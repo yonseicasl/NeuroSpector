@@ -105,11 +105,11 @@ void analyzer_configs_t::parse() {
             }
             else if(!is_map_parsed) {
                 for(size_t row = 0; row < MAP_TABLE_ROWS; row++) {
-                    std::getline(config_file, line);
                     if(line[0] == '#') {
                         row--; continue;
                     }
                     get_line_vals(line, 1, layers_and_maps.at(layer_and_map_cnt - 1).map_vals);
+                    std::getline(config_file, line);
                 }
                 is_map_parsed = true;
             }

@@ -36,6 +36,7 @@ public:
     // Layer parameter values
     std::vector<unsigned> layer_vals; // KBPQCRS
     unsigned stride;
+    std::vector<bool> U_exists;
 private:
     // Table(D(7) x U(6))
     unsigned D_size = static_cast<unsigned>(parameter_t::SIZE);

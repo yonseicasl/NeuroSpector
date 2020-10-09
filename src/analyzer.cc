@@ -38,10 +38,18 @@ void analyzer_t::init_layer_and_map() {
         tmp_mt->stride = analyzer_configs.layers_and_maps.at(i).layer_vals.at(7);
         // Mapping table values 
         for(size_t r = 0; r < MAP_TABLE_ROWS; r++) {
-            for(size_t c = 0; c < MAP_TABLE_COLUMNS; c++) {
-                parameter_t D = static_cast<parameter_t>(c); 
-                component_t U = static_cast<component_t>(r); 
-                tmp_mt->put_val(D, U, analyzer_configs.layers_and_maps.at(i).map_vals.at(c + r * MAP_TABLE_ROWS));
+            for(size_t c = 0; c < MAP_TABLE_COLUMNS + 1; c++) {
+                if(c < MAP_TABLE_COLUMNS) {
+                    parameter_t D = static_cast<parameter_t>(c); 
+                    component_t U = static_cast<component_t>(r); 
+                    tmp_mt->put_val(D, U, analyzer_configs.layers_and_maps.at(i).map_vals.at(c + r * (MAP_TABLE_COLUMNS + 1)));
+                }
+                else {
+                    if(analyzer_configs.layers_and_maps.at(i).map_vals.at(c + r * (MAP_TABLE_COLUMNS + 1)) == 1)
+                        tmp_mt->U_exists.at(r) = true;
+                    else
+                        tmp_mt->U_exists.at(r) = false;
+                }
             }
         }
         mapping_tables.push_back(std::make_pair(analyzer_configs.layers_and_maps.at(i).name, tmp_mt)); 

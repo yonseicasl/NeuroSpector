@@ -39,7 +39,7 @@ public:
     struct layer_and_map_t {
         std::string name;
         std::vector<unsigned> layer_vals;   // KBPQCRS and stride
-        std::vector<unsigned> map_vals;     // [(D,U)s and exist] x MAP_TABLE_ROWS
+        std::vector<unsigned> map_vals;     // [(D,U)s and exists] x MAP_TABLE_ROWS
     };
     acc_t accelerator;
     std::string network_name;

@@ -5,6 +5,7 @@ static handler_t handler;
 mapping_table_t::mapping_table_t()
     : stride(1) {
     layer_vals.assign(7, 1);
+    U_exists.assign(6, true);
     table.assign(D_size * U_size, 1);
     D_str.push_back("K");
     D_str.push_back("B");
@@ -68,10 +69,12 @@ void mapping_table_t::print_stats() {
     std::cout << std::endl;
     handler.print_line(60);
     for(const auto &u : enum_range<component_t>(last_component)) {
-        std::cout << U_str.at(static_cast<unsigned>(u)) << "  |"; 
-        for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-            std::cout << std::setw(7) << get_val(d, u);
+        if(U_exists.at(static_cast<unsigned>(u))) {
+            std::cout << U_str.at(static_cast<unsigned>(u)) << "  |"; 
+            for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+                std::cout << std::setw(7) << get_val(d, u);
+            }
+            std::cout << std::endl;
         }
-        std::cout << std::endl;
     }
 }
