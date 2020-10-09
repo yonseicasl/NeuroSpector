@@ -1,4 +1,4 @@
-[ACC:EYERISS]
+[ACC:EYERISS],
 #ARRAY_SIZE_X,14
 #ARRAY_SIZE_Y,12
 #,Input,Weight,Output
@@ -8,11 +8,11 @@ BYPASS_L2,0,1,0
 
 # [NET] must be before [MAP]s for checking <LAYER_# and [MAP:LAYER_#]> pairs
 # Layer types: CONV_#, FC_#, PW_#, DW_#
-[NET:ALEXNET]
+[NET:ALEXNET],
 #,K,B,P,Q,C,R,S,stride
 CONV_1,96,4,55,55,3,11,11,4
 
-[MAP:CONV_1]
+[MAP:CONV_1],
 #,K,B,P,Q,C,R,S,exist(T/F)
 L0,1,1,1,1,1,1,1,0
 L1,16,1,1,1,1,1,11,1
