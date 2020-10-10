@@ -97,7 +97,7 @@ void analyzer_t::analyze_tiles() {
 
 void analyzer_t::analyze_accesses() {
     for(size_t i = 0; i < mapping_tables.size(); i++) {
-        accesses_t *tmp_accessess = new accesses_t(mapping_tables.at(i).second, accelerator);
+        accesses_t *tmp_accessess = new accesses_t(mapping_tables.at(i).second, accelerator, tiles.at(i));
         accesses.push_back(tmp_accessess);
     }
 }

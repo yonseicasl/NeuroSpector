@@ -8,6 +8,8 @@
 #include "mapping_table.h"
 #include "utils.h"
 
+#define MB_UNIT 8388608
+
 enum class data_type_t {
     INPUT, WEIGHT, OUTPUT, SIZE
 };
@@ -39,7 +41,7 @@ public:
 /* Tiles stats */
 class tiles_t {
 public:
-    tiles_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_);
+    tiles_t(mapping_table_t *mapping_table_, accelerator_t *accelerator_);
     ~tiles_t();
     void init();
     void print_stats();
@@ -53,16 +55,16 @@ public:
         size_t num_output;
     };
 
+    std::vector<tile_t> tiles;
 private:
     mapping_table_t *mapping_table;
     accelerator_t *accelerator;
-    std::vector<tile_t> tiles;
 };
 
 /* Accesses stats */
 class accesses_t {
 public:
-    accesses_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_);
+    accesses_t(mapping_table_t *mapping_table_, accelerator_t *accelerator_, tiles_t *tiles_);
     ~accesses_t();
     void init();
     void print_stats();
@@ -74,11 +76,22 @@ public:
         size_t cnts_input;
         size_t cnts_weight;
         size_t cnts_output;
+        double mb_input;
+        double mb_weight;
+        double mb_output;
+        double mb_total;
+        void counts_to_mb(accelerator_t *acc_) {
+            mb_input = double(cnts_input * acc_->input_precision) / MB_UNIT; 
+            mb_weight = double(cnts_weight) * acc_->weight_precision / MB_UNIT;
+            mb_output = double(cnts_output) * acc_->output_precision / MB_UNIT;
+            mb_total = mb_input + mb_weight + mb_output;
+        }
     };
 
 private:
     mapping_table_t *mapping_table;
     accelerator_t *accelerator;
+    tiles_t *tiles;
     std::vector<access_t> accesses;
 };
 
