@@ -13,6 +13,7 @@ enum class data_type_t {
 };
 
 enum class bypass_t {
+// BYPASS MASK: 0 ~ 7
 //   0,   1,   2,   3,   4,   5,   6,   7 
     XXX, XXO, XWX, XWO, IXX, IXO, IWX, IWO
 };
@@ -30,7 +31,6 @@ public:
     unsigned input_precision;
     unsigned weight_precision;
     unsigned output_precision;
-    // Bypass range: 0 ~ 7
     bypass_t bypass_L1;
     bypass_t bypass_L2;
 };

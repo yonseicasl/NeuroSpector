@@ -21,6 +21,7 @@ analyzer_t::~analyzer_t() {
 
 void analyzer_t::init_acc() {
     accelerator = new accelerator_t;
+    accelerator->name = analyzer_configs.accelerator.name;
     accelerator->array_size_x = analyzer_configs.accelerator.array_size_x;
     accelerator->array_size_y = analyzer_configs.accelerator.array_size_y;
     accelerator->input_precision = analyzer_configs.accelerator.precision.at(0);     // Input
@@ -77,20 +78,28 @@ void analyzer_t::analyze_accesses() {
 
 }
 
-void analyzer_t::print_mapping_tables() {
-    for(size_t i = 0; i < mapping_tables.size(); i++) {
-        std::cout << "\n# " << mapping_tables.at(i).first << std::endl;
-        mapping_tables.at(i).second->print_stats();
+void analyzer_t::print_stats() {
+    print_accelerator();
+    for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
+        std::cout << "\n# " << mapping_tables.at(idx).first << std::endl;
+        print_mapping_tables(idx);
+        print_tiles(idx);
+        print_accesses(idx);
     }
 }
 
-void analyzer_t::print_tiles() {
-    for(size_t i = 0; i < tiles.size(); i++) {
-        std::cout << "\n# " << mapping_tables.at(i).first << std::endl;
-        tiles.at(i)->print_stats();
-    }
+void analyzer_t::print_accelerator() {
+     accelerator->print_stats(); 
 }
 
-void analyzer_t::print_accesses() {
+void analyzer_t::print_mapping_tables(unsigned idx_) {
+    mapping_tables.at(idx_).second->print_stats();
+}
+
+void analyzer_t::print_tiles(unsigned idx_) {
+    tiles.at(idx_)->print_stats();
+}
+
+void analyzer_t::print_accesses(unsigned idx_) {
     
 }

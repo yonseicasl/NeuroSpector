@@ -10,6 +10,27 @@ accelerator_t::~accelerator_t() {
 
 }
 
+void accelerator_t::init() {
+
+}
+
+void accelerator_t::print_stats() {
+    handler.print_line(35);
+    std::cout << "# BYPASS MASK: 0 ~ 7\n"
+              << "  0(XXX), 1(XXO), 2(XWX), 3(XWO),\n"
+              << "  4(IXX), 5(IXO), 6(IWX), 7(IWO)" << std::endl;
+    handler.print_line(35);
+    std::cout << "# ACCELERATOR SPEC" << std::endl;
+    std::cout << std::setw(15) << "NAME: " << name << "\n"
+              << std::setw(15) << "X: " << array_size_x << "\n"
+              << std::setw(15) << "Y: " << array_size_y << "\n"
+              << std::setw(15) << "PRECISION(I): " << input_precision << "\n"
+              << std::setw(15) << "PRECISION(W): " << weight_precision << "\n"
+              << std::setw(15) << "PRECISION(O): " << output_precision << "\n"
+              << std::setw(15) << "L1 BYPASS: " << static_cast<unsigned>(bypass_L1) << "\n"
+              << std::setw(15) << "L2 BYPASS: " << static_cast<unsigned>(bypass_L2) << std::endl;
+}
+
 tiles_t::tiles_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_) 
     : mapping_table(mapping_table_), accelerator(accelerator_) {
     init();
@@ -48,7 +69,6 @@ void tiles_t::init() {
 }
 
 void tiles_t::print_stats() {
-    mapping_table->print_stats();
     std::cout << "\n# TILE SIZES" << std::endl;
     std::cout << std::setw(10) << "TILES" 
               << std::setw(12) << "INPUT"
