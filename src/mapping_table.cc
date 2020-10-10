@@ -79,4 +79,10 @@ void mapping_table_t::print_stats() {
             std::cout << std::endl;
         }
     }
+    handler.print_line(60);
+    std::cout << " PRODUCT |";
+    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        std::cout << std::setw(7) << product(d, component_t::CHIP, false, false);
+    }
+    std::cout << std::endl;
 }

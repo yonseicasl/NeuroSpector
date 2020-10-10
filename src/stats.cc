@@ -2,16 +2,14 @@
 
 static handler_t handler;
 
+/* Accelerator stats */
 accelerator_t::accelerator_t() {
-
 }
 
 accelerator_t::~accelerator_t() {
-
 }
 
 void accelerator_t::init() {
-
 }
 
 void accelerator_t::print_stats() {
@@ -31,13 +29,13 @@ void accelerator_t::print_stats() {
               << std::setw(15) << "L2 BYPASS: " << static_cast<unsigned>(bypass_L2) << std::endl;
 }
 
+/* Tiles stats */
 tiles_t::tiles_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_) 
     : mapping_table(mapping_table_), accelerator(accelerator_) {
     init();
 }
 
 tiles_t::~tiles_t() {
-
 }
 
 void tiles_t::init() {
@@ -138,4 +136,33 @@ size_t tiles_t::calculate_tile_size(data_type_t type_, component_t U) {
         default: handler.print_err(err_type_t::INVAILD, "Data type");
     }
     return rtn_size;
+}
+
+/* Accesses stats */
+accesses_t::accesses_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_) 
+: mapping_table(mapping_table_), accelerator(accelerator_) {
+    init();
+}
+
+accesses_t::~accesses_t() {
+}
+
+void accesses_t::init() {
+    //access_t glb_access("  GLB ACCESSES");
+    access_t dram_access(" DRAM ACCESSES");
+//    glb_access.cnts_input = calculate_access_counts(data_type_t::INPUT, component_t::L0);
+//    glb_access.cnts_weight = calculate_access_counts(data_type_t::INPUT, component_t::L0);
+//    glb_access.cnts_output = calculate_access_counts(data_type_t::INPUT, component_t::L0);
+    dram_access.cnts_input = calculate_access_counts(data_type_t::INPUT, component_t::CHIP);
+    dram_access.cnts_weight = calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP);
+    dram_access.cnts_output = calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP);
+}
+
+void accesses_t::print_stats() {
+
+}
+
+size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
+
+    return 0;
 }

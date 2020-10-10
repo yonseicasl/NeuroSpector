@@ -15,7 +15,9 @@ analyzer_t::~analyzer_t() {
     delete accelerator;
     for(size_t i = 0; i < mapping_tables.size(); i++) {
         delete mapping_tables.at(i).second;
+        delete data_sizes.at(i);
         delete tiles.at(i);
+        delete accesses.at(i);
     }
 }
 
@@ -41,8 +43,27 @@ void analyzer_t::init_acc() {
 
 void analyzer_t::init_layer_and_map() {
     for(size_t i = 0; i < analyzer_configs.layers_and_maps.size(); i++) {
-        mapping_table_t *tmp_mt = new mapping_table_t;
+        // Data sizes
+        data_size_t *tmp_data_size = new data_size_t;
+        tmp_data_size->input_size = analyzer_configs.layers_and_maps.at(i).layer_vals.at(1)
+                                  * analyzer_configs.layers_and_maps.at(i).layer_vals.at(4)
+                                  * (((analyzer_configs.layers_and_maps.at(i).layer_vals.at(2) - 1)
+                                  * analyzer_configs.layers_and_maps.at(i).layer_vals.at(7))
+                                  + analyzer_configs.layers_and_maps.at(i).layer_vals.at(5))
+                                  * (((analyzer_configs.layers_and_maps.at(i).layer_vals.at(3) - 1)
+                                  * analyzer_configs.layers_and_maps.at(i).layer_vals.at(7))
+                                  + analyzer_configs.layers_and_maps.at(i).layer_vals.at(6));
+        tmp_data_size->weight_size = analyzer_configs.layers_and_maps.at(i).layer_vals.at(0)
+                                   * analyzer_configs.layers_and_maps.at(i).layer_vals.at(4)
+                                   * analyzer_configs.layers_and_maps.at(i).layer_vals.at(5)
+                                   * analyzer_configs.layers_and_maps.at(i).layer_vals.at(6);
+        tmp_data_size->output_size = analyzer_configs.layers_and_maps.at(i).layer_vals.at(0)
+                                   * analyzer_configs.layers_and_maps.at(i).layer_vals.at(1)
+                                   * analyzer_configs.layers_and_maps.at(i).layer_vals.at(2)
+                                   * analyzer_configs.layers_and_maps.at(i).layer_vals.at(3);
+        data_sizes.push_back(tmp_data_size);
         // Layer parameter values
+        mapping_table_t *tmp_mt = new mapping_table_t;
         std::copy(analyzer_configs.layers_and_maps.at(i).layer_vals.begin(), 
                   analyzer_configs.layers_and_maps.at(i).layer_vals.end() - 1, 
                   tmp_mt->layer_vals.begin());
@@ -75,15 +96,26 @@ void analyzer_t::analyze_tiles() {
 }
 
 void analyzer_t::analyze_accesses() {
-
+    for(size_t i = 0; i < mapping_tables.size(); i++) {
+        accesses_t *tmp_accessess = new accesses_t(mapping_tables.at(i).second, accelerator);
+        accesses.push_back(tmp_accessess);
+    }
 }
 
 void analyzer_t::print_stats() {
     print_accelerator();
     for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
-        std::cout << "\n# " << mapping_tables.at(idx).first << std::endl;
+        handler.print_line(60);
+        std::cout << "# LAYER: " << mapping_tables.at(idx).first << std::endl;
+        handler.print_line(60);
+        std::cout << "# MAPPING TABLE" << std::endl;
         print_mapping_tables(idx);
         print_tiles(idx);
+        handler.print_line(42);
+        std::cout << " DATA SIZE |" 
+                  << std::setw(10) << data_sizes.at(idx)->input_size 
+                  << std::setw(10) << data_sizes.at(idx)->weight_size
+                  << std::setw(10) << data_sizes.at(idx)->output_size << std::endl;
         print_accesses(idx);
     }
 }
@@ -101,5 +133,5 @@ void analyzer_t::print_tiles(unsigned idx_) {
 }
 
 void analyzer_t::print_accesses(unsigned idx_) {
-    
+    accesses.at(idx_)->print_stats();
 }

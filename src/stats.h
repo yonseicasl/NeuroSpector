@@ -18,6 +18,7 @@ enum class bypass_t {
     XXX, XXO, XWX, XWO, IXX, IXO, IWX, IWO
 };
 
+/* Accelerator stats */
 class accelerator_t {
 public:
     accelerator_t();
@@ -35,6 +36,7 @@ public:
     bypass_t bypass_L2;
 };
 
+/* Tiles stats */
 class tiles_t {
 public:
     tiles_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_);
@@ -53,12 +55,31 @@ public:
 
 private:
     mapping_table_t *mapping_table;
-    accelerator_t * accelerator;
+    accelerator_t *accelerator;
     std::vector<tile_t> tiles;
 };
 
-//class dram_accesses_t {
-//
-//};
+/* Accesses stats */
+class accesses_t {
+public:
+    accesses_t(mapping_table_t *mapping_table_, accelerator_t * accelerator_);
+    ~accesses_t();
+    void init();
+    void print_stats();
+    size_t calculate_access_counts(data_type_t type_, component_t U);
+
+    struct access_t {
+        access_t(std::string name_) : name(name_) {}
+        std::string name;
+        size_t cnts_input;
+        size_t cnts_weight;
+        size_t cnts_output;
+    };
+
+private:
+    mapping_table_t *mapping_table;
+    accelerator_t *accelerator;
+    std::vector<access_t> accesses;
+};
 
 #endif
