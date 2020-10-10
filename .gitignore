@@ -20,3 +20,6 @@ stats/
 # Libraries
 *.so
 *.a
+
+# MACOS
+.DS_Store

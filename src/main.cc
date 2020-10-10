@@ -16,7 +16,7 @@ int main(int argc, char **argv) {
     // Parse configurations
     analyzer_configs_t analyzer_cfg(argv[1]);
     analyzer_t *analyzer = new analyzer_t(analyzer_cfg);
-    analyzer->print_mapping_tables();
+    analyzer->print_tiles();
 
     delete analyzer;
     return 0;

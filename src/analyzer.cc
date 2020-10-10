@@ -7,25 +7,35 @@ analyzer_t::analyzer_t(analyzer_configs_t &analyzer_configs_)
     init_acc();
     init_layer_and_map();
     std::cout << "# Analyzer initialization complete!" << std::endl;
+    analyze_tiles();
+    analyze_accesses();
 }
 
 analyzer_t::~analyzer_t() {
-    for(size_t i = 0; i < mapping_tables.size(); i++)
+    delete accelerator;
+    for(size_t i = 0; i < mapping_tables.size(); i++) {
         delete mapping_tables.at(i).second;
+        delete tiles.at(i);
+    }
 }
 
 void analyzer_t::init_acc() {
-    accelerator.array_size_x = analyzer_configs.accelerator.array_size_x;
-    accelerator.array_size_y = analyzer_configs.accelerator.array_size_y;
-    accelerator.input_precision = analyzer_configs.accelerator.precision.at(0);     // Input
-    accelerator.weight_precision = analyzer_configs.accelerator.precision.at(1);    // Weight
-    accelerator.output_precision = analyzer_configs.accelerator.precision.at(2);    // Output
-    accelerator.bypass_L1 = analyzer_configs.accelerator.bypass_L1.at(0) * 1;       // Input
-    accelerator.bypass_L1 += analyzer_configs.accelerator.bypass_L1.at(1) * 2;      // Weight
-    accelerator.bypass_L1 += analyzer_configs.accelerator.bypass_L1.at(2) * 4;      // Output
-    accelerator.bypass_L2 = analyzer_configs.accelerator.bypass_L2.at(0) * 1;       // Input
-    accelerator.bypass_L2 += analyzer_configs.accelerator.bypass_L2.at(1) * 2;      // Weight
-    accelerator.bypass_L2 += analyzer_configs.accelerator.bypass_L2.at(2) * 4;      // Output
+    accelerator = new accelerator_t;
+    accelerator->array_size_x = analyzer_configs.accelerator.array_size_x;
+    accelerator->array_size_y = analyzer_configs.accelerator.array_size_y;
+    accelerator->input_precision = analyzer_configs.accelerator.precision.at(0);     // Input
+    accelerator->weight_precision = analyzer_configs.accelerator.precision.at(1);    // Weight
+    accelerator->output_precision = analyzer_configs.accelerator.precision.at(2);    // Output
+    unsigned bypass_L1 = 0;
+    unsigned bypass_L2 = 0;
+    bypass_L1 = analyzer_configs.accelerator.bypass_L1.at(0) * 4;       // Input
+    bypass_L1 += analyzer_configs.accelerator.bypass_L1.at(1) * 2;      // Weight
+    bypass_L1 += analyzer_configs.accelerator.bypass_L1.at(2) * 1;      // Output
+    bypass_L2 = analyzer_configs.accelerator.bypass_L2.at(0) * 4;       // Input
+    bypass_L2 += analyzer_configs.accelerator.bypass_L2.at(1) * 2;      // Weight
+    bypass_L2 += analyzer_configs.accelerator.bypass_L2.at(2) * 1;      // Output
+    accelerator->bypass_L1 = static_cast<bypass_t>(bypass_L1);
+    accelerator->bypass_L2 = static_cast<bypass_t>(bypass_L2);
 }
 
 void analyzer_t::init_layer_and_map() {
@@ -56,9 +66,31 @@ void analyzer_t::init_layer_and_map() {
     }
 }
 
+void analyzer_t::analyze_tiles() {
+    for(size_t i = 0; i < mapping_tables.size(); i++) {
+        tiles_t *tmp_tiles = new tiles_t(mapping_tables.at(i).second, accelerator);
+        tiles.push_back(tmp_tiles);
+    }
+}
+
+void analyzer_t::analyze_accesses() {
+
+}
+
 void analyzer_t::print_mapping_tables() {
     for(size_t i = 0; i < mapping_tables.size(); i++) {
         std::cout << "\n# " << mapping_tables.at(i).first << std::endl;
         mapping_tables.at(i).second->print_stats();
     }
+}
+
+void analyzer_t::print_tiles() {
+    for(size_t i = 0; i < tiles.size(); i++) {
+        std::cout << "\n# " << mapping_tables.at(i).first << std::endl;
+        tiles.at(i)->print_stats();
+    }
+}
+
+void analyzer_t::print_accesses() {
+    
 }

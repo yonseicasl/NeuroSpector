@@ -5,6 +5,7 @@
 
 #include "configs.h"
 #include "mapping_table.h"
+#include "stats.h"
 
 class analyzer_t {
 public:
@@ -12,24 +13,19 @@ public:
     ~analyzer_t();
     void init_acc();
     void init_layer_and_map();
+    void analyze_tiles();
+    void analyze_accesses();
     void print_mapping_tables();
-
-    struct acc_t {
-        std::string name;
-        unsigned array_size_x;
-        unsigned array_size_y;
-        unsigned input_precision;
-        unsigned weight_precision;
-        unsigned output_precision;
-        // Bypass range: 0 ~ 7
-        unsigned bypass_L1;
-        unsigned bypass_L2;
-    };
+    void print_tiles();
+    void print_accesses();
 
 private:
     analyzer_configs_t &analyzer_configs;
-    acc_t accelerator;
+    // Parsed from analyzer configs
+    accelerator_t *accelerator;
     std::vector<std::pair<std::string, mapping_table_t*>> mapping_tables;
+    // Analyzed stats
+    std::vector<tiles_t*> tiles;
 };
 
 #endif
