@@ -22,4 +22,5 @@ stats/
 *.a
 
 # MACOS
+*.DS_Store
 .DS_Store
