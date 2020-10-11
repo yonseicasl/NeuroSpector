@@ -1,4 +1,5 @@
 #include "analyzer.h"
+#include <iomanip>
 
 static handler_t handler;
 
@@ -116,6 +117,10 @@ void analyzer_t::print_stats() {
                   << std::setw(10) << data_sizes.at(idx)->input_size 
                   << std::setw(10) << data_sizes.at(idx)->weight_size
                   << std::setw(10) << data_sizes.at(idx)->output_size << std::endl;
+//        std::cout << " DATA SIZE |" 
+//                  << std::setw(8) << std::fixed << std::setprecision(2) << double(data_sizes.at(idx)->input_size) / KB_UNIT << "KB"
+//                  << std::setw(8) << std::fixed << std::setprecision(2) << double(data_sizes.at(idx)->weight_size) / KB_UNIT << "KB"
+//                  << std::setw(8) << std::fixed << std::setprecision(2) << double(data_sizes.at(idx)->output_size) / KB_UNIT << "KB" << std::endl;
         print_accesses(idx);
     }
 }

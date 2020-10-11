@@ -8,6 +8,7 @@
 #include "mapping_table.h"
 #include "utils.h"
 
+#define KB_UNIT 8192
 #define MB_UNIT 8388608
 
 enum class data_type_t {
@@ -56,6 +57,7 @@ public:
     };
 
     std::vector<tile_t> tiles;
+
 private:
     mapping_table_t *mapping_table;
     accelerator_t *accelerator;

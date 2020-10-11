@@ -41,29 +41,29 @@ tiles_t::~tiles_t() {
 
 void tiles_t::init() {
     tile_t mac_tile("  MAC TILE");      // 0
-    tile_t pe_tile("   PE TILE");       // 1
-    tile_t array_tile("ARRAY TILE");    // 2
-    tile_t glb_tile("  GLB TILE");      // 3
-    tile_t chip_tile(" CHIP TILE");     // 4
     mac_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::L0);
     mac_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::L0);
     mac_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::L0);
+    tiles.push_back(mac_tile);
+    tile_t pe_tile("   PE TILE");       // 1
     pe_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::L1);
     pe_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::L1);
     pe_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::L1);
+    tiles.push_back(pe_tile);
+    tile_t array_tile("ARRAY TILE");    // 2
     array_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::Y);
     array_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::Y);
     array_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::Y);
+    tiles.push_back(array_tile);
+    tile_t glb_tile("  GLB TILE");      // 3
     glb_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::L2);
     glb_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::L2);
     glb_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::L2);
+    tiles.push_back(glb_tile);
+    tile_t chip_tile(" CHIP TILE");     // 4
     chip_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::CHIP);
     chip_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::CHIP);
     chip_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::CHIP);
-    tiles.push_back(mac_tile);
-    tiles.push_back(pe_tile);
-    tiles.push_back(array_tile);
-    tiles.push_back(glb_tile);
     tiles.push_back(chip_tile);
 }
 
@@ -149,11 +149,13 @@ accesses_t::~accesses_t() {
 }
 
 void accesses_t::init() {
-    //access_t glb_access("  GLB ACCESSES");
-    access_t dram_access(" DRAM ACCESSES");
-//    glb_access.cnts_input = calculate_access_counts(data_type_t::INPUT, component_t::L0);
-//    glb_access.cnts_weight = calculate_access_counts(data_type_t::INPUT, component_t::L0);
-//    glb_access.cnts_output = calculate_access_counts(data_type_t::INPUT, component_t::L0);
+//    access_t glb_access("  GLB ACCESSES");  // 1
+//    glb_access.cnts_input = calculate_access_counts(data_type_t::INPUT, component_t::Y);
+//    glb_access.cnts_weight = calculate_access_counts(data_type_t::INPUT, component_t::Y);
+//    glb_access.cnts_output = calculate_access_counts(data_type_t::INPUT, component_t::Y);
+//    glb_access.counts_to_mb(accelerator);
+    //accesses.push_back(glb_access);
+    access_t dram_access(" DRAM ACCESSES"); // 2
     dram_access.cnts_input = calculate_access_counts(data_type_t::INPUT, component_t::CHIP);
     dram_access.cnts_weight = calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP);
     dram_access.cnts_output = calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP);
@@ -203,7 +205,7 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                              || accelerator->bypass_L2 == bypass_t::IXO
                              || accelerator->bypass_L2 == bypass_t::IWX
                              || accelerator->bypass_L2 == bypass_t::IWO) ? true : false;
-                // GLB tile size x dividers
+                // CHIP tile size x dividers
                 rtn_size *= tiles->tiles.at(4).num_input;
                 rtn_size *= mapping_table->divider(parameter_t::B, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::P, U, is_bypass_L1, is_bypass_L2);
@@ -211,10 +213,8 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                 rtn_size *= mapping_table->divider(parameter_t::C, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::R, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::S, U, is_bypass_L1, is_bypass_L2);
-                // Multiply bypass effects 
-                if(is_bypass_L2) {
-                    rtn_size *= mapping_table->divider(parameter_t::K, U, is_bypass_L1, false);
-                }
+                // CHIP tile size x quotient (because K is not an input parameter)
+                rtn_size *= mapping_table->quotient(parameter_t::K, U, is_bypass_L1, false);
             }
             break;
         case data_type_t::WEIGHT:
@@ -225,19 +225,42 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                              || accelerator->bypass_L2 == bypass_t::XWO
                              || accelerator->bypass_L2 == bypass_t::IWX
                              || accelerator->bypass_L2 == bypass_t::IWO) ? true : false;
-                // GLB tile size x dividers
+                // Chip tile size x dividers
                 rtn_size *= tiles->tiles.at(4).num_weight;
                 rtn_size *= mapping_table->divider(parameter_t::K, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::R, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::S, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::C, U, is_bypass_L1, is_bypass_L2);
-                // Multiply bypass effects 
-                if(is_bypass_L2) {
-                    rtn_size *= mapping_table->divider(parameter_t::B, U, is_bypass_L1, false);
-                    rtn_size *= mapping_table->divider(parameter_t::P, U, is_bypass_L1, false);
-                    rtn_size *= mapping_table->divider(parameter_t::Q, U, is_bypass_L1, false);
-                }
+                // CHIP tile size x quotients (because B,P,Q are not weight parameters)
+                rtn_size *= mapping_table->quotient(parameter_t::B, U, is_bypass_L1, false);
+                rtn_size *= mapping_table->quotient(parameter_t::P, U, is_bypass_L1, false);
+                rtn_size *= mapping_table->quotient(parameter_t::Q, U, is_bypass_L1, false);
             }
+            // GLB accesses
+//            else if(U == component_t::Y) {
+//                // L1 Bypass check
+//                is_bypass_L2 = (accelerator->bypass_L2 == bypass_t::XWX 
+//                             || accelerator->bypass_L2 == bypass_t::XWO
+//                             || accelerator->bypass_L2 == bypass_t::IWX
+//                             || accelerator->bypass_L2 == bypass_t::IWO) ? true : false;
+//                // L2 Bypass check
+//                is_bypass_L2 = (accelerator->bypass_L2 == bypass_t::XWX 
+//                             || accelerator->bypass_L2 == bypass_t::XWO
+//                             || accelerator->bypass_L2 == bypass_t::IWX
+//                             || accelerator->bypass_L2 == bypass_t::IWO) ? true : false;
+//                // Chip tile size x dividers
+//                rtn_size *= tiles->tiles.at(2).num_weight;
+//                rtn_size *= mapping_table->divider(parameter_t::K, U, is_bypass_L1, is_bypass_L2);
+//                rtn_size *= mapping_table->divider(parameter_t::R, U, is_bypass_L1, is_bypass_L2);
+//                rtn_size *= mapping_table->divider(parameter_t::S, U, is_bypass_L1, is_bypass_L2);
+//                rtn_size *= mapping_table->divider(parameter_t::C, U, is_bypass_L1, is_bypass_L2);
+//                // Multiply bypass effects 
+//                if(is_bypass_L2) {
+//                    rtn_size *= mapping_table->divider(parameter_t::B, U, is_bypass_L1, false);
+//                    rtn_size *= mapping_table->divider(parameter_t::P, U, is_bypass_L1, false);
+//                    rtn_size *= mapping_table->divider(parameter_t::Q, U, is_bypass_L1, false);
+//                }
+//            }
             break;
         case data_type_t::OUTPUT:
             // DRAM accesses
@@ -247,18 +270,13 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                              || accelerator->bypass_L2 == bypass_t::XWO
                              || accelerator->bypass_L2 == bypass_t::IXO
                              || accelerator->bypass_L2 == bypass_t::IWO) ? true : false;
-                // GLB tile size x dividers
+                // CHIP tile size x dividers
                 rtn_size *= tiles->tiles.at(4).num_output;
                 rtn_size *= mapping_table->divider(parameter_t::K, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::B, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::P, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::Q, U, is_bypass_L1, is_bypass_L2);
-                // Multiply bypass effects 
-                if(is_bypass_L2) {
-                    rtn_size *= mapping_table->divider(parameter_t::R, U, is_bypass_L1, false);
-                    rtn_size *= mapping_table->divider(parameter_t::S, U, is_bypass_L1, false);
-                    rtn_size *= mapping_table->divider(parameter_t::C, U, is_bypass_L1, false);
-                }
+                // No CHIP tile size x quotients (because output tiles' wirte back only one time)
             }
             break;
         default: handler.print_err(err_type_t::INVAILD, "Data type");

@@ -85,4 +85,14 @@ void mapping_table_t::print_stats() {
         std::cout << std::setw(7) << product(d, component_t::CHIP, false, false);
     }
     std::cout << std::endl;
+    std::cout << " QT(L2)  |";
+    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        std::cout << std::setw(7) << quotient(d, component_t::L2, false, false);
+    }
+    std::cout << std::endl;
+//    std::cout << " QT( Y)  |";
+//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+//        std::cout << std::setw(7) << quotient(d, component_t::Y, false, false);
+//    }
+//    std::cout << std::endl;
 }
