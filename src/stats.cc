@@ -213,8 +213,11 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                 rtn_size *= mapping_table->divider(parameter_t::C, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::R, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::S, U, is_bypass_L1, is_bypass_L2);
-                // CHIP tile size x quotient (because K is not an input parameter)
-                rtn_size *= mapping_table->quotient(parameter_t::K, U, is_bypass_L1, false);
+                // Bypass effect
+                if(is_bypass_L2) {
+                    // CHIP tile size x quotient (because K is not an input parameter)
+                    rtn_size *= mapping_table->quotient(parameter_t::K, U, is_bypass_L1, false);
+                }
             }
             break;
         case data_type_t::WEIGHT:
@@ -231,10 +234,13 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                 rtn_size *= mapping_table->divider(parameter_t::R, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::S, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::C, U, is_bypass_L1, is_bypass_L2);
-                // CHIP tile size x quotients (because B,P,Q are not weight parameters)
-                rtn_size *= mapping_table->quotient(parameter_t::B, U, is_bypass_L1, false);
-                rtn_size *= mapping_table->quotient(parameter_t::P, U, is_bypass_L1, false);
-                rtn_size *= mapping_table->quotient(parameter_t::Q, U, is_bypass_L1, false);
+                // Bypass effect
+                if(is_bypass_L2) {
+                    // CHIP tile size x quotients (because B,P,Q are not weight parameters)
+                    rtn_size *= mapping_table->quotient(parameter_t::B, U, is_bypass_L1, false);
+                    rtn_size *= mapping_table->quotient(parameter_t::P, U, is_bypass_L1, false);
+                    rtn_size *= mapping_table->quotient(parameter_t::Q, U, is_bypass_L1, false);
+                }
             }
             // GLB accesses
 //            else if(U == component_t::Y) {
@@ -276,7 +282,14 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U) {
                 rtn_size *= mapping_table->divider(parameter_t::B, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::P, U, is_bypass_L1, is_bypass_L2);
                 rtn_size *= mapping_table->divider(parameter_t::Q, U, is_bypass_L1, is_bypass_L2);
-                // No CHIP tile size x quotients (because output tiles' wirte back only one time)
+                // Bypass effect 
+                if(is_bypass_L2) {
+                    // CHIP tile size x quotients (because C,R,S are not output parameters)
+                    rtn_size *= mapping_table->quotient(parameter_t::C, U, is_bypass_L1, false);
+                    rtn_size *= mapping_table->quotient(parameter_t::R, U, is_bypass_L1, false);
+                    rtn_size *= mapping_table->quotient(parameter_t::S, U, is_bypass_L1, false);
+                    rtn_size *= 2; // Read/Write
+                }
             }
             break;
         default: handler.print_err(err_type_t::INVAILD, "Data type");

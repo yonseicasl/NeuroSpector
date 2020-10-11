@@ -51,8 +51,8 @@ unsigned mapping_table_t::product(parameter_t D, component_t U, bool is_bypass_L
 }
 
 unsigned mapping_table_t::quotient(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
-    float d_val = layer_vals.at(static_cast<unsigned>(D));  
-        return round(d_val / product(D, U, is_bypass_L1, is_bypass_L2));
+    float d_val = layer_vals.at(static_cast<unsigned>(D));
+    return round(d_val / product(D, U, is_bypass_L1, is_bypass_L2));
 }
 
 float mapping_table_t::divider(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
@@ -85,11 +85,16 @@ void mapping_table_t::print_stats() {
         std::cout << std::setw(7) << product(d, component_t::CHIP, false, false);
     }
     std::cout << std::endl;
-    std::cout << " QT(L2)  |";
-    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-        std::cout << std::setw(7) << quotient(d, component_t::L2, false, false);
-    }
-    std::cout << std::endl;
+//    std::cout << " QT(L2)F |";
+//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+//        std::cout << std::setw(7) << quotient(d, component_t::L2, false, false);
+//    }
+//    std::cout << std::endl;
+//    std::cout << " QT(L2)T |";
+//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+//        std::cout << std::setw(7) << quotient(d, component_t::L2, false, true);
+//    }
+//    std::cout << std::endl;
 //    std::cout << " QT( Y)  |";
 //    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
 //        std::cout << std::setw(7) << quotient(d, component_t::Y, false, false);
