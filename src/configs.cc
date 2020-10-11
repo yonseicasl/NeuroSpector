@@ -1,5 +1,4 @@
 #include <algorithm>
-#include <cstdlib>
 #include <vector>
 
 #include "configs.h"
@@ -12,6 +11,15 @@ configs_t::configs_t(std::string config_file_) {
     config_file.open(config_file_.c_str());
     if(!config_file.is_open()) 
         handler.print_err(err_type_t::OPENFAIL, config_file_);
+}
+
+template<typename T>
+T configs_t::get_line_val(std::string &line_) {
+    double val;
+    size_t strpos = line_.find(',') + 1;
+    size_t endpos = line_.find(',', strpos);
+    val = std::stod(line_.substr(strpos, endpos - strpos));
+    return val;
 }
 
 void configs_t::get_line_vals(std::string &line_, size_t bias_, std::vector<unsigned> &container) {
@@ -76,14 +84,63 @@ void analyzer_configs_t::parse() {
         }
         else {
             if(!is_hw_parsed) {
-                if(line.find("PRECISION") != std::string::npos) {
+                size_t strpos = line.find(',') + 1;
+                size_t endpos = line.find(',', strpos);
+                // MAC
+                if(line.find("MAC_PER_PE") != std::string::npos) {
+                    accelerator.mac_per_pe = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("MAC_WIDTH") != std::string::npos) {
+                    accelerator.mac_width = get_line_val<unsigned>(line); continue;
+                }
+                // L1
+                else if(line.find("L1_SIZES") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.L1_sizes); continue;
+                }
+                else if(line.find("L1_BYPASS") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.L1_bypass); continue;
+                }
+                else if(line.find("L1_STATIONARY") != std::string::npos) {
+                    accelerator.L1_stationary = line.substr(strpos, endpos - strpos); 
+                    if(accelerator.L1_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "L1_STATIONARY parsing error");
+                    continue;
+                }
+                // X, Y
+                else if(line.find("ARRAY_SIZE_X") != std::string::npos) {
+                    accelerator.array_size_x = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("ARRAY_SIZE_Y") != std::string::npos) {
+                    accelerator.array_size_y = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("ARRAY_UNROLL_X") != std::string::npos) {
+                    accelerator.array_unroll_x = line.substr(strpos, endpos - strpos);
+                    if(accelerator.array_unroll_x.size() != 1)
+                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_X parsing error");
+                    continue;
+                }
+                else if(line.find("ARRAY_UNROLL_Y") != std::string::npos) {
+                    accelerator.array_unroll_y = line.substr(strpos, endpos - strpos);
+                    if(accelerator.array_unroll_y.size() != 1)
+                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
+                    continue;
+                }
+                // L2
+                else if(line.find("L2_SIZE") != std::string::npos) {
+                    accelerator.L2_size = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("L2_BYPASS") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.L2_bypass); continue;
+                }
+                else if(line.find("L2_STATIONARY") != std::string::npos) {
+                    accelerator.L2_stationary = line.substr(strpos, endpos - strpos);
+                    if(accelerator.L2_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "L2_STATIONARY parsing error");
+                    continue;
+                }
+                // PRECISION
+                else if(line.find("PRECISION") != std::string::npos) {
                     get_line_vals(line, 1, accelerator.precision); continue;
-                }
-                else if(line.find("BYPASS_L1") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.bypass_L1); continue;
-                }
-                else if(line.find("BYPASS_L2") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.bypass_L2); continue;
                 }
                 else 
                     handler.print_err(err_type_t::INVAILD, "HW parsing");

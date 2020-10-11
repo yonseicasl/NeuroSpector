@@ -30,13 +30,28 @@ public:
     void print_stats();
 
     std::string name;
+    // MAC
+    unsigned mac_per_pe;
+    unsigned mac_width;
+    // L1
+    unsigned input_L1_sizes;
+    unsigned weight_L1_sizes;
+    unsigned output_L1_sizes;
+    bypass_t L1_bypass;
+    std::string L1_stationary;
+    // X, Y
     unsigned array_size_x;
     unsigned array_size_y;
+    parameter_t array_unroll_x;
+    parameter_t array_unroll_y;
+    // L2
+    unsigned L2_size;
+    bypass_t L2_bypass;
+    std::string L2_stationary;
+    // PRECISION
     unsigned input_precision;
     unsigned weight_precision;
     unsigned output_precision;
-    bypass_t bypass_L1;
-    bypass_t bypass_L2;
 };
 
 /* Tiles stats */

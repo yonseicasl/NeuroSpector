@@ -1,9 +1,31 @@
+# *********************************
+# Accelerator configurations
+# *********************************
+# BYPASS True(1) / False(0) 
+# SATAIONARY: WS(Weight Stationary), OS(Output Stationary)
 [ACC:EYERISS]
-#,Input,Weight,Output
+# MAC
+MAC_PER_PE,1
+MAC_WIDTH,1
+# L1(byte) - I,W,O
+L1_SIZES,24,448,48
+L1_BYPASS,0,0,0
+L1_STATIONARY,OS
+# X, Y
+ARRAY_SIZE_X,14
+ARRAY_SIZE_Y,12
+ARRAY_UNROLL_X,P
+ARRAY_UNROLL_Y,R
+# L2(KB)
+L2_SIZE,108
+L2_BYPASS,0,1,0
+L2_STATIONARY,OS
+# PRECISION unit: bit
 PRECISION,16,16,16
-BYPASS_L1,0,0,0
-BYPASS_L2,0,1,0
 
+# *********************************
+# Network Configurations
+# *********************************
 # [NET] must be before [MAP]s for checking <LAYER_# and [MAP:LAYER_#]> pairs
 # Layer types: CONV_#, FC_#, PW_#, DW_#
 [NET:ALEXNET]
@@ -14,6 +36,9 @@ CONV_3,384,4,13,13,256,3,3,1
 CONV_4,384,4,13,13,192,3,3,1
 CONV_5,256,4,13,13,192,3,3,1
 
+# *********************************
+# Mapping table Configurations
+# *********************************
 [MAP:CONV_1]
 #,K,B,P,Q,C,R,S,exist(T/F)
 L0,1,1,1,1,1,1,1,1

@@ -16,7 +16,7 @@ public:
     void init_layer_and_map();
     void analyze_tiles();
     void analyze_accesses();
-    void print_stats();
+    void print_stats(unsigned idx_);
     void print_accelerator(); 
     void print_mapping_tables(unsigned idx_);
     void print_tiles(unsigned idx_);

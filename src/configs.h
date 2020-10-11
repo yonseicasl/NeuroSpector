@@ -3,7 +3,7 @@
 
 #include <fstream>
 #include <iostream>
-#include <sstream>
+//#include <sstream>
 #include <string>
 #include <vector>
 
@@ -16,6 +16,8 @@ public:
     configs_t(std::string config_file_);
     virtual ~configs_t() {}
     virtual void parse() = 0;
+    template<typename T>
+    T get_line_val(std::string &line_);
     void get_line_vals(std::string &line_, size_t bias_, std::vector<unsigned> &container);
 
 protected:
@@ -30,11 +32,24 @@ public:
     void parse();
     struct acc_t {
         std::string name;
-        unsigned array_size_x = 14;
-        unsigned array_size_y = 12;
+        // MAC
+        unsigned mac_per_pe;
+        unsigned mac_width;
+        // L1
+        std::vector<unsigned> L1_sizes;
+        std::vector<unsigned> L1_bypass;
+        std::string L1_stationary;
+        // X, Y
+        unsigned array_size_x;
+        unsigned array_size_y;
+        std::string array_unroll_x;
+        std::string array_unroll_y;
+        // L2
+        unsigned L2_size;
+        std::vector<unsigned> L2_bypass;
+        std::string L2_stationary;
+        // PRECISION
         std::vector<unsigned> precision;
-        std::vector<unsigned> bypass_L1;
-        std::vector<unsigned> bypass_L2;
     };
     struct layer_and_map_t {
         std::string name;
