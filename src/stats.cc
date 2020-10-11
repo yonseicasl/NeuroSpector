@@ -33,7 +33,7 @@ void accelerator_t::print_stats() {
               << std::setw(15) << "L1 SIZE(W): " << weight_L1_sizes << " bytes\n"
               << std::setw(15) << "L1 SIZE(O): " << output_L1_sizes << " bytes\n"
               << std::setw(15) << "L1 BYPASS: " << static_cast<unsigned>(L1_bypass) << "\n"
-              << std::setw(15) << "L1 STATIONAYR: " << L1_stationary << "\n"
+              << std::setw(15) << "L1 STATIONARY: " << L1_stationary << "\n"
               // X, Y
               << std::setw(15) << "X: " << array_size_x << "\n"
               << std::setw(15) << "Y: " << array_size_y << "\n"
@@ -42,7 +42,7 @@ void accelerator_t::print_stats() {
               // L2
               << std::setw(15) << "L2 SIZE: " << L2_size << " KB\n"
               << std::setw(15) << "L2 BYPASS: " << static_cast<unsigned>(L2_bypass) << "\n"
-              << std::setw(15) << "L2 STATIONAYR: " << L2_stationary << "\n"
+              << std::setw(15) << "L2 STATIONARY: " << L2_stationary << "\n"
               // PRECISION
               << std::setw(15) << "PRECISION(I): " << input_precision << " bits\n"
               << std::setw(15) << "PRECISION(W): " << weight_precision << " bits\n"
