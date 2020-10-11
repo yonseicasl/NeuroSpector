@@ -69,7 +69,7 @@ void mapping_table_t::print_stats() {
                   << std::setw(3) << layer_vals.at(static_cast<unsigned>(d)) << ") ";
     }
     std::cout << std::endl;
-    handler.print_line(60);
+    handler.print_line(60, "-");
     for(const auto &u : enum_range<component_t>(last_component)) {
         if(U_exists.at(static_cast<unsigned>(u))) {
             std::cout << U_str.at(static_cast<unsigned>(u)) << "  |"; 
@@ -79,7 +79,7 @@ void mapping_table_t::print_stats() {
             std::cout << std::endl;
         }
     }
-    handler.print_line(60);
+    handler.print_line(60, "-");
     std::cout << " PRODUCT |";
     for(const auto &d : enum_range<parameter_t>(last_parameter)) {
         std::cout << std::setw(7) << product(d, component_t::CHIP, false, false);

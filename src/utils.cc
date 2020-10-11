@@ -21,9 +21,9 @@ void handler_t::print_err(err_type_t type_, std::string msg_) {
     }
 }
 
-void handler_t::print_line(unsigned num_) {
+void handler_t::print_line(unsigned num_, std::string str_) {
     for(unsigned num = 0; num < num_; num++) {
-        std::cout << "-";
+        std::cout << str_;
     }
     std::cout << std::endl;
 }

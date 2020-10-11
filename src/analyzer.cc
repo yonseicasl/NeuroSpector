@@ -105,14 +105,16 @@ void analyzer_t::analyze_accesses() {
 
 void analyzer_t::print_stats() {
     print_accelerator();
+    handler.print_line(35, "-");
+    std::cout << "\n# NETWORK: " << analyzer_configs.network_name << std::endl;
+    handler.print_line(35, "-");
     for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
-        handler.print_line(60);
         std::cout << "# LAYER: " << mapping_tables.at(idx).first << std::endl;
-        handler.print_line(60);
+        handler.print_line(17, "*");
         std::cout << "# MAPPING TABLE" << std::endl;
         print_mapping_tables(idx);
         print_tiles(idx);
-        handler.print_line(42);
+        handler.print_line(42, "-");
         std::cout << " DATA SIZE |" 
                   << std::setw(10) << data_sizes.at(idx)->input_size 
                   << std::setw(10) << data_sizes.at(idx)->weight_size
@@ -122,6 +124,7 @@ void analyzer_t::print_stats() {
 //                  << std::setw(8) << std::fixed << std::setprecision(2) << double(data_sizes.at(idx)->weight_size) / KB_UNIT << "KB"
 //                  << std::setw(8) << std::fixed << std::setprecision(2) << double(data_sizes.at(idx)->output_size) / KB_UNIT << "KB" << std::endl;
         print_accesses(idx);
+        std::cout << std::endl;
     }
 }
 

@@ -16,7 +16,7 @@ public:
     ~handler_t();
 
     void print_err(err_type_t type_, std::string msg_); 
-    void print_line(unsigned num_);
+    void print_line(unsigned num_, std::string str_);
     void make_dir(std::string name_);
 };
 

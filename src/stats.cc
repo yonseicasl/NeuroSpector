@@ -14,11 +14,11 @@ void accelerator_t::init() {
 }
 
 void accelerator_t::print_stats() {
-    handler.print_line(35);
+    handler.print_line(35, "-");
     std::cout << "# BYPASS MASK: 0 ~ 7\n"
               << "  0(XXX), 1(XXO), 2(XWX), 3(XWO),\n"
               << "  4(IXX), 5(IXO), 6(IWX), 7(IWO)" << std::endl;
-    handler.print_line(35);
+    handler.print_line(35, "-");
     std::cout << "# ACCELERATOR SPEC" << std::endl;
     std::cout << std::setw(15) << "NAME: " << name << "\n"
               << std::setw(15) << "X: " << array_size_x << "\n"
@@ -73,7 +73,7 @@ void tiles_t::print_stats() {
               << std::setw(10) << "INPUT"
               << std::setw(10) << "WEIGHT"
               << std::setw(10) << "OUTPUT" << std::endl; 
-    handler.print_line(43);
+    handler.print_line(43, "-");
     for(size_t t = 0; t < tiles.size(); t++) {
         std::cout << tiles.at(t).name << " |" 
                   << std::setw(10) << tiles.at(t).num_input
@@ -182,7 +182,7 @@ void accesses_t::print_stats() {
               << std::setw(10) << "WEIGHT"
               << std::setw(10) << "OUTPUT"
               << std::setw(10) << "TOTAL" << std::endl; 
-    handler.print_line(58);
+    handler.print_line(58, "-");
     for(size_t a = 0; a < accesses.size(); a++) {
         std::cout << std::setw(15) << accesses.at(a).name << " |" 
                   << std::setw(10) << std::fixed << std::setprecision(2) << accesses.at(a).mb_input
