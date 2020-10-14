@@ -11,3 +11,6 @@ $ ./run.sh gdb              # Gdb
 
 ## Accelerator Spec
 ![](./img/acc_spec.png)
+
+## Mapping table
+![](./img/mapping_table.png)
