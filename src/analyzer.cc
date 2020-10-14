@@ -29,6 +29,7 @@ void analyzer_t::init_acc() {
     // L0
     accelerator->mac_per_pe = analyzer_configs.accelerator.mac_per_pe;
     accelerator->mac_width = analyzer_configs.accelerator.mac_width;
+    accelerator->mac_stationary = analyzer_configs.accelerator.mac_stationary;
     // L1
     accelerator->input_L1_sizes = analyzer_configs.accelerator.L1_sizes.at(0);
     accelerator->weight_L1_sizes = analyzer_configs.accelerator.L1_sizes.at(1);
@@ -44,6 +45,7 @@ void analyzer_t::init_acc() {
     accelerator->array_size_y = analyzer_configs.accelerator.array_size_y;
     accelerator->array_unroll_x = static_cast<parameter_t>(parameters.find(analyzer_configs.accelerator.array_unroll_x));
     accelerator->array_unroll_y = static_cast<parameter_t>(parameters.find(analyzer_configs.accelerator.array_unroll_y));
+    accelerator->array_stationary = analyzer_configs.accelerator.array_stationary;
     // L2
     accelerator->L2_size = analyzer_configs.accelerator.L2_size;
     unsigned L2_bypass = 0;

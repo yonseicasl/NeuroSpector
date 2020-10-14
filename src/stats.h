@@ -15,6 +15,10 @@ enum class data_type_t {
     INPUT, WEIGHT, OUTPUT, SIZE
 };
 
+enum class stationary_t {
+    IS, WS, OS, SIZE
+};
+
 enum class bypass_t {
 // BYPASS MASK: 0 ~ 7
 //   0,   1,   2,   3,   4,   5,   6,   7 
@@ -33,6 +37,7 @@ public:
     // MAC
     unsigned mac_per_pe;
     unsigned mac_width;
+    std::string mac_stationary;
     // L1
     unsigned input_L1_sizes;
     unsigned weight_L1_sizes;
@@ -44,6 +49,7 @@ public:
     unsigned array_size_y;
     parameter_t array_unroll_x;
     parameter_t array_unroll_y;
+    std::string array_stationary;
     // L2
     unsigned L2_size;
     bypass_t L2_bypass;
@@ -85,23 +91,22 @@ public:
     ~accesses_t();
     void init();
     void print_stats();
-    size_t calculate_access_counts(data_type_t type_, component_t U);
+    size_t calculate_access_counts(data_type_t type_, component_t U, bool is_optimized);
 
     struct access_t {
         access_t(std::string name_) : name(name_) {}
         std::string name;
-        size_t cnts_input;
-        size_t cnts_weight;
-        size_t cnts_output;
-        double mb_input;
-        double mb_weight;
-        double mb_output;
-        double mb_total;
+        std::vector<std::pair<size_t, double>> input_cnts_mb;
+        std::vector<std::pair<size_t, double>> weight_cnts_mb;
+        std::vector<std::pair<size_t, double>> output_cnts_mb;
+        std::vector<double> mb_totals;
         void counts_to_mb(accelerator_t *acc_) {
-            mb_input = double(cnts_input * acc_->input_precision) / MB_UNIT; 
-            mb_weight = double(cnts_weight) * acc_->weight_precision / MB_UNIT;
-            mb_output = double(cnts_output) * acc_->output_precision / MB_UNIT;
-            mb_total = mb_input + mb_weight + mb_output;
+            for(size_t i = 0; i < input_cnts_mb.size(); i++) {
+                input_cnts_mb.at(i).second = double(input_cnts_mb.at(i).first * acc_->input_precision) / MB_UNIT; 
+                weight_cnts_mb.at(i).second = double(weight_cnts_mb.at(i).first * acc_->weight_precision) / MB_UNIT; 
+                output_cnts_mb.at(i).second = double(output_cnts_mb.at(i).first * acc_->output_precision) / MB_UNIT; 
+                mb_totals.push_back(input_cnts_mb.at(i).second + weight_cnts_mb.at(i).second + output_cnts_mb.at(i).second);
+            }
         }
     };
 

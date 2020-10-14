@@ -2,11 +2,12 @@
 # Accelerator configurations
 # *********************************
 # BYPASS True(1) / False(0) 
-# SATAIONARY: WS(Weight Stationary), OS(Output Stationary)
+# SATAIONARY: IS(Input Stationary), WS(Weight Stationary), OS(Output Stationary)
 [ACC:EYERISS]
 # MAC
 MAC_PER_PE,1
 MAC_WIDTH,1
+MAC_STATIONARY,OS
 # L1(byte) - I,W,O
 L1_SIZES,24,448,48
 L1_BYPASS,0,0,0
@@ -16,10 +17,11 @@ ARRAY_SIZE_X,14
 ARRAY_SIZE_Y,12
 ARRAY_UNROLL_X,P
 ARRAY_UNROLL_Y,R
+ARRAY_STATIONARY,OS
 # L2(KB)
 L2_SIZE,108
 L2_BYPASS,0,1,0
-L2_STATIONARY,OS
+L2_STATIONARY,WS
 # PRECISION unit: bit
 PRECISION,16,16,16
 

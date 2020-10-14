@@ -24,9 +24,11 @@ public:
 
     void put_val(parameter_t D, component_t U, unsigned num_);
     unsigned get_val(parameter_t D, component_t U);
-    unsigned product(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
-    unsigned quotient(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
-    float divider(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
+    unsigned get_product(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
+    // get cycles_int(D, U): round_up(layer value of D / get_product(D, U))
+    unsigned get_cycles_int(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
+    // get cycles_real(D, U): layer value of D / get_product(D, U)
+    float get_cycles_real(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
     void print_stats();
 
     // Layer parameter values
@@ -39,7 +41,7 @@ private:
     unsigned D_size = static_cast<unsigned>(parameter_t::SIZE);
     unsigned U_size = static_cast<unsigned>(component_t::SIZE);
     std::vector<unsigned> table;
-    std::vector<std::string> D_str;
+    std::string D_str = "KBPQCRS";
     std::vector<std::string> U_str;
 };
 

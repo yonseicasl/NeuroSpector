@@ -93,6 +93,12 @@ void analyzer_configs_t::parse() {
                 else if(line.find("MAC_WIDTH") != std::string::npos) {
                     accelerator.mac_width = get_line_val<unsigned>(line); continue;
                 }
+                else if(line.find("MAC_STATIONARY") != std::string::npos) {
+                    accelerator.mac_stationary = line.substr(strpos, endpos - strpos); 
+                    if(accelerator.mac_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "MAC_STATIONARY parsing error");
+                    continue;
+                }
                 // L1
                 else if(line.find("L1_SIZES") != std::string::npos) {
                     get_line_vals(line, 1, accelerator.L1_sizes); continue;
@@ -123,6 +129,12 @@ void analyzer_configs_t::parse() {
                     accelerator.array_unroll_y = line.substr(strpos, endpos - strpos);
                     if(accelerator.array_unroll_y.size() != 1)
                         handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
+                    continue;
+                }
+                else if(line.find("ARRAY_STATIONARY") != std::string::npos) {
+                    accelerator.array_stationary = line.substr(strpos, endpos - strpos); 
+                    if(accelerator.array_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "ARRAY_STATIONARY parsing error");
                     continue;
                 }
                 // L2

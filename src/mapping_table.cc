@@ -7,13 +7,6 @@ mapping_table_t::mapping_table_t()
     layer_vals.assign(7, 1);
     U_exists.assign(6, true);
     table.assign(D_size * U_size, 1);
-    D_str.push_back("K");
-    D_str.push_back("B");
-    D_str.push_back("P");
-    D_str.push_back("Q");
-    D_str.push_back("C");
-    D_str.push_back("R");
-    D_str.push_back("S");
     U_str.push_back(" L0 (S)");
     U_str.push_back(" L1 (T)");
     U_str.push_back("  X (S)");
@@ -37,7 +30,7 @@ unsigned mapping_table_t::get_val(parameter_t D, component_t U) {
     return table.at(column + 7 * row);
 }
 
-unsigned mapping_table_t::product(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
+unsigned mapping_table_t::get_product(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
     component_t next_U = static_cast<component_t>(static_cast<unsigned>(U) + 1);
     unsigned column = static_cast<unsigned>(D);
     unsigned product = 1;
@@ -50,14 +43,14 @@ unsigned mapping_table_t::product(parameter_t D, component_t U, bool is_bypass_L
     return product;
 }
 
-unsigned mapping_table_t::quotient(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
+unsigned mapping_table_t::get_cycles_int(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
     float d_val = layer_vals.at(static_cast<unsigned>(D));
-    return round(d_val / product(D, U, is_bypass_L1, is_bypass_L2));
+    return round(d_val / get_product(D, U, is_bypass_L1, is_bypass_L2));
 }
 
-float mapping_table_t::divider(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
+float mapping_table_t::get_cycles_real(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2) {
     float d_val = layer_vals.at(static_cast<unsigned>(D));  
-    return d_val / product(D, U, is_bypass_L1, is_bypass_L2);
+    return d_val / get_product(D, U, is_bypass_L1, is_bypass_L2);
 }
 
 void mapping_table_t::print_stats() {
@@ -82,22 +75,7 @@ void mapping_table_t::print_stats() {
     handler.print_line(60, "-");
     std::cout << " PRODUCT |";
     for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-        std::cout << std::setw(7) << product(d, component_t::CHIP, false, false);
+        std::cout << std::setw(7) << get_product(d, component_t::CHIP, false, false);
     }
     std::cout << std::endl;
-//    std::cout << " QT(L2)F |";
-//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-//        std::cout << std::setw(7) << quotient(d, component_t::L2, false, false);
-//    }
-//    std::cout << std::endl;
-//    std::cout << " QT(L2)T |";
-//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-//        std::cout << std::setw(7) << quotient(d, component_t::L2, false, true);
-//    }
-//    std::cout << std::endl;
-//    std::cout << " QT( Y)  |";
-//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-//        std::cout << std::setw(7) << quotient(d, component_t::Y, false, false);
-//    }
-//    std::cout << std::endl;
 }
