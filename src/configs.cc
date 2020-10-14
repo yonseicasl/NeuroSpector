@@ -93,10 +93,10 @@ void analyzer_configs_t::parse() {
                 else if(line.find("MAC_WIDTH") != std::string::npos) {
                     accelerator.mac_width = get_line_val<unsigned>(line); continue;
                 }
-                else if(line.find("MAC_STATIONARY") != std::string::npos) {
-                    accelerator.mac_stationary = line.substr(strpos, endpos - strpos); 
-                    if(accelerator.mac_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "MAC_STATIONARY parsing error");
+                else if(line.find("L0_STATIONARY") != std::string::npos) {
+                    accelerator.L0_stationary = line.substr(strpos, endpos - strpos); 
+                    if(accelerator.L0_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "L0_STATIONARY parsing error");
                     continue;
                 }
                 // L1

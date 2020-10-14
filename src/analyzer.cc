@@ -29,7 +29,7 @@ void analyzer_t::init_acc() {
     // MAC
     accelerator->mac_per_pe = analyzer_configs.accelerator.mac_per_pe;
     accelerator->mac_width = analyzer_configs.accelerator.mac_width;
-    accelerator->mac_stationary = analyzer_configs.accelerator.mac_stationary;
+    accelerator->L0_stationary = analyzer_configs.accelerator.L0_stationary;
     // L1
     accelerator->input_L1_sizes = analyzer_configs.accelerator.L1_sizes.at(0);
     accelerator->weight_L1_sizes = analyzer_configs.accelerator.L1_sizes.at(1);

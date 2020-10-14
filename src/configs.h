@@ -35,7 +35,7 @@ public:
         // MAC
         unsigned mac_per_pe;
         unsigned mac_width;
-        std::string mac_stationary;
+        std::string L0_stationary;
         // L1
         std::vector<unsigned> L1_sizes;
         std::vector<unsigned> L1_bypass;

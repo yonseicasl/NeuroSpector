@@ -29,7 +29,7 @@ void accelerator_t::print_stats() {
               // MAC
               << std::setw(15) << "MAC PER PE: " << mac_per_pe << "\n"
               << std::setw(15) << "MAC WIDTH: " << mac_width << "\n"
-              << std::setw(15) << "MAC STATIONARY: " << mac_stationary << "\n"
+              << std::setw(15) << "L0 STATIONARY: " << L0_stationary << "\n"
               // L1
               << std::setw(15) << "L1 SIZE(I): " << input_L1_sizes << " bytes\n"
               << std::setw(15) << "L1 SIZE(W): " << weight_L1_sizes << " bytes\n"

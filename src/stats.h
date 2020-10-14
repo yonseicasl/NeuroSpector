@@ -37,7 +37,7 @@ public:
     // MAC
     unsigned mac_per_pe;
     unsigned mac_width;
-    std::string mac_stationary;
+    std::string L0_stationary;
     // L1
     unsigned input_L1_sizes;
     unsigned weight_L1_sizes;
