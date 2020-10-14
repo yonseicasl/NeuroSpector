@@ -41,7 +41,6 @@ void accelerator_t::print_stats() {
               << std::setw(15) << "Y: " << array_size_y << "\n"
               << std::setw(15) << "X UNROLL: " << parameters.at(static_cast<unsigned>(array_unroll_x)) << "\n"
               << std::setw(15) << "Y UNROLL: " << parameters.at(static_cast<unsigned>(array_unroll_y)) << "\n"
-              << std::setw(15) << "ARRAY STATIONARY: " << array_stationary << "\n"
               // L2
               << std::setw(15) << "L2 SIZE: " << L2_size << " KB\n"
               << std::setw(15) << "L2 BYPASS: " << static_cast<unsigned>(L2_bypass) << "\n"

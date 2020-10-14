@@ -41,7 +41,6 @@ void optimizer_t::init_acc() {
     accelerator->array_size_y = analyzer_configs.accelerator.array_size_y;
     accelerator->array_unroll_x = static_cast<parameter_t>(parameters.find(analyzer_configs.accelerator.array_unroll_x));
     accelerator->array_unroll_y = static_cast<parameter_t>(parameters.find(analyzer_configs.accelerator.array_unroll_y));
-    accelerator->array_stationary = analyzer_configs.accelerator.array_stationary;
     // L2
     accelerator->L2_size = analyzer_configs.accelerator.L2_size;
     unsigned L2_bypass = 0;

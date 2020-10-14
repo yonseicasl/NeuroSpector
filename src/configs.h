@@ -45,7 +45,6 @@ public:
         unsigned array_size_y;
         std::string array_unroll_x;
         std::string array_unroll_y;
-        std::string array_stationary;
         // L2
         unsigned L2_size;
         std::vector<unsigned> L2_bypass;

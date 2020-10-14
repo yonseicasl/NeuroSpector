@@ -131,12 +131,6 @@ void analyzer_configs_t::parse() {
                         handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
                     continue;
                 }
-                else if(line.find("ARRAY_STATIONARY") != std::string::npos) {
-                    accelerator.array_stationary = line.substr(strpos, endpos - strpos); 
-                    if(accelerator.array_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "ARRAY_STATIONARY parsing error");
-                    continue;
-                }
                 // L2
                 else if(line.find("L2_SIZE") != std::string::npos) {
                     accelerator.L2_size = get_line_val<unsigned>(line); continue;
