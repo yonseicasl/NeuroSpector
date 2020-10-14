@@ -5,14 +5,13 @@ static handler_t handler;
 mapping_table_t::mapping_table_t()
     : stride(1) {
     layer_vals.assign(7, 1);
-    U_exists.assign(6, true);
+    U_exists.assign(5, true);
     table.assign(D_size * U_size, 1);
-    U_str.push_back(" L0 (S)");
+    U_str.push_back(" MAC(S)");
     U_str.push_back(" L1 (T)");
     U_str.push_back("  X (S)");
     U_str.push_back("  Y (S)");
     U_str.push_back(" L2 (T)");
-    U_str.push_back("CHIP(S)");
 }
 
 mapping_table_t::~mapping_table_t() {
@@ -75,7 +74,7 @@ void mapping_table_t::print_stats() {
     handler.print_line(60, "-");
     std::cout << " PRODUCT |";
     for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-        std::cout << std::setw(7) << get_product(d, component_t::CHIP, false, false);
+        std::cout << std::setw(7) << get_product(d, component_t::L2, false, false);
     }
     std::cout << std::endl;
 }

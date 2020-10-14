@@ -7,7 +7,7 @@
 #include <string>
 #include <vector>
 
-#define MAP_TABLE_ROWS 6
+#define MAP_TABLE_ROWS 5
 #define MAP_TABLE_COLUMNS 7
 
 /* Configuration */

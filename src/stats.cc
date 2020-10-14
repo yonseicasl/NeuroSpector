@@ -26,7 +26,7 @@ void accelerator_t::print_stats() {
     handler.print_line(35, "-");
     std::cout << "# ACCELERATOR SPEC" << std::endl;
     std::cout << std::setw(15) << "NAME: " << name << "\n"
-              // L0
+              // MAC
               << std::setw(15) << "MAC PER PE: " << mac_per_pe << "\n"
               << std::setw(15) << "MAC WIDTH: " << mac_width << "\n"
               << std::setw(15) << "MAC STATIONARY: " << mac_stationary << "\n"
@@ -63,9 +63,9 @@ tiles_t::~tiles_t() {
 
 void tiles_t::init() {
     tile_t mac_tile("  MAC TILE");      // 0
-    mac_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::L0);
-    mac_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::L0);
-    mac_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::L0);
+    mac_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::MAC);
+    mac_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::MAC);
+    mac_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::MAC);
     tiles.push_back(mac_tile);
     tile_t pe_tile("   PE TILE");       // 1
     pe_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::L1);
@@ -82,11 +82,6 @@ void tiles_t::init() {
     glb_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::L2);
     glb_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::L2);
     tiles.push_back(glb_tile);
-    tile_t chip_tile(" CHIP TILE");     // 4
-    chip_tile.num_input = calculate_tile_size(data_type_t::INPUT, component_t::CHIP);
-    chip_tile.num_weight = calculate_tile_size(data_type_t::WEIGHT, component_t::CHIP);
-    chip_tile.num_output = calculate_tile_size(data_type_t::OUTPUT, component_t::CHIP);
-    tiles.push_back(chip_tile);
 }
 
 void tiles_t::print_stats() {
@@ -180,59 +175,59 @@ void accesses_t::init() {
     access_t dram_access(" DRAM ACCESSES"); // 2
     // No bypass
     if(accelerator->L2_bypass == bypass_t::XXX) {
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
     }
     // Input bypass
     else if(accelerator->L2_bypass == bypass_t::IXX) {
         // case 1
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, false), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, false), 0));
         // case 2
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, false), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, false), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
     } 
     // Weight bypass
     else if(accelerator->L2_bypass == bypass_t::XWX) {
         // case 1
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, false), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, false), 0));
         // case 2
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, false), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, false), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
     } 
     // Output bypass
     else if(accelerator->L2_bypass == bypass_t::XXO) {
         // case 1
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, false), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, false), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
         // case 2
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, false), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, false), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
     }
     // Double bypass
     else if(accelerator->L2_bypass == bypass_t::XWO
          || accelerator->L2_bypass == bypass_t::IXO
          || accelerator->L2_bypass == bypass_t::IWX) {
         // case 1
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, false), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, false), 0));
         // case 2
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, true), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, false), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, true), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, false), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
         // case 3
-        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::CHIP, false), 0));
-        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::CHIP, true), 0));
-        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::CHIP, true), 0));
+        dram_access.input_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::INPUT, component_t::L2, false), 0));
+        dram_access.weight_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::WEIGHT, component_t::L2, true), 0));
+        dram_access.output_cnts_mb.push_back(std::make_pair(calculate_access_counts(data_type_t::OUTPUT, component_t::L2, true), 0));
     }
     else {
         handler.print_err(err_type_t::INVAILD, "IWO");
@@ -271,8 +266,8 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U, boo
                          || accelerator->L2_bypass == bypass_t::IWX
                          || accelerator->L2_bypass == bypass_t::IXO) ? true : false; 
             // DRAM accesses
-            if(U == component_t::CHIP) {
-                rtn_size *= tiles->tiles.at(4).num_input;
+            if(U == component_t::L2) {
+                rtn_size *= tiles->tiles.at(3).num_input;
                 // Alpha(W/O)
                 if(accelerator->L2_stationary != "IS") {
                     // weight bypass or output bypass effects
@@ -296,8 +291,8 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U, boo
                          || accelerator->L2_bypass == bypass_t::XWO
                          || accelerator->L2_bypass == bypass_t::IWX) ? true : false; 
             // DRAM accesses
-            if(U == component_t::CHIP) {
-                rtn_size *= tiles->tiles.at(4).num_weight;
+            if(U == component_t::L2) {
+                rtn_size *= tiles->tiles.at(3).num_weight;
                 // Alpha(W/O)
                 rtn_size *= mapping_table->get_cycles_real(parameter_t::K, U, is_L1_bypass, is_L2_bypass);
                 // Beta(I/O)
@@ -325,8 +320,8 @@ size_t accesses_t::calculate_access_counts(data_type_t type_, component_t U, boo
                          || accelerator->L2_bypass == bypass_t::XWO 
                          || accelerator->L2_bypass == bypass_t::IXO) ? true : false; 
             // DRAM accesses
-            if(U == component_t::CHIP) {
-                rtn_size *= tiles->tiles.at(4).num_output;
+            if(U == component_t::L2) {
+                rtn_size *= tiles->tiles.at(3).num_output;
                 // Alpha(W/O)
                 rtn_size *= mapping_table->get_cycles_real(parameter_t::K, U, is_L1_bypass, is_L2_bypass);
                 // Beta(I/O)

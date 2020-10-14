@@ -13,8 +13,8 @@ enum class parameter_t { // D(7)
     K, B, P, Q, C, R, S, SIZE
 };
 
-enum class component_t { // U(6)
-    L0, L1, X, Y, L2, CHIP, SIZE 
+enum class component_t { // U(5)
+    MAC, L1, X, Y, L2, SIZE 
 };
 
 class mapping_table_t {
@@ -37,7 +37,7 @@ public:
     std::vector<bool> U_exists;
 
 private:
-    // Table(D(7) x U(6))
+    // Table(D(7) x U(5))
     unsigned D_size = static_cast<unsigned>(parameter_t::SIZE);
     unsigned U_size = static_cast<unsigned>(component_t::SIZE);
     std::vector<unsigned> table;

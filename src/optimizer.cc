@@ -1,28 +1,24 @@
-#include "analyzer.h"
+#include "optimizer.h"
 #include <iomanip>
 
 static handler_t handler;
 
-analyzer_t::analyzer_t(analyzer_configs_t &analyzer_configs_) 
+optimizer_t::optimizer_t(analyzer_configs_t &analyzer_configs_) 
     : analyzer_configs(analyzer_configs_) {
     init_acc();
     init_layer_and_map();
-    std::cout << "# Analyzer initialization complete!" << std::endl;
-    analyze_tiles();
-    analyze_accesses();
+    std::cout << "# optimizer initialization complete!" << std::endl;
 }
 
-analyzer_t::~analyzer_t() {
+optimizer_t::~optimizer_t() {
     delete accelerator;
     for(size_t i = 0; i < mapping_tables.size(); i++) {
         delete mapping_tables.at(i).second;
         delete data_sizes.at(i);
-        delete tiles.at(i);
-        delete accesses.at(i);
     }
 }
 
-void analyzer_t::init_acc() {
+void optimizer_t::init_acc() {
     std::string parameters = "KBPQCRS";
     accelerator = new accelerator_t;
     accelerator->name = analyzer_configs.accelerator.name;
@@ -60,7 +56,7 @@ void analyzer_t::init_acc() {
     accelerator->output_precision = analyzer_configs.accelerator.precision.at(2);    // Output
 }
 
-void analyzer_t::init_layer_and_map() {
+void optimizer_t::init_layer_and_map() {
     for(size_t i = 0; i < analyzer_configs.layers_and_maps.size(); i++) {
         // Data sizes
         data_size_t *tmp_data_size = new data_size_t;
@@ -87,89 +83,52 @@ void analyzer_t::init_layer_and_map() {
                   analyzer_configs.layers_and_maps.at(i).layer_vals.end() - 1, 
                   tmp_mt->layer_vals.begin());
         tmp_mt->stride = analyzer_configs.layers_and_maps.at(i).layer_vals.at(7);
-        // Mapping table values 
-        for(size_t r = 0; r < MAP_TABLE_ROWS; r++) {
-            for(size_t c = 0; c < MAP_TABLE_COLUMNS + 1; c++) {
-                if(c < MAP_TABLE_COLUMNS) {
-                    parameter_t D = static_cast<parameter_t>(c); 
-                    component_t U = static_cast<component_t>(r); 
-                    tmp_mt->put_val(D, U, analyzer_configs.layers_and_maps.at(i).map_vals.at(c + r * (MAP_TABLE_COLUMNS + 1)));
-                }
-                else {
-                    if(analyzer_configs.layers_and_maps.at(i).map_vals.at(c + r * (MAP_TABLE_COLUMNS + 1)) == 1)
-                        tmp_mt->U_exists.at(r) = true;
-                    else
-                        tmp_mt->U_exists.at(r) = false;
-                }
-            }
-        }
         mapping_tables.push_back(std::make_pair(analyzer_configs.layers_and_maps.at(i).name, tmp_mt)); 
     }
 }
 
-void analyzer_t::analyze_tiles() {
-    for(size_t i = 0; i < mapping_tables.size(); i++) {
-        tiles_t *tmp_tiles = new tiles_t(mapping_tables.at(i).second, accelerator);
-        tiles.push_back(tmp_tiles);
-    }
-}
 
-void analyzer_t::analyze_accesses() {
-    for(size_t i = 0; i < mapping_tables.size(); i++) {
-        accesses_t *tmp_accessess = new accesses_t(mapping_tables.at(i).second, accelerator, tiles.at(i));
-        accesses.push_back(tmp_accessess);
-    }
-}
-
-void analyzer_t::print_stats(unsigned idx_) {
+void optimizer_t::print_stats(unsigned idx_) {
     print_accelerator();
     handler.print_line(35, "-");
-    std::cout << "\n# NETWORK: " << analyzer_configs.network_name << std::endl;
-    handler.print_line(35, "-");
-    if(idx_ == 0) {
-        for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
-            std::cout << "# LAYER: " << mapping_tables.at(idx).first << std::endl;
-            handler.print_line(17, "*");
-            std::cout << "# MAPPING TABLE" << std::endl;
-            print_mapping_tables(idx);
-            print_tiles(idx);
-            handler.print_line(42, "-");
-            std::cout << " DATA SIZE |" 
-                      << std::setw(10) << data_sizes.at(idx)->input_size 
-                      << std::setw(10) << data_sizes.at(idx)->weight_size
-                      << std::setw(10) << data_sizes.at(idx)->output_size << std::endl;
-            print_accesses(idx);
-            std::cout << std::endl;
-        }
-    }
-    else {
-        std::cout << "# LAYER: " << mapping_tables.at(idx_ - 1).first << std::endl;
-        handler.print_line(17, "*");
-        std::cout << "# MAPPING TABLE" << std::endl;
-        print_mapping_tables(idx_ - 1);
-        print_tiles(idx_ - 1);
-        handler.print_line(42, "-");
-        std::cout << " DATA SIZE |" 
-                  << std::setw(10) << data_sizes.at(idx_ - 1)->input_size 
-                  << std::setw(10) << data_sizes.at(idx_ - 1)->weight_size
-                  << std::setw(10) << data_sizes.at(idx_ - 1)->output_size << std::endl;
-        print_accesses(idx_ - 1);
-        std::cout << std::endl;
-    }
+//    std::cout << "\n# NETWORK: " << analyzer_configs.network_name << std::endl;
+//    handler.print_line(35, "-");
+//    if(idx_ == 0) {
+//        for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
+//            std::cout << "# LAYER: " << mapping_tables.at(idx).first << std::endl;
+//            handler.print_line(17, "*");
+//            std::cout << "# MAPPING TABLE" << std::endl;
+//            print_mapping_tables(idx);
+//            print_tiles(idx);
+//            handler.print_line(42, "-");
+//            std::cout << " DATA SIZE |" 
+//                      << std::setw(10) << data_sizes.at(idx)->input_size 
+//                      << std::setw(10) << data_sizes.at(idx)->weight_size
+//                      << std::setw(10) << data_sizes.at(idx)->output_size << std::endl;
+//            print_accesses(idx);
+//            std::cout << std::endl;
+//        }
+//    }
+//    else {
+//        std::cout << "# LAYER: " << mapping_tables.at(idx_ - 1).first << std::endl;
+//        handler.print_line(17, "*");
+//        std::cout << "# MAPPING TABLE" << std::endl;
+//        print_mapping_tables(idx_ - 1);
+//        print_tiles(idx_ - 1);
+//        handler.print_line(42, "-");
+//        std::cout << " DATA SIZE |" 
+//                  << std::setw(10) << data_sizes.at(idx_ - 1)->input_size 
+//                  << std::setw(10) << data_sizes.at(idx_ - 1)->weight_size
+//                  << std::setw(10) << data_sizes.at(idx_ - 1)->output_size << std::endl;
+//        print_accesses(idx_ - 1);
+//        std::cout << std::endl;
+//    }
 }
 
-void analyzer_t::print_accelerator() {
+void optimizer_t::print_accelerator() {
      accelerator->print_stats(); 
 }
 
-void analyzer_t::print_mapping_tables(unsigned idx_) {
+void optimizer_t::print_mapping_tables(unsigned idx_) {
     mapping_tables.at(idx_).second->print_stats();
-}
-
-void analyzer_t::print_tiles(unsigned idx_) {
-    tiles.at(idx_)->print_stats();
-}
-
-void analyzer_t::print_accesses(unsigned idx_) {
-    accesses.at(idx_)->print_stats();
 }
