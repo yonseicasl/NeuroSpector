@@ -74,8 +74,39 @@ public:
     optimizer_configs_t(std::string config_file_);
     ~optimizer_configs_t();
     void parse();
+    struct acc_t {
+        std::string name;
+        // MAC
+        unsigned mac_per_pe;
+        unsigned mac_width;
+        std::string L0_stationary;
+        // L1
+        std::vector<unsigned> L1_sizes;
+        std::vector<unsigned> L1_bypass;
+        std::string L1_stationary;
+        // X, Y
+        unsigned array_size_x;
+        unsigned array_size_y;
+        std::string array_unroll_x;
+        std::string array_unroll_y;
+        // L2
+        unsigned L2_size;
+        std::vector<unsigned> L2_bypass;
+        std::string L2_stationary;
+        // PRECISION
+        std::vector<unsigned> precision;
+    };
+    struct layer_t {
+        std::string name;
+        std::vector<unsigned> layer_vals;   // KBPQCRS and stride
+    };
+    acc_t accelerator;
+    std::string network_name;
+    std::vector<layer_t> layers;
 
 private:
+    bool is_hw_parsed;
+    bool is_net_parsed;
 };
 
 #endif

@@ -185,12 +185,125 @@ void analyzer_configs_t::parse() {
 
 /* Optimizer configuration */
 optimizer_configs_t::optimizer_configs_t(std::string config_file_) 
-    : configs_t(config_file_) { 
+    : configs_t(config_file_), 
+    is_hw_parsed(true), is_net_parsed(true) { 
+    parse();
 }
 
 optimizer_configs_t::~optimizer_configs_t() {
 }
 
 void optimizer_configs_t::parse() {
+    std::string line;
+    // Start parsing
+    while(std::getline(config_file, line)) {
+        // Erase all spaces
+        line.erase(remove(line.begin(), line.end(), ' '), line.end());
+        // Skip blank lines or comments
+        if(!line.size() || (line[0] == '#')) continue;
+        // Parse [SECTION:NAME]
+        else if(line[0] == '[') {
+            size_t strpos = line.find(':') + 1; 
+            size_t endpos = line.find(']'); 
+            if(line.find("ACC") != std::string::npos) {
+                accelerator.name = line.substr(strpos, endpos - strpos);
+                is_hw_parsed = false; is_net_parsed = true;
+            }
+            else if(line.find("NET") != std::string::npos) {
+                network_name = line.substr(strpos, endpos - strpos);
+                is_hw_parsed = true; is_net_parsed = false;
+            }
+            else 
+                handler.print_err(err_type_t::INVAILD, "[SECTION:NAME]");
+            continue;
+        }
+        else {
+            if(!is_hw_parsed) {
+                size_t strpos = line.find(',') + 1;
+                size_t endpos = line.find(',', strpos);
+                // MAC
+                if(line.find("MAC_PER_PE") != std::string::npos) {
+                    accelerator.mac_per_pe = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("MAC_WIDTH") != std::string::npos) {
+                    accelerator.mac_width = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("L0_STATIONARY") != std::string::npos) {
+                    accelerator.L0_stationary = line.substr(strpos, endpos - strpos); 
+                    if(accelerator.L0_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "L0_STATIONARY parsing error");
+                    continue;
+                }
+                // L1
+                else if(line.find("L1_SIZES") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.L1_sizes); continue;
+                }
+                else if(line.find("L1_BYPASS") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.L1_bypass); continue;
+                }
+                else if(line.find("L1_STATIONARY") != std::string::npos) {
+                    accelerator.L1_stationary = line.substr(strpos, endpos - strpos); 
+                    if(accelerator.L1_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "L1_STATIONARY parsing error");
+                    continue;
+                }
+                // X, Y
+                else if(line.find("ARRAY_SIZE_X") != std::string::npos) {
+                    accelerator.array_size_x = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("ARRAY_SIZE_Y") != std::string::npos) {
+                    accelerator.array_size_y = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("ARRAY_UNROLL_X") != std::string::npos) {
+                    accelerator.array_unroll_x = line.substr(strpos, endpos - strpos);
+                    if(accelerator.array_unroll_x.size() != 1)
+                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_X parsing error");
+                    continue;
+                }
+                else if(line.find("ARRAY_UNROLL_Y") != std::string::npos) {
+                    accelerator.array_unroll_y = line.substr(strpos, endpos - strpos);
+                    if(accelerator.array_unroll_y.size() != 1)
+                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
+                    continue;
+                }
+                // L2
+                else if(line.find("L2_SIZE") != std::string::npos) {
+                    accelerator.L2_size = get_line_val<unsigned>(line); continue;
+                }
+                else if(line.find("L2_BYPASS") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.L2_bypass); continue;
+                }
+                else if(line.find("L2_STATIONARY") != std::string::npos) {
+                    accelerator.L2_stationary = line.substr(strpos, endpos - strpos);
+                    if(accelerator.L2_stationary.size() != 2)
+                        handler.print_err(err_type_t::INVAILD, "L2_STATIONARY parsing error");
+                    continue;
+                }
+                // PRECISION
+                else if(line.find("PRECISION") != std::string::npos) {
+                    get_line_vals(line, 1, accelerator.precision); continue;
+                }
+                else 
+                    handler.print_err(err_type_t::INVAILD, "HW parsing");
+            }
+            else if(!is_net_parsed) {
+                bool is_layer = line.find("CONV") != std::string::npos 
+                                || line.find("FC") != std::string::npos 
+                                || line.find("PW") != std::string::npos 
+                                || line.find("DW") != std::string::npos;
+                if(is_layer) {
+                    layer_t layer;
+                    layer.name = line.substr(0, line.find(','));
+                    get_line_vals(line, 1, layer.layer_vals);
+                    layers.push_back(layer);
+                    continue;
+                }
+                else
+                    handler.print_err(err_type_t::INVAILD, "NET parsing");
+            }
+            else 
+                handler.print_err(err_type_t::INVAILD, "line parsing error!");
+        }
+    }
     return;
 }

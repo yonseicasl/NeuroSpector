@@ -21,7 +21,7 @@ class mapping_table_t {
 public:
     mapping_table_t();
     ~mapping_table_t();
-
+    void print_stats();
     void put_val(parameter_t D, component_t U, unsigned num_);
     unsigned get_val(parameter_t D, component_t U);
     unsigned get_product(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
@@ -29,7 +29,12 @@ public:
     unsigned get_cycles_int(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
     // get cycles_real(D, U): layer value of D / get_product(D, U)
     float get_cycles_real(parameter_t D, component_t U, bool is_bypass_L1, bool is_bypass_L2);
-    void print_stats();
+    // for optimizer
+    unsigned get_row_product(component_t U);
+    void expand(component_t U, unsigned max_expanded);
+    void alpha_expand(component_t U, unsigned max_expanded);
+    void beta_expand(component_t U, unsigned max_expanded);
+    void gamma_expand(component_t U, unsigned max_expanded);
 
     // Layer parameter values
     std::vector<unsigned> layer_vals; // KBPQCRS

@@ -17,6 +17,38 @@ mapping_table_t::mapping_table_t()
 mapping_table_t::~mapping_table_t() {
 }
 
+void mapping_table_t::print_stats() {
+    component_t last_component = static_cast<component_t>(U_size);
+    parameter_t last_parameter = static_cast<parameter_t>(D_size);
+    std::cout << "  U \\ D  |  ";
+    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        std::cout << D_str.at(static_cast<unsigned>(d)) << "("
+                  << std::setw(3) << layer_vals.at(static_cast<unsigned>(d)) << ") ";
+    }
+    std::cout << std::endl;
+    handler.print_line(60, "-");
+    for(const auto &u : enum_range<component_t>(last_component)) {
+        if(U_exists.at(static_cast<unsigned>(u))) {
+            std::cout << U_str.at(static_cast<unsigned>(u)) << "  |"; 
+            for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+                std::cout << std::setw(7) << get_val(d, u);
+            }
+            std::cout << std::endl;
+        }
+    }
+    handler.print_line(60, "-");
+    std::cout << " PRODUCT |";
+    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        std::cout << std::setw(7) << get_product(d, component_t::L2, false, false);
+    }
+    std::cout << std::endl;
+    std::cout << "REMAINDER|";
+    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        std::cout << std::setw(7) << std::fixed << std::setprecision(1) << float(layer_vals.at(static_cast<unsigned>(d))) / get_product(d, component_t::L2, false, false);
+    }
+    std::cout << std::endl;
+}
+
 void mapping_table_t::put_val(parameter_t D, component_t U, unsigned num_) {
     unsigned column = static_cast<unsigned>(D);
     unsigned row = static_cast<unsigned>(U);
@@ -52,29 +84,59 @@ float mapping_table_t::get_cycles_real(parameter_t D, component_t U, bool is_byp
     return d_val / get_product(D, U, is_bypass_L1, is_bypass_L2);
 }
 
-void mapping_table_t::print_stats() {
-    component_t last_component = static_cast<component_t>(U_size);
+unsigned mapping_table_t::get_row_product(component_t U) {
     parameter_t last_parameter = static_cast<parameter_t>(D_size);
-    std::cout << "  U \\ D  |  ";
+    unsigned product = 1;
     for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-        std::cout << D_str.at(static_cast<unsigned>(d)) << "("
-                  << std::setw(3) << layer_vals.at(static_cast<unsigned>(d)) << ") ";
+        product *= get_val(d, U);
     }
-    std::cout << std::endl;
-    handler.print_line(60, "-");
-    for(const auto &u : enum_range<component_t>(last_component)) {
-        if(U_exists.at(static_cast<unsigned>(u))) {
-            std::cout << U_str.at(static_cast<unsigned>(u)) << "  |"; 
-            for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-                std::cout << std::setw(7) << get_val(d, u);
+    return product;
+}
+
+void mapping_table_t::expand(component_t U, unsigned max_expanded) { 
+    parameter_t last_parameter = static_cast<parameter_t>(D_size);
+    unsigned cnt = 0;
+    unsigned max_idx = 0;
+    unsigned max_val = 1;
+    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        if(cnt == 0) 
+            max_val = layer_vals.at(cnt) / get_product(d, component_t::L2, 0, 0);
+        else {
+            if(max_val < layer_vals.at(cnt) / get_product(d, component_t::L2, 0, 0)) {
+                max_val = layer_vals.at(cnt) / get_product(d, component_t::L2, 0, 0);
+                max_idx = cnt;
             }
-            std::cout << std::endl;
         }
+        cnt++;
     }
-    handler.print_line(60, "-");
-    std::cout << " PRODUCT |";
-    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
-        std::cout << std::setw(7) << get_product(d, component_t::L2, false, false);
+    if(max_expanded <= max_val) {
+        // TODO: eyeriss conv2
+        put_val(static_cast<parameter_t>(max_idx), U, max_expanded);
     }
-    std::cout << std::endl;
+    else {
+        put_val(static_cast<parameter_t>(max_idx), U, max_val);
+    }
+    // TODO: if not full -> next max
+    return;
+}
+
+void mapping_table_t::alpha_expand(component_t U, unsigned max_expanded) { 
+    unsigned max_val = layer_vals.at(0) / get_product(parameter_t::K, component_t::L2, 0, 0);
+    if(max_expanded <= max_val) {
+        // TODO: eyeriss conv2
+        put_val(parameter_t::K, U, max_expanded);
+    }
+    else {
+        put_val(parameter_t::K, U, max_val);
+    }
+    // TODO: if not full -> next max
+    return;
+}
+
+void mapping_table_t::beta_expand(component_t U, unsigned max_expanded) { 
+    return;
+}
+
+void mapping_table_t::gamma_expand(component_t U, unsigned max_expanded) { 
+    return;
 }
