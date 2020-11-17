@@ -291,81 +291,98 @@ void mapping_table_t::print_tile_size() {
 }
 
 void mapping_table_t::print_access_cnts() {
+    unsigned num_setw = 12;
     std::cout << "# DRAM ACCESS COUNTS" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
-              << std::setw(15) << " IS "
-              << std::setw(15) << " WS "
-              << std::setw(15) << " OS " << std::endl; 
+              << std::setw(num_setw) << " IS "
+              << std::setw(num_setw) << " WS "
+              << std::setw(num_setw) << " OS "  
+              << std::setw(num_setw) << " TILE SIZE" << std::endl; 
     handler.print_line(60, "-");
     std::cout << std::setw(12) << "   INPUT  |" 
-              << std::setw(15) << DRAM_access_cnts.is.input_cnts 
-              << std::setw(15) << DRAM_access_cnts.ws.input_cnts
-              << std::setw(15) << DRAM_access_cnts.os.input_cnts << std::endl; 
+              << std::setw(num_setw) << DRAM_access_cnts.is.input_cnts 
+              << std::setw(num_setw) << DRAM_access_cnts.ws.input_cnts
+              << std::setw(num_setw) << DRAM_access_cnts.os.input_cnts 
+              << std::setw(num_setw) << tile_sizes.L2.input_tile << std::endl; 
     std::cout << std::setw(12) << "  FILTER  |" 
-              << std::setw(15) << DRAM_access_cnts.is.weight_cnts 
-              << std::setw(15) << DRAM_access_cnts.ws.weight_cnts
-              << std::setw(15) << DRAM_access_cnts.os.weight_cnts << std::endl; 
+              << std::setw(num_setw) << DRAM_access_cnts.is.weight_cnts 
+              << std::setw(num_setw) << DRAM_access_cnts.ws.weight_cnts
+              << std::setw(num_setw) << DRAM_access_cnts.os.weight_cnts  
+              << std::setw(num_setw) << tile_sizes.L2.weight_tile << std::endl; 
     std::cout << std::setw(12) << "  OUTPUT  |" 
-              << std::setw(15) << DRAM_access_cnts.is.output_cnts 
-              << std::setw(15) << DRAM_access_cnts.ws.output_cnts
-              << std::setw(15) << DRAM_access_cnts.os.output_cnts << std::endl; 
+              << std::setw(num_setw) << DRAM_access_cnts.is.output_cnts 
+              << std::setw(num_setw) << DRAM_access_cnts.ws.output_cnts
+              << std::setw(num_setw) << DRAM_access_cnts.os.output_cnts 
+              << std::setw(num_setw) << tile_sizes.L2.output_tile << std::endl; 
     handler.print_line(60, "-");
     std::cout << "# L2 ACCESS COUNTS (x REQUESTING PEs)" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
-              << std::setw(15) << " IS "
-              << std::setw(15) << " WS "
-              << std::setw(15) << " OS " << std::endl; 
+              << std::setw(num_setw) << " IS "
+              << std::setw(num_setw) << " WS "
+              << std::setw(num_setw) << " OS "  
+              << std::setw(num_setw) << " TILE SIZE" << std::endl; 
     handler.print_line(60, "-");
     std::cout << std::setw(12) << "   INPUT  |" 
-              << std::setw(15) << L2_access_cnts.is.input_cnts
-              << std::setw(15) << L2_access_cnts.ws.input_cnts
-              << std::setw(15) << L2_access_cnts.os.input_cnts << std::endl; 
+              << std::setw(num_setw) << L2_access_cnts.is.input_cnts
+              << std::setw(num_setw) << L2_access_cnts.ws.input_cnts
+              << std::setw(num_setw) << L2_access_cnts.os.input_cnts  
+              << std::setw(num_setw) << tile_sizes.L1.input_tile << std::endl; 
     std::cout << std::setw(12) << "  FILTER  |" 
-              << std::setw(15) << L2_access_cnts.is.weight_cnts
-              << std::setw(15) << L2_access_cnts.ws.weight_cnts
-              << std::setw(15) << L2_access_cnts.os.weight_cnts << std::endl; 
+              << std::setw(num_setw) << L2_access_cnts.is.weight_cnts
+              << std::setw(num_setw) << L2_access_cnts.ws.weight_cnts
+              << std::setw(num_setw) << L2_access_cnts.os.weight_cnts  
+              << std::setw(num_setw) << tile_sizes.L1.weight_tile << std::endl; 
     std::cout << std::setw(12) << "  OUTPUT  |" 
-              << std::setw(15) << L2_access_cnts.is.output_cnts
-              << std::setw(15) << L2_access_cnts.ws.output_cnts
-              << std::setw(15) << L2_access_cnts.os.output_cnts << std::endl; 
+              << std::setw(num_setw) << L2_access_cnts.is.output_cnts
+              << std::setw(num_setw) << L2_access_cnts.ws.output_cnts
+              << std::setw(num_setw) << L2_access_cnts.os.output_cnts 
+              << std::setw(num_setw) << tile_sizes.L1.output_tile << std::endl; 
     handler.print_line(60, "-");
     std::cout << "# NoC ACCESS COUNTS (x NON-REQUESTING PEs)" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
-              << std::setw(15) << " IS "
-              << std::setw(15) << " WS "
-              << std::setw(15) << " OS " << std::endl; 
+              << std::setw(num_setw) << " IS "
+              << std::setw(num_setw) << " WS "
+              << std::setw(num_setw) << " OS "  
+              << std::setw(num_setw) << " TILE SIZE" << std::endl; 
     handler.print_line(60, "-");
     std::cout << std::setw(12) << "   INPUT  |" 
-              << std::setw(15) << noc_access_cnts.is.input_cnts
-              << std::setw(15) << noc_access_cnts.ws.input_cnts
-              << std::setw(15) << noc_access_cnts.os.input_cnts << std::endl; 
+              << std::setw(num_setw) << noc_access_cnts.is.input_cnts
+              << std::setw(num_setw) << noc_access_cnts.ws.input_cnts
+              << std::setw(num_setw) << noc_access_cnts.os.input_cnts 
+              << std::setw(num_setw) << tile_sizes.L1.input_tile << std::endl; 
     std::cout << std::setw(12) << "  FILTER  |" 
-              << std::setw(15) << noc_access_cnts.is.weight_cnts
-              << std::setw(15) << noc_access_cnts.ws.weight_cnts
-              << std::setw(15) << noc_access_cnts.os.weight_cnts << std::endl; 
+              << std::setw(num_setw) << noc_access_cnts.is.weight_cnts
+              << std::setw(num_setw) << noc_access_cnts.ws.weight_cnts
+              << std::setw(num_setw) << noc_access_cnts.os.weight_cnts  
+              << std::setw(num_setw) << tile_sizes.L1.weight_tile << std::endl; 
     std::cout << std::setw(12) << "  OUTPUT  |" 
-              << std::setw(15) << noc_access_cnts.is.output_cnts
-              << std::setw(15) << noc_access_cnts.ws.output_cnts
-              << std::setw(15) << noc_access_cnts.os.output_cnts << std::endl; 
+              << std::setw(num_setw) << noc_access_cnts.is.output_cnts
+              << std::setw(num_setw) << noc_access_cnts.ws.output_cnts
+              << std::setw(num_setw) << noc_access_cnts.os.output_cnts 
+              << std::setw(num_setw) << tile_sizes.L1.output_tile << std::endl; 
     handler.print_line(60, "-");
     std::cout << "# L1 ACCESS COUNTS (x TOTAL ACTIVE PEs)" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
-              << std::setw(15) << " IS "
-              << std::setw(15) << " WS "
-              << std::setw(15) << " OS " << std::endl; 
+              << std::setw(num_setw) << " IS "
+              << std::setw(num_setw) << " WS "
+              << std::setw(num_setw) << " OS "  
+              << std::setw(num_setw) << " TILE SIZE" << std::endl; 
     handler.print_line(60, "-");
     std::cout << std::setw(12) << "   INPUT  |" 
-              << std::setw(15) << L1_access_cnts.is.input_cnts
-              << std::setw(15) << L1_access_cnts.ws.input_cnts
-              << std::setw(15) << L1_access_cnts.os.input_cnts << std::endl; 
+              << std::setw(num_setw) << L1_access_cnts.is.input_cnts
+              << std::setw(num_setw) << L1_access_cnts.ws.input_cnts
+              << std::setw(num_setw) << L1_access_cnts.os.input_cnts 
+              << std::setw(num_setw) << tile_sizes.MAC.input_tile << std::endl; 
     std::cout << std::setw(12) << "  FILTER  |" 
-              << std::setw(15) << L1_access_cnts.is.weight_cnts
-              << std::setw(15) << L1_access_cnts.ws.weight_cnts
-              << std::setw(15) << L1_access_cnts.os.weight_cnts << std::endl; 
+              << std::setw(num_setw) << L1_access_cnts.is.weight_cnts
+              << std::setw(num_setw) << L1_access_cnts.ws.weight_cnts
+              << std::setw(num_setw) << L1_access_cnts.os.weight_cnts 
+              << std::setw(num_setw) << tile_sizes.MAC.weight_tile << std::endl; 
     std::cout << std::setw(12) << "  OUTPUT  |" 
-              << std::setw(15) << L1_access_cnts.is.output_cnts
-              << std::setw(15) << L1_access_cnts.ws.output_cnts
-              << std::setw(15) << L1_access_cnts.os.output_cnts << std::endl; 
+              << std::setw(num_setw) << L1_access_cnts.is.output_cnts
+              << std::setw(num_setw) << L1_access_cnts.ws.output_cnts
+              << std::setw(num_setw) << L1_access_cnts.os.output_cnts 
+              << std::setw(num_setw) << tile_sizes.MAC.output_tile << std::endl; 
     handler.print_line(60, "-");
 }
 
