@@ -84,6 +84,7 @@ public:
         unsigned output_pes;
     };
 
+    float pe_utilization;
     unsigned total_active_pes;
     info_t requesting;
 };

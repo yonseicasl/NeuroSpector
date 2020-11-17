@@ -35,9 +35,17 @@ void mapping_table_t::print_stats() {
         std::cout << std::endl;
     }
     handler.print_line(63, "-");
-    std::cout << "# TOTAL MACs: " << layer_vals.at(0) * layer_vals.at(1) * layer_vals.at(2) 
-                                   * layer_vals.at(3) * layer_vals.at(4) * layer_vals.at(5) 
-                                   * layer_vals.at(6) << std::endl;
+    std::cout << "# TOTAL MACs                : " << layer_vals.at(0) * layer_vals.at(1) * layer_vals.at(2) 
+                                                   * layer_vals.at(3) * layer_vals.at(4) * layer_vals.at(5) 
+                                                   * layer_vals.at(6) << std::endl;
+    std::cout << "# PE TOTAL ACTIVE PEs       : " << noc_info.total_active_pes << std::endl;
+    std::cout << "# PE UTILIZATION            : " << noc_info.total_active_pes << " / TOTAL PEs" << std::endl;
+    std::cout << "# REQUESTING INPUT PEs      : " << noc_info.requesting.input_pes << std::endl;
+    std::cout << "# REQUESTING WEIGHT PEs     : " << noc_info.requesting.weight_pes << std::endl;
+    std::cout << "# REQUESTING OUTPUT PEs     : " << noc_info.requesting.output_pes << std::endl;
+    std::cout << "# NON-REQUESTING INPUT PEs  : " << noc_info.total_active_pes - noc_info.requesting.input_pes << std::endl;
+    std::cout << "# NON-REQUESTING WEIGHT PEs : " << noc_info.total_active_pes - noc_info.requesting.weight_pes << std::endl;
+    std::cout << "# NON-REQUESTING OUTPUT PEs : " << noc_info.total_active_pes - noc_info.requesting.output_pes << std::endl;
     print_tile_size();
     print_access_cnts();
 }
@@ -301,7 +309,7 @@ void mapping_table_t::print_access_cnts() {
               << std::setw(15) << DRAM_access_cnts.ws.output_cnts
               << std::setw(15) << DRAM_access_cnts.os.output_cnts << std::endl; 
     handler.print_line(60, "-");
-    std::cout << "# L2 ACCESS COUNTS" << std::endl;
+    std::cout << "# L2 ACCESS COUNTS (x REQUESTING PEs)" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
               << std::setw(15) << " IS "
               << std::setw(15) << " WS "
@@ -320,7 +328,7 @@ void mapping_table_t::print_access_cnts() {
               << std::setw(15) << L2_access_cnts.ws.output_cnts
               << std::setw(15) << L2_access_cnts.os.output_cnts << std::endl; 
     handler.print_line(60, "-");
-    std::cout << "# NoC ACCESS COUNTS" << std::endl;
+    std::cout << "# NoC ACCESS COUNTS (x NON-REQUESTING PEs)" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
               << std::setw(15) << " IS "
               << std::setw(15) << " WS "
@@ -339,7 +347,7 @@ void mapping_table_t::print_access_cnts() {
               << std::setw(15) << noc_access_cnts.ws.output_cnts
               << std::setw(15) << noc_access_cnts.os.output_cnts << std::endl; 
     handler.print_line(60, "-");
-    std::cout << "# L1 ACCESS COUNTS" << std::endl;
+    std::cout << "# L1 ACCESS COUNTS (x TOTAL ACTIVE PEs)" << std::endl;
     std::cout << std::setw(12) << " DATAFLOW |" 
               << std::setw(15) << " IS "
               << std::setw(15) << " WS "
