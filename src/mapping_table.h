@@ -31,9 +31,11 @@ public:
     void update_tile_size(); 
     void update_noc_info();
     void update_access_cnts();
-    void update() { update_dram_row(); update_tile_size(); update_access_cnts(); }
+    void update_energy_stats();
+    void update() { update_dram_row(); update_tile_size(); update_access_cnts(); update_energy_stats(); }
     void print_tile_size();
     void print_access_cnts();
+    void print_energy_stats();
     // for optimizer
 //    unsigned get_row_product(component_t U);
 //    void expand(component_t U, unsigned max_expanded);
@@ -45,12 +47,14 @@ public:
     unsigned stride;
     // Information
     bool noc_exists = 1;
+    size_t mac_cnts;
     tile_size_t tile_sizes;
     noc_info_t noc_info;
     access_cnts_t L1_access_cnts;
     access_cnts_t L2_access_cnts;
     access_cnts_t noc_access_cnts;
     access_cnts_t DRAM_access_cnts;
+    energy_stats_t energy_stats;
     // Dataflow
     dataflow_t L0_dataflow;
     dataflow_t L1_dataflow;

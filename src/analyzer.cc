@@ -24,9 +24,9 @@ void analyzer_t::init() {
                   mapping_configs.mappings.at(i).layer_vals.end() - 1, 
                   tmp_mt->layer_vals.begin());
         tmp_mt->stride = mapping_configs.mappings.at(i).layer_vals.at(7);
-        tmp_mt->L0_dataflow = dataflow_t::NO;
-        tmp_mt->L1_dataflow = dataflow_t::NO;
-        tmp_mt->L2_dataflow = dataflow_t::NO;
+        tmp_mt->L0_dataflow = dataflow_t::WS;
+        tmp_mt->L1_dataflow = dataflow_t::WS;
+        tmp_mt->L2_dataflow = dataflow_t::OS;
         // Mapping table values 
         for(size_t u = 0; u < 5; u++) {
             for(size_t d = 0; d < 7; d++) {

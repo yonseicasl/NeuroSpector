@@ -109,4 +109,28 @@ public:
     info_t os;
 };
 
+/* Energy constants */
+class energy_stats_t {
+public:
+    energy_stats_t();
+    ~energy_stats_t();
+    void init();
+    void print_stats();
+    void total() { total_energy = MAC_total_energy + L1_total_energy + L2_total_energy + DRAM_total_energy; }
+
+    float MAC_operand_avg = 1;
+    float L1_read_write_avg = 1;
+    float L2_read_write_avg = 6.6;
+    float DRAM_read_write_avg = 200;
+
+    double MAC_total_energy;
+    // Affected by MAC dataflow & non-requesting PEs
+    double L1_total_energy;
+    // Affected by L2 dataflow & requesting PEs
+    double L2_total_energy;
+    // Affected by L2 dataflow
+    double DRAM_total_energy;
+    double total_energy;
+};
+
 #endif

@@ -47,7 +47,6 @@ void mapping_table_t::print_stats() {
     handler.print_line(63, "-");
     print_tile_size();
     print_access_cnts();
-    print_energy_stats();
 }
 
 void mapping_table_t::put_val(parameter_t D, component_t U, unsigned num_) {
@@ -279,36 +278,28 @@ void mapping_table_t::update_energy_stats() {
     size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts;
     size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts;
     // L1 accesses 
-    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts;
-    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts;
-    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
+    size_t between_L1_MAC_is = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts;
+    size_t between_L1_MAC_ws = tile_sizes.L1.input_tile * L2_access_cnts.ws.input_cnts + tile_sizes.L1.weight_tile * L2_access_cnts.ws.weight_cnts + tile_sizes.L1.output_tile * L2_access_cnts.ws.output_cnts;
+    size_t between_L1_MAC_os = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts;
     // MAC total energy
     energy_stats.MAC_total_energy = mac_cnts * energy_stats.MAC_operand_avg;
-    // Between L1 and MAC
-    if(L1_dataflow == dataflow_t::IS) {
-        energy_stats.L1_total_energy = between_L1_MAC_is * energy_stats.L1_read_write_avg;
-    }
-    else if(L1_dataflow == dataflow_t::WS) {
-        energy_stats.L1_total_energy = between_L1_MAC_ws * energy_stats.L1_read_write_avg;
-    }
-    else if(L1_dataflow == dataflow_t::OS) {
-        energy_stats.L1_total_energy = between_L1_MAC_os * energy_stats.L1_read_write_avg;
-    }
+    // L1 total energy
+    
     // Between L2 and L1
     if(L1_dataflow == dataflow_t::IS) {
         energy_stats.L2_total_energy = between_L2_L1_is * energy_stats.L2_read_write_avg;
-        energy_stats.L1_total_energy += between_L2_L1_is * energy_stats.L1_read_write_avg;
-        energy_stats.L1_total_energy += between_L1_L1_is * energy_stats.L1_read_write_avg * 2;
+        energy_stats.L1_total_energy += between_L2_L1_is * energy_stats.L2_read_write_avg;
+        energy_stats.L1_total_energy += between_L1_L1_is * energy_stats.L1_read_write_avg;
     }
     else if(L1_dataflow == dataflow_t::WS) {
         energy_stats.L2_total_energy = between_L2_L1_ws * energy_stats.L2_read_write_avg;
-        energy_stats.L1_total_energy += between_L2_L1_ws * energy_stats.L1_read_write_avg;
-        energy_stats.L1_total_energy += between_L1_L1_ws * energy_stats.L1_read_write_avg * 2;
+        energy_stats.L1_total_energy += between_L2_L1_ws * energy_stats.L2_read_write_avg;
+        energy_stats.L1_total_energy += between_L1_L1_ws * energy_stats.L1_read_write_avg;
     }
     else if(L1_dataflow == dataflow_t::OS) {
         energy_stats.L2_total_energy = between_L2_L1_os * energy_stats.L2_read_write_avg;
-        energy_stats.L1_total_energy += between_L2_L1_os * energy_stats.L1_read_write_avg;
-        energy_stats.L1_total_energy += between_L1_L1_os * energy_stats.L1_read_write_avg * 2;
+        energy_stats.L1_total_energy += between_L2_L1_os * energy_stats.L2_read_write_avg;
+        energy_stats.L1_total_energy += between_L1_L1_os * energy_stats.L1_read_write_avg;
     }
     // Between DRAM and L2
     if(L2_dataflow == dataflow_t::IS) {
@@ -324,7 +315,6 @@ void mapping_table_t::update_energy_stats() {
         energy_stats.DRAM_total_energy = between_DRAM_L2_os * energy_stats.DRAM_read_write_avg; 
         energy_stats.L2_total_energy += between_DRAM_L2_os * energy_stats.L2_read_write_avg;
     }
-    energy_stats.total();
 }
 
 void mapping_table_t::print_tile_size() {
@@ -447,31 +437,6 @@ void mapping_table_t::print_access_cnts() {
               << std::setw(num_setw) << L1_access_cnts.os.output_cnts 
               << std::setw(num_setw) << tile_sizes.MAC.output_tile << std::endl; 
     handler.print_line(60, "-");
-}
-
-void mapping_table_t::print_energy_stats() {
-    std::cout << "# ENERGY STATS" << std::endl;
-    std::cout << std::setw(12) << "COMPONENT  |" 
-              << std::setw(10)  << "DATAFLOW"
-              << std::setw(10) << "ENERGY" << std::endl; 
-    handler.print_line(43, "-");
-    std::cout << std::setw(12) << "  MAC  |" 
-              << std::setw(10)  << static_cast<unsigned>(L0_dataflow)
-              << std::setw(15) << std::setprecision(10) << energy_stats.MAC_total_energy << std::endl; 
-    std::cout << std::setw(12) << "  L1   |" 
-              << std::setw(10)  << static_cast<unsigned>(L1_dataflow)
-              << std::setw(15) << std::setprecision(10) << energy_stats.L1_total_energy << std::endl; 
-    std::cout << std::setw(12) << "  L2   |" 
-              << std::setw(10)  << static_cast<unsigned>(L2_dataflow)
-              << std::setw(15) << std::setprecision(10) << energy_stats.L2_total_energy << std::endl; 
-    std::cout << std::setw(12) << " DRAM  |" 
-              << std::setw(10)  << "NONE"
-              << std::setw(15) << std::setprecision(10) << energy_stats.DRAM_total_energy << std::endl; 
-    handler.print_line(43, "-");
-    std::cout << std::setw(12) << " TOTAL  |" 
-              << std::setw(10)  << ""
-              << std::setw(15) << std::setprecision(10) << energy_stats.total_energy << std::endl; 
-    handler.print_line(43, "-");
 }
 
 //unsigned mapping_table_t::get_row_product(component_t U) {

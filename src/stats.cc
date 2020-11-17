@@ -144,3 +144,12 @@ access_cnts_t::access_cnts_t() {
 
 access_cnts_t::~access_cnts_t() {
 }
+
+/* Energy constants */
+energy_stats_t::energy_stats_t() {
+}
+
+energy_stats_t::~energy_stats_t() {
+}
+
+
