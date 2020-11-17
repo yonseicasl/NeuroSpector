@@ -5,115 +5,107 @@
 #include <string>
 #include <vector>
 
-#include "mapping_table.h"
+#include "configs.h"
 #include "utils.h"
 
-#define KB_UNIT 8192
-#define MB_UNIT 8388608
-
-enum class data_type_t {
-    INPUT, WEIGHT, OUTPUT, SIZE
+enum class dataflow_t {
+    IS, WS, OS, NO, SIZE
 };
 
-enum class stationary_t {
-    IS, WS, OS, SIZE
-};
-
-enum class bypass_t {
-// BYPASS MASK: 0 ~ 7
-//   0,   1,   2,   3,   4,   5,   6,   7 
-    XXX, XXO, XWX, XWO, IXX, IXO, IWX, IWO
-};
-
-/* Accelerator stats */
+/* Accelerator */
 class accelerator_t {
 public:
-    accelerator_t();
+    accelerator_t(accelerator_configs_t &accelerator_configs_);
     ~accelerator_t();
     void init();
     void print_stats();
 
     std::string name;
-    // MAC
-    unsigned mac_per_pe;
-    unsigned mac_width;
-    std::string L0_stationary;
-    // L1
-    unsigned input_L1_sizes;
-    unsigned weight_L1_sizes;
-    unsigned output_L1_sizes;
-    bypass_t L1_bypass;
-    std::string L1_stationary;
-    // X, Y
-    unsigned array_size_x;
-    unsigned array_size_y;
-    parameter_t array_unroll_x;
-    parameter_t array_unroll_y;
-    // L2
-    unsigned L2_size;
-    bypass_t L2_bypass;
-    std::string L2_stationary;
     // PRECISION
     unsigned input_precision;
     unsigned weight_precision;
     unsigned output_precision;
-};
-
-/* Tiles stats */
-class tiles_t {
-public:
-    tiles_t(mapping_table_t *mapping_table_, accelerator_t *accelerator_);
-    ~tiles_t();
-    void init();
-    void print_stats();
-    size_t calculate_tile_size(data_type_t type_, component_t U);
-
-    struct tile_t {
-        tile_t(std::string name_) : name(name_) {}
-        std::string name;
-        size_t num_input;
-        size_t num_weight;
-        size_t num_output;
-    };
-
-    std::vector<tile_t> tiles;
-
-private:
-    mapping_table_t *mapping_table;
-    accelerator_t *accelerator;
-};
-
-/* Accesses stats */
-class accesses_t {
-public:
-    accesses_t(mapping_table_t *mapping_table_, accelerator_t *accelerator_, tiles_t *tiles_);
-    ~accesses_t();
-    void init();
-    void print_stats();
-    size_t calculate_access_counts(data_type_t type_, component_t U, bool is_optimized);
-
-    struct access_t {
-        access_t(std::string name_) : name(name_) {}
-        std::string name;
-        std::vector<std::pair<size_t, double>> input_cnts_mb;
-        std::vector<std::pair<size_t, double>> weight_cnts_mb;
-        std::vector<std::pair<size_t, double>> output_cnts_mb;
-        std::vector<double> mb_totals;
-        void counts_to_mb(accelerator_t *acc_) {
-            for(size_t i = 0; i < input_cnts_mb.size(); i++) {
-                input_cnts_mb.at(i).second = double(input_cnts_mb.at(i).first * acc_->input_precision) / MB_UNIT; 
-                weight_cnts_mb.at(i).second = double(weight_cnts_mb.at(i).first * acc_->weight_precision) / MB_UNIT; 
-                output_cnts_mb.at(i).second = double(output_cnts_mb.at(i).first * acc_->output_precision) / MB_UNIT; 
-                mb_totals.push_back(input_cnts_mb.at(i).second + weight_cnts_mb.at(i).second + output_cnts_mb.at(i).second);
-            }
-        }
-    };
+    // MAC
+    unsigned mac_per_pe;
+    unsigned mac_width;
+    dataflow_t L0_dataflow;
+    // L1
+    bool L1_mode; // Shared: 0 / Separate: 1
+    unsigned L1_total_size;
+    unsigned L1_input_size;
+    unsigned L1_weight_size;
+    unsigned L1_output_size;
+    dataflow_t L1_dataflow;
+    // X, Y
+    bool array_mode; // flexible: 0 / fixed: 1
+    unsigned array_size_x;
+    unsigned array_size_y;
+    unsigned array_map_x;
+    unsigned array_map_y;
+    // L2
+    unsigned L2_shared_size;
+    dataflow_t L2_dataflow;
 
 private:
-    mapping_table_t *mapping_table;
-    accelerator_t *accelerator;
-    tiles_t *tiles;
-    std::vector<access_t> accesses;
+    accelerator_configs_t &accelerator_configs;
+};
+
+/* Tile sizes */
+class tile_size_t {
+public:
+    tile_size_t();
+    ~tile_size_t();
+    void init();
+    void print_stats();
+
+    struct info_t {
+        size_t input_tile;
+        size_t weight_tile;
+        size_t output_tile;
+    };
+
+    info_t MAC;
+    info_t L1;
+    info_t L2;
+    info_t DRAM;
+};
+
+/* NoC information */
+class noc_info_t {
+public:
+    noc_info_t();
+    ~noc_info_t();
+    void init();
+    void print_stats();
+
+    struct info_t {
+        unsigned input_pes;
+        unsigned weight_pes;
+        unsigned output_pes;
+    };
+
+    unsigned total_active_pes;
+    info_t requesting;
+};
+
+/* Access counts */
+class access_cnts_t {
+public:
+    access_cnts_t();
+    ~access_cnts_t();
+    void init();
+    void print_stats();
+
+    struct info_t {
+        info_t() : input_cnts(0), weight_cnts(0), output_cnts(0) {}
+        size_t input_cnts;
+        size_t weight_cnts;
+        size_t output_cnts;
+    };
+
+    info_t is;
+    info_t ws;
+    info_t os;
 };
 
 #endif

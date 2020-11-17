@@ -1,8 +1,7 @@
 #!/bin/bash
 
-# Configuration
-analyzer_arg=configs/eyeriss_alexnet.csv
-optimizer_arg=configs/
+# Configurations
+map_arg=configs/mappings/eyeriss_alexnet.csv
 
 # Usage
 print_help() {
@@ -17,15 +16,15 @@ fi
 
 # For running
 if [[ "$#" -eq 0  ]];  then
-    ./neurospector $analyzer_arg
+    ./neurospector 'A' $map_arg
 fi
 
 # For debugging
 if [[ "$#" -eq 1  ]];  then
     action=$1; shift
     if [[ $action == gdb ]]; then
-        gdb --args neurospector $analyzer_arg
+        gdb --args neurospector 'A' $map_arg
     else
-        ./neurospector $analyzer_arg $action
+        ./neurospector 'A' $map_arg $action
     fi
 fi

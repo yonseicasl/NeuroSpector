@@ -1,0 +1,41 @@
+# *********************************
+# ACCELERATOR CONFIGURATIONS
+# *********************************
+# DATAFLOW: 
+# IS (INPUT STATIONARY)   WS (WEIGHT STATIONARY) 
+# OS (OUTPUT STATIONARY)  NO (NONE) 
+# IS, WS, OS FOR ANALYZER & OPTIMIZER, NO FOR ONLY OPTIMIZER
+# *********************************
+[ACC:EYERISS]
+# ************ COMMON *************
+# PRECISION : BIT
+PRECISION,16,16,16
+# ************* MAC ***************
+MAC_PER_PE,1
+MAC_WIDTH,1
+L0_DATAFLOW,NO
+# ************* L1 ****************
+# L1_EXISTS        : 1 (TRUE) / 0 (FALSE)
+# L1_MODE          : 1 (SEPARATE) / 0 (SHARED)
+# L1_SEPARATE_SIZE : BYTE - I,W,O
+# L1_SHARED_SIZE   : BYTE
+L1_EXISTS,1
+L1_MODE,0
+L1_SEPARATE_SIZE,24,448,48
+L1_SHARED_SIZE,520
+L1_DATAFLOW,NO
+# ******* PE ARRAY (X, Y) ********
+# ARRAY_MODE  : 1 (FIXED) / 0 (FLEXIBLE) 
+# ARRAY_MAP_X : KBPQCRS 
+# ARRAY_MAP_Y : KBPQCRS
+ARRAY_MODE,0
+ARRAY_SIZE_X,14
+ARRAY_SIZE_Y,12
+ARRAY_MAP_X,P
+ARRAY_MAP_Y,R
+# ************* L2 ****************
+# L2_EXISTS      : 1 (TRUE) / 0 (FALSE)
+# L2_SHARED_SIZE : KB
+L2_EXISTS,1
+L2_SHARED_SIZE,108
+L2_DATAFLOW,NO

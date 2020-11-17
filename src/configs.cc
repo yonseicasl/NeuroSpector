@@ -40,18 +40,16 @@ void configs_t::get_line_vals(std::string &line_, size_t bias_, std::vector<unsi
     return;
 }
 
-/* Analyzer configuration */
-analyzer_configs_t::analyzer_configs_t(std::string config_file_) 
-    : configs_t(config_file_), 
-    is_hw_parsed(true), is_net_parsed(true), 
-    is_map_parsed(true), layer_and_map_cnt(0) { 
+/* Accelerator configuration */
+accelerator_configs_t::accelerator_configs_t(std::string config_file_) 
+    : configs_t(config_file_) { 
     parse();
 }
 
-analyzer_configs_t::~analyzer_configs_t() {
+accelerator_configs_t::~accelerator_configs_t() {
 }
 
-void analyzer_configs_t::parse() {
+void accelerator_configs_t::parse() {
     std::string line;
     // Start parsing
     while(std::getline(config_file, line)) {
@@ -63,137 +61,103 @@ void analyzer_configs_t::parse() {
         else if(line[0] == '[') {
             size_t strpos = line.find(':') + 1; 
             size_t endpos = line.find(']'); 
-            if(line.find("ACC") != std::string::npos) {
-                accelerator.name = line.substr(strpos, endpos - strpos);
-                is_hw_parsed = false; is_net_parsed = true; is_map_parsed = true;
-            }
-            else if(line.find("NET") != std::string::npos) {
-                network_name = line.substr(strpos, endpos - strpos);
-                is_hw_parsed = true; is_net_parsed = false; is_map_parsed = true;
-            }
-            else if(line.find("MAP") != std::string::npos) {
-                std::string layer_name = line.substr(strpos, endpos - strpos);
-                if(layers_and_maps.at(layer_and_map_cnt).name.compare(layer_name)) 
-                    handler.print_err(err_type_t::INVAILD, "LAYER-MAP are not matched");
-                is_hw_parsed = true; is_net_parsed = true; is_map_parsed = false;
-                layer_and_map_cnt++;
-            }
+            if(line.find("ACC") != std::string::npos) 
+                name = line.substr(strpos, endpos - strpos);
             else 
                 handler.print_err(err_type_t::INVAILD, "[SECTION:NAME]");
             continue;
         }
         else {
-            if(!is_hw_parsed) {
-                size_t strpos = line.find(',') + 1;
-                size_t endpos = line.find(',', strpos);
-                // MAC
-                if(line.find("MAC_PER_PE") != std::string::npos) {
-                    accelerator.mac_per_pe = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("MAC_WIDTH") != std::string::npos) {
-                    accelerator.mac_width = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("L0_STATIONARY") != std::string::npos) {
-                    accelerator.L0_stationary = line.substr(strpos, endpos - strpos); 
-                    if(accelerator.L0_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "L0_STATIONARY parsing error");
-                    continue;
-                }
-                // L1
-                else if(line.find("L1_SIZES") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.L1_sizes); continue;
-                }
-                else if(line.find("L1_BYPASS") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.L1_bypass); continue;
-                }
-                else if(line.find("L1_STATIONARY") != std::string::npos) {
-                    accelerator.L1_stationary = line.substr(strpos, endpos - strpos); 
-                    if(accelerator.L1_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "L1_STATIONARY parsing error");
-                    continue;
-                }
-                // X, Y
-                else if(line.find("ARRAY_SIZE_X") != std::string::npos) {
-                    accelerator.array_size_x = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("ARRAY_SIZE_Y") != std::string::npos) {
-                    accelerator.array_size_y = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("ARRAY_UNROLL_X") != std::string::npos) {
-                    accelerator.array_unroll_x = line.substr(strpos, endpos - strpos);
-                    if(accelerator.array_unroll_x.size() != 1)
-                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_X parsing error");
-                    continue;
-                }
-                else if(line.find("ARRAY_UNROLL_Y") != std::string::npos) {
-                    accelerator.array_unroll_y = line.substr(strpos, endpos - strpos);
-                    if(accelerator.array_unroll_y.size() != 1)
-                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
-                    continue;
-                }
-                // L2
-                else if(line.find("L2_SIZE") != std::string::npos) {
-                    accelerator.L2_size = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("L2_BYPASS") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.L2_bypass); continue;
-                }
-                else if(line.find("L2_STATIONARY") != std::string::npos) {
-                    accelerator.L2_stationary = line.substr(strpos, endpos - strpos);
-                    if(accelerator.L2_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "L2_STATIONARY parsing error");
-                    continue;
-                }
-                // PRECISION
-                else if(line.find("PRECISION") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.precision); continue;
-                }
-                else 
-                    handler.print_err(err_type_t::INVAILD, "HW parsing");
+            size_t strpos = line.find(',') + 1;
+            size_t endpos = line.find(',', strpos);
+            // PRECISION
+            if(line.find("PRECISION") != std::string::npos) {
+                get_line_vals(line, 1, precision); continue;
             }
-            else if(!is_net_parsed) {
-                bool is_layer = line.find("CONV") != std::string::npos 
-                                || line.find("FC") != std::string::npos 
-                                || line.find("PW") != std::string::npos 
-                                || line.find("DW") != std::string::npos;
-                if(is_layer) {
-                    layer_and_map_t layer_and_map;
-                    layer_and_map.name = line.substr(0, line.find(','));
-                    get_line_vals(line, 1, layer_and_map.layer_vals);
-                    layers_and_maps.push_back(layer_and_map);
-                    continue;
-                }
-                else
-                    handler.print_err(err_type_t::INVAILD, "NET parsing");
+            // MAC
+            else if(line.find("MAC_PER_PE") != std::string::npos) {
+                mac_per_pe = get_line_val<unsigned>(line); continue;
             }
-            else if(!is_map_parsed) {
-                for(size_t row = 0; row < MAP_TABLE_ROWS; row++) {
-                    if(line[0] == '#') {
-                        row--; continue;
-                    }
-                    get_line_vals(line, 1, layers_and_maps.at(layer_and_map_cnt - 1).map_vals);
-                    std::getline(config_file, line);
-                }
-                is_map_parsed = true;
+            else if(line.find("MAC_WIDTH") != std::string::npos) {
+                mac_width = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("L0_DATAFLOW") != std::string::npos) {
+                L0_dataflow = line.substr(strpos, endpos - strpos); 
+                if(L0_dataflow.size() != 2)
+                    handler.print_err(err_type_t::INVAILD, "L0_DATAFLOW parsing error");
+                continue;
+            }
+            // L1
+            else if(line.find("L1_EXISTS") != std::string::npos) {
+                L1_mode = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("L1_MODE") != std::string::npos) {
+                L1_mode = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("L1_SEPARATE_SIZE") != std::string::npos) {
+                get_line_vals(line, 1, L1_separate_size); continue;
+            }
+            else if(line.find("L1_SHARED_SIZE") != std::string::npos) {
+                L1_shared_size = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("L1_DATAFLOW") != std::string::npos) {
+                L1_dataflow = line.substr(strpos, endpos - strpos); 
+                if(L1_dataflow.size() != 2)
+                    handler.print_err(err_type_t::INVAILD, "L1_DATAFLOW parsing error");
+                continue;
+            }
+            // X, Y
+            else if(line.find("ARRAY_MODE") != std::string::npos) {
+                array_mode = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("ARRAY_SIZE_X") != std::string::npos) {
+                array_size_x = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("ARRAY_SIZE_Y") != std::string::npos) {
+                array_size_y = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("ARRAY_MAP_X") != std::string::npos) {
+                array_map_x = line.substr(strpos, endpos - strpos);
+                if(array_map_x.size() != 1)
+                    handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_X parsing error");
+                continue;
+            }
+            else if(line.find("ARRAY_MAP_Y") != std::string::npos) {
+                array_map_y = line.substr(strpos, endpos - strpos);
+                if(array_map_y.size() != 1)
+                    handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
+                continue;
+            }
+            // L2
+            else if(line.find("L2_EXISTS") != std::string::npos) {
+                L2_exists = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("L2_SHARED_SIZE") != std::string::npos) {
+                L2_shared_size = get_line_val<unsigned>(line); continue;
+            }
+            else if(line.find("L2_DATAFLOW") != std::string::npos) {
+                L2_dataflow = line.substr(strpos, endpos - strpos);
+                if(L2_dataflow.size() != 2)
+                    handler.print_err(err_type_t::INVAILD, "L2_DATAFLOW parsing error");
+                continue;
             }
             else 
-                handler.print_err(err_type_t::INVAILD, "line parsing error!");
+                handler.print_err(err_type_t::INVAILD, "ACC parsing");
         }
     }
     return;
 }
 
-/* Optimizer configuration */
-optimizer_configs_t::optimizer_configs_t(std::string config_file_) 
-    : configs_t(config_file_), 
-    is_hw_parsed(true), is_net_parsed(true) { 
+/* Network configuration */
+network_configs_t::network_configs_t(std::string config_file_) 
+    : configs_t(config_file_) { 
     parse();
 }
 
-optimizer_configs_t::~optimizer_configs_t() {
+network_configs_t::~network_configs_t() {
 }
 
-void optimizer_configs_t::parse() {
+void network_configs_t::parse() {
     std::string line;
     // Start parsing
     while(std::getline(config_file, line)) {
@@ -205,104 +169,93 @@ void optimizer_configs_t::parse() {
         else if(line[0] == '[') {
             size_t strpos = line.find(':') + 1; 
             size_t endpos = line.find(']'); 
-            if(line.find("ACC") != std::string::npos) {
-                accelerator.name = line.substr(strpos, endpos - strpos);
-                is_hw_parsed = false; is_net_parsed = true;
-            }
-            else if(line.find("NET") != std::string::npos) {
+            if(line.find("NET") != std::string::npos) 
                 network_name = line.substr(strpos, endpos - strpos);
-                is_hw_parsed = true; is_net_parsed = false;
+            else 
+                handler.print_err(err_type_t::INVAILD, "[SECTION:NAME]");
+            continue;
+        }
+        else {
+            bool is_layer = line.find("CONV") != std::string::npos 
+                            || line.find("FC") != std::string::npos 
+                            || line.find("PW") != std::string::npos 
+                            || line.find("DW") != std::string::npos;
+            if(is_layer) {
+                layer_t layer;
+                layer.name = line.substr(0, line.find(','));
+                get_line_vals(line, 1, layer.layer_vals);
+                layers.push_back(layer);
+                continue;
+            }
+            else
+                handler.print_err(err_type_t::INVAILD, "NET parsing");
+        }
+    }
+    return;
+}
+
+/* Mapping configuration */
+mapping_configs_t::mapping_configs_t(std::string config_file_) 
+    : configs_t(config_file_) { 
+    parse();
+}
+
+mapping_configs_t::~mapping_configs_t() {
+}
+
+void mapping_configs_t::parse() {
+    std::string line;
+    bool is_mapping_parsed = true;
+    unsigned layer_cnts = 0;
+    // Start parsing
+    while(std::getline(config_file, line)) {
+        // Erase all spaces
+        line.erase(remove(line.begin(), line.end(), ' '), line.end());
+        // Skip blank lines or comments
+        if(!line.size() || (line[0] == '#')) continue;
+        // Parse [SECTION:NAME]
+        else if(line[0] == '[') {
+            size_t strpos = line.find(':') + 1; 
+            size_t endpos = line.find(']'); 
+            if(line.find("NET") != std::string::npos) 
+                network_name = line.substr(strpos, endpos - strpos);
+            else if(line.find("MAP") != std::string::npos) {
+                std::string layer_name = line.substr(strpos, endpos - strpos);
+                if(mappings.at(layer_cnts).name.compare(layer_name)) 
+                    handler.print_err(err_type_t::INVAILD, "LAYER-MAP are not matched");
+                is_mapping_parsed = false;
+                layer_cnts++;
             }
             else 
                 handler.print_err(err_type_t::INVAILD, "[SECTION:NAME]");
             continue;
         }
         else {
-            if(!is_hw_parsed) {
-                size_t strpos = line.find(',') + 1;
-                size_t endpos = line.find(',', strpos);
-                // MAC
-                if(line.find("MAC_PER_PE") != std::string::npos) {
-                    accelerator.mac_per_pe = get_line_val<unsigned>(line); continue;
+            // Mapping parsing
+            if(!is_mapping_parsed) {
+                for(size_t row = 0; row < 5; row++) {
+                    if(line[0] == '#') {
+                        row--; continue;
+                    }
+                    get_line_vals(line, 1, mappings.at(layer_cnts - 1).map_vals);
+                    std::getline(config_file, line);
                 }
-                else if(line.find("MAC_WIDTH") != std::string::npos) {
-                    accelerator.mac_width = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("L0_STATIONARY") != std::string::npos) {
-                    accelerator.L0_stationary = line.substr(strpos, endpos - strpos); 
-                    if(accelerator.L0_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "L0_STATIONARY parsing error");
-                    continue;
-                }
-                // L1
-                else if(line.find("L1_SIZES") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.L1_sizes); continue;
-                }
-                else if(line.find("L1_BYPASS") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.L1_bypass); continue;
-                }
-                else if(line.find("L1_STATIONARY") != std::string::npos) {
-                    accelerator.L1_stationary = line.substr(strpos, endpos - strpos); 
-                    if(accelerator.L1_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "L1_STATIONARY parsing error");
-                    continue;
-                }
-                // X, Y
-                else if(line.find("ARRAY_SIZE_X") != std::string::npos) {
-                    accelerator.array_size_x = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("ARRAY_SIZE_Y") != std::string::npos) {
-                    accelerator.array_size_y = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("ARRAY_UNROLL_X") != std::string::npos) {
-                    accelerator.array_unroll_x = line.substr(strpos, endpos - strpos);
-                    if(accelerator.array_unroll_x.size() != 1)
-                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_X parsing error");
-                    continue;
-                }
-                else if(line.find("ARRAY_UNROLL_Y") != std::string::npos) {
-                    accelerator.array_unroll_y = line.substr(strpos, endpos - strpos);
-                    if(accelerator.array_unroll_y.size() != 1)
-                        handler.print_err(err_type_t::INVAILD, "ARRAY_UNROLL_Y parsing error");
-                    continue;
-                }
-                // L2
-                else if(line.find("L2_SIZE") != std::string::npos) {
-                    accelerator.L2_size = get_line_val<unsigned>(line); continue;
-                }
-                else if(line.find("L2_BYPASS") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.L2_bypass); continue;
-                }
-                else if(line.find("L2_STATIONARY") != std::string::npos) {
-                    accelerator.L2_stationary = line.substr(strpos, endpos - strpos);
-                    if(accelerator.L2_stationary.size() != 2)
-                        handler.print_err(err_type_t::INVAILD, "L2_STATIONARY parsing error");
-                    continue;
-                }
-                // PRECISION
-                else if(line.find("PRECISION") != std::string::npos) {
-                    get_line_vals(line, 1, accelerator.precision); continue;
-                }
-                else 
-                    handler.print_err(err_type_t::INVAILD, "HW parsing");
             }
-            else if(!is_net_parsed) {
+            else {
                 bool is_layer = line.find("CONV") != std::string::npos 
                                 || line.find("FC") != std::string::npos 
                                 || line.find("PW") != std::string::npos 
                                 || line.find("DW") != std::string::npos;
                 if(is_layer) {
-                    layer_t layer;
-                    layer.name = line.substr(0, line.find(','));
-                    get_line_vals(line, 1, layer.layer_vals);
-                    layers.push_back(layer);
+                    mapping_t mapping;
+                    mapping.name = line.substr(0, line.find(','));
+                    get_line_vals(line, 1, mapping.layer_vals);
+                    mappings.push_back(mapping);
                     continue;
                 }
-                else
+                else 
                     handler.print_err(err_type_t::INVAILD, "NET parsing");
             }
-            else 
-                handler.print_err(err_type_t::INVAILD, "line parsing error!");
         }
     }
     return;

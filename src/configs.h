@@ -3,12 +3,8 @@
 
 #include <fstream>
 #include <iostream>
-//#include <sstream>
 #include <string>
 #include <vector>
-
-#define MAP_TABLE_ROWS 5
-#define MAP_TABLE_COLUMNS 7
 
 /* Configuration */
 class configs_t {
@@ -24,89 +20,66 @@ protected:
     std::ifstream config_file;
 };
 
-/* Analyzer configuration */
-class analyzer_configs_t : public configs_t {
+/* Accelerator configuration */
+class accelerator_configs_t : public configs_t {
 public:
-    analyzer_configs_t(std::string config_file_);
-    ~analyzer_configs_t();
+    accelerator_configs_t(std::string config_file_);
+    ~accelerator_configs_t();
     void parse();
-    struct acc_t {
-        std::string name;
-        // MAC
-        unsigned mac_per_pe;
-        unsigned mac_width;
-        std::string L0_stationary;
-        // L1
-        std::vector<unsigned> L1_sizes;
-        std::vector<unsigned> L1_bypass;
-        std::string L1_stationary;
-        // X, Y
-        unsigned array_size_x;
-        unsigned array_size_y;
-        std::string array_unroll_x;
-        std::string array_unroll_y;
-        // L2
-        unsigned L2_size;
-        std::vector<unsigned> L2_bypass;
-        std::string L2_stationary;
-        // PRECISION
-        std::vector<unsigned> precision;
-    };
-    struct layer_and_map_t {
-        std::string name;
-        std::vector<unsigned> layer_vals;   // KBPQCRS and stride
-        std::vector<unsigned> map_vals;     // [(D,U)s and exists] x MAP_TABLE_ROWS
-    };
-    acc_t accelerator;
-    std::string network_name;
-    std::vector<layer_and_map_t> layers_and_maps;
 
-private:
-    bool is_hw_parsed;
-    bool is_net_parsed;
-    bool is_map_parsed;
-    unsigned layer_and_map_cnt;
+    std::string name;
+    // PRECISION
+    std::vector<unsigned> precision;
+    // MAC
+    unsigned mac_per_pe;
+    unsigned mac_width;
+    std::string L0_dataflow;
+    // L1
+    unsigned L1_exists;
+    unsigned L1_mode;
+    unsigned L1_shared_size;
+    std::vector<unsigned> L1_separate_size;
+    std::string L1_dataflow;
+    // X, Y
+    unsigned array_mode;
+    unsigned array_size_x;
+    unsigned array_size_y;
+    std::string array_map_x;
+    std::string array_map_y;
+    // L2
+    unsigned L2_exists;
+    unsigned L2_shared_size;
+    std::string L2_dataflow;
 };
 
-/* Optimizer configuration */
-class optimizer_configs_t : public configs_t {
+/* Network configuration */
+class network_configs_t : public configs_t {
 public:
-    optimizer_configs_t(std::string config_file_);
-    ~optimizer_configs_t();
+    network_configs_t(std::string config_file_);
+    ~network_configs_t();
     void parse();
-    struct acc_t {
-        std::string name;
-        // MAC
-        unsigned mac_per_pe;
-        unsigned mac_width;
-        std::string L0_stationary;
-        // L1
-        std::vector<unsigned> L1_sizes;
-        std::vector<unsigned> L1_bypass;
-        std::string L1_stationary;
-        // X, Y
-        unsigned array_size_x;
-        unsigned array_size_y;
-        std::string array_unroll_x;
-        std::string array_unroll_y;
-        // L2
-        unsigned L2_size;
-        std::vector<unsigned> L2_bypass;
-        std::string L2_stationary;
-        // PRECISION
-        std::vector<unsigned> precision;
-    };
+    
     struct layer_t {
         std::string name;
         std::vector<unsigned> layer_vals;   // KBPQCRS and stride
     };
-    acc_t accelerator;
     std::string network_name;
     std::vector<layer_t> layers;
-
-private:
-    bool is_hw_parsed;
-    bool is_net_parsed;
 };
 
+/* Mapping configuration */
+class mapping_configs_t : public configs_t {
+public:
+    mapping_configs_t(std::string config_file_);
+    ~mapping_configs_t();
+    void parse();
+    
+    struct mapping_t {
+        std::string name;
+        std::vector<unsigned> layer_vals;   // KBPQCRS and stride
+        std::vector<unsigned> map_vals;     // [(D,U)s and exists] x 5
+    };
+    std::string network_name;
+    std::vector<mapping_t> mappings;
+};
 #endif
