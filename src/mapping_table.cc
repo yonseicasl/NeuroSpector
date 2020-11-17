@@ -35,6 +35,9 @@ void mapping_table_t::print_stats() {
         std::cout << std::endl;
     }
     handler.print_line(63, "-");
+    std::cout << "# TOTAL MACs: " << layer_vals.at(0) * layer_vals.at(1) * layer_vals.at(2) 
+                                   * layer_vals.at(3) * layer_vals.at(4) * layer_vals.at(5) 
+                                   * layer_vals.at(6) << std::endl;
     print_tile_size();
     print_access_cnts();
 }
