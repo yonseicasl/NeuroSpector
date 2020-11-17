@@ -46,6 +46,7 @@ void mapping_table_t::print_stats() {
     std::cout << "# NON-REQUESTING INPUT PEs  : " << noc_info.total_active_pes - noc_info.requesting.input_pes << std::endl;
     std::cout << "# NON-REQUESTING WEIGHT PEs : " << noc_info.total_active_pes - noc_info.requesting.weight_pes << std::endl;
     std::cout << "# NON-REQUESTING OUTPUT PEs : " << noc_info.total_active_pes - noc_info.requesting.output_pes << std::endl;
+    handler.print_line(63, "-");
     print_tile_size();
     print_access_cnts();
 }
