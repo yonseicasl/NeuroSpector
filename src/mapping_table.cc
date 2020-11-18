@@ -267,21 +267,45 @@ void mapping_table_t::update_access_cnts() {
 
 void mapping_table_t::update_energy_stats() {
     // DRAM accesses
-    size_t between_DRAM_L2_is = tile_sizes.L2.input_tile * DRAM_access_cnts.is.input_cnts + tile_sizes.L2.weight_tile * DRAM_access_cnts.is.weight_cnts + tile_sizes.L2.output_tile * DRAM_access_cnts.is.output_cnts;
-    size_t between_DRAM_L2_ws = tile_sizes.L2.input_tile * DRAM_access_cnts.ws.input_cnts + tile_sizes.L2.weight_tile * DRAM_access_cnts.ws.weight_cnts + tile_sizes.L2.output_tile * DRAM_access_cnts.ws.output_cnts;
-    size_t between_DRAM_L2_os = tile_sizes.L2.input_tile * DRAM_access_cnts.os.input_cnts + tile_sizes.L2.weight_tile * DRAM_access_cnts.os.weight_cnts + tile_sizes.L2.output_tile * DRAM_access_cnts.os.output_cnts;
+    size_t between_DRAM_L2_is = tile_sizes.L2.input_tile * DRAM_access_cnts.is.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.is.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.is.output_cnts;
+    size_t between_DRAM_L2_ws = tile_sizes.L2.input_tile * DRAM_access_cnts.ws.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.ws.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.ws.output_cnts;
+    size_t between_DRAM_L2_os = tile_sizes.L2.input_tile * DRAM_access_cnts.os.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.os.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.os.output_cnts;
     // L2 accesses 
-    size_t between_L2_L1_is = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts;
-    size_t between_L2_L1_ws = tile_sizes.L1.input_tile * L2_access_cnts.ws.input_cnts + tile_sizes.L1.weight_tile * L2_access_cnts.ws.weight_cnts + tile_sizes.L1.output_tile * L2_access_cnts.ws.output_cnts;
-    size_t between_L2_L1_os = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts;
+    size_t between_L2_L1_is = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts;
+    size_t between_L2_L1_ws = tile_sizes.L1.input_tile * L2_access_cnts.ws.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.ws.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.ws.output_cnts;
+    size_t between_L2_L1_os = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts;
     // NoC accesses 
-    size_t between_L1_L1_is = tile_sizes.L1.input_tile * noc_access_cnts.is.input_cnts + tile_sizes.L1.weight_tile * noc_access_cnts.is.weight_cnts + tile_sizes.L1.output_tile * noc_access_cnts.is.output_cnts;
-    size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts;
-    size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts;
+    size_t between_L1_L1_is = tile_sizes.L1.input_tile * noc_access_cnts.is.input_cnts 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.is.weight_cnts 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.is.output_cnts;
+    size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts;
+    size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts;
     // L1 accesses 
-    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts;
-    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts;
-    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
+    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts;
+    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts;
+    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
     // MAC total energy
     energy_stats.MAC_total_energy = mac_cnts * energy_stats.MAC_operand_avg;
     // Between L1 and MAC
