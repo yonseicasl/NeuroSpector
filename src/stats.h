@@ -118,12 +118,21 @@ public:
     void print_stats();
     void total() { total_energy = MAC_total_energy + L1_total_energy + L2_total_energy + DRAM_total_energy; }
 
-    float MAC_operand_avg = 1;
-    float L1_read_write_input = 1.38;
-    float L1_read_write_weight = 2.58;
-    float L1_read_write_output = 1.13;
-    float L2_read_write_avg = 16.10;
-    float DRAM_read_write_avg = 200;
+    // Eyeriss 45nm (pJ)
+    float MAC_operand_avg = 2.2;
+    float L1_read_write_input = 0.19;
+    float L1_read_write_weight = 0.94;
+    float L1_read_write_output = 0.25;
+    float L2_read_write_avg = 7.5;
+    float DRAM_read_write_avg = 440;
+
+    // Simba 45nm (pJ)
+//    float MAC_operand_avg = 2.2;
+//    float L1_read_write_input = 0.81;
+//    float L1_read_write_weight = 1.45;
+//    float L1_read_write_output = 0.58;
+//    float L2_read_write_avg = 7.71;
+//    float DRAM_read_write_avg = 440;
 
     double MAC_total_energy;
     // Affected by MAC dataflow & non-requesting PEs
