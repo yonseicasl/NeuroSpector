@@ -277,7 +277,7 @@ void mapping_table_t::update_energy_stats() {
     size_t between_DRAM_L2_os = tile_sizes.L2.input_tile * DRAM_access_cnts.os.input_cnts 
                               + tile_sizes.L2.weight_tile * DRAM_access_cnts.os.weight_cnts 
                               + tile_sizes.L2.output_tile * DRAM_access_cnts.os.output_cnts;
-    // L2 accesses 
+    // L2 accesses for L2 
     size_t between_L2_L1_is = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts 
                             + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts 
                             + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts;
@@ -287,53 +287,63 @@ void mapping_table_t::update_energy_stats() {
     size_t between_L2_L1_os = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts 
                             + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts 
                             + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts;
+    // L2 accesses for L1 
+    size_t between_L2_L1_is_for_L1 = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts * energy_stats.L1_read_write_input 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts * energy_stats.L1_read_write_weight 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts * energy_stats.L1_read_write_output;
+    size_t between_L2_L1_ws_for_L1 = tile_sizes.L1.input_tile * L2_access_cnts.ws.input_cnts * energy_stats.L1_read_write_input 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.ws.weight_cnts * energy_stats.L1_read_write_weight 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.ws.output_cnts * energy_stats.L1_read_write_output;
+    size_t between_L2_L1_os_for_L1 = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts * energy_stats.L1_read_write_input 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts * energy_stats.L1_read_write_weight 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts * energy_stats.L1_read_write_output;
     // NoC accesses 
-    size_t between_L1_L1_is = tile_sizes.L1.input_tile * noc_access_cnts.is.input_cnts 
-                            + tile_sizes.L1.weight_tile * noc_access_cnts.is.weight_cnts 
-                            + tile_sizes.L1.output_tile * noc_access_cnts.is.output_cnts;
-    size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts 
-                            + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts 
-                            + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts;
-    size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts 
-                            + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts 
-                            + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts;
+    size_t between_L1_L1_is = tile_sizes.L1.input_tile * noc_access_cnts.is.input_cnts * energy_stats.L1_read_write_input 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.is.weight_cnts * energy_stats.L1_read_write_weight 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.is.output_cnts * energy_stats.L1_read_write_output;
+    size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts * energy_stats.L1_read_write_input 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts * energy_stats.L1_read_write_weight 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts * energy_stats.L1_read_write_output;
+    size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts * energy_stats.L1_read_write_input 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts * energy_stats.L1_read_write_weight 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts * energy_stats.L1_read_write_output;
     // L1 accesses 
-    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts 
-                             + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts 
-                             + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts;
-    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts 
-                             + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts 
-                             + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts;
-    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts 
-                             + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts 
-                             + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
+    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts * energy_stats.L1_read_write_input 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts * energy_stats.L1_read_write_weight
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts * energy_stats.L1_read_write_output;
+    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts * energy_stats.L1_read_write_input
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts * energy_stats.L1_read_write_weight 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts * energy_stats.L1_read_write_output;
+    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts * energy_stats.L1_read_write_input 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts * energy_stats.L1_read_write_weight 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts * energy_stats.L1_read_write_output;
     // MAC total energy
     energy_stats.MAC_total_energy = mac_cnts * energy_stats.MAC_operand_avg;
     // Between L1 and MAC
     if(L1_dataflow == dataflow_t::IS) {
-        energy_stats.L1_total_energy = between_L1_MAC_is * energy_stats.L1_read_write_avg;
+        energy_stats.L1_total_energy = between_L1_MAC_is;
     }
     else if(L1_dataflow == dataflow_t::WS) {
-        energy_stats.L1_total_energy = between_L1_MAC_ws * energy_stats.L1_read_write_avg;
+        energy_stats.L1_total_energy = between_L1_MAC_ws;
     }
     else if(L1_dataflow == dataflow_t::OS) {
-        energy_stats.L1_total_energy = between_L1_MAC_os * energy_stats.L1_read_write_avg;
+        energy_stats.L1_total_energy = between_L1_MAC_os;
     }
     // Between L2 and L1
     if(L1_dataflow == dataflow_t::IS) {
         energy_stats.L2_total_energy = between_L2_L1_is * energy_stats.L2_read_write_avg;
-        energy_stats.L1_total_energy += between_L2_L1_is * energy_stats.L1_read_write_avg;
-        energy_stats.L1_total_energy += between_L1_L1_is * energy_stats.L1_read_write_avg * 2;
+        energy_stats.L1_total_energy += between_L2_L1_is_for_L1;
+        energy_stats.L1_total_energy += between_L1_L1_is * 2;
     }
     else if(L1_dataflow == dataflow_t::WS) {
         energy_stats.L2_total_energy = between_L2_L1_ws * energy_stats.L2_read_write_avg;
-        energy_stats.L1_total_energy += between_L2_L1_ws * energy_stats.L1_read_write_avg;
-        energy_stats.L1_total_energy += between_L1_L1_ws * energy_stats.L1_read_write_avg * 2;
+        energy_stats.L1_total_energy += between_L2_L1_ws_for_L1;
+        energy_stats.L1_total_energy += between_L1_L1_ws * 2;
     }
     else if(L1_dataflow == dataflow_t::OS) {
         energy_stats.L2_total_energy = between_L2_L1_os * energy_stats.L2_read_write_avg;
-        energy_stats.L1_total_energy += between_L2_L1_os * energy_stats.L1_read_write_avg;
-        energy_stats.L1_total_energy += between_L1_L1_os * energy_stats.L1_read_write_avg * 2;
+        energy_stats.L1_total_energy += between_L2_L1_os_for_L1;
+        energy_stats.L1_total_energy += between_L1_L1_os * 2;
     }
     // Between DRAM and L2
     if(L2_dataflow == dataflow_t::IS) {
