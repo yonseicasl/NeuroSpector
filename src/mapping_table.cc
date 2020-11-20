@@ -404,7 +404,11 @@ void mapping_table_t::update_cycle_stats() {
                              + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts 
                              + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
     // MAC total cycles
-    cycle_stats.MAC_total_cycle = mac_cnts * cycle_stats.MAC_latency / noc_info.total_active_pes;
+    size_t active_macs = get_val(parameter_t::K, component_t::MAC) * get_val(parameter_t::B, component_t::MAC)
+                       * get_val(parameter_t::P, component_t::MAC) * get_val(parameter_t::Q, component_t::MAC)
+                       * get_val(parameter_t::C, component_t::MAC) * get_val(parameter_t::R, component_t::MAC)
+                       * get_val(parameter_t::S, component_t::MAC);
+    cycle_stats.MAC_total_cycle = mac_cnts * cycle_stats.MAC_latency / noc_info.total_active_pes / active_macs;
     // Between L1 and MAC
     if(L1_dataflow == dataflow_t::IS) {
         cycle_stats.L1_total_cycle = between_L1_MAC_is * cycle_stats.L1_latency / noc_info.total_active_pes;
