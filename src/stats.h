@@ -109,7 +109,7 @@ public:
     info_t os;
 };
 
-/* Energy constants */
+/* Energy stats */
 class energy_stats_t {
 public:
     energy_stats_t();
@@ -131,6 +131,29 @@ public:
     // Affected by L2 dataflow
     double DRAM_total_energy;
     double total_energy;
+};
+
+/* Cycle stats */
+class cycle_stats_t {
+public:
+    cycle_stats_t();
+    ~cycle_stats_t();
+    void init();
+    void print_stats();
+    void total() { total_cycle = MAC_total_cycle + L1_total_cycle + noc_total_cycle + L2_total_cycle + DRAM_total_cycle; }
+
+    float MAC_latency = 1;
+    float L1_latency = 2;
+    float noc_latency = 2;
+    float L2_latency = 15;
+    float DRAM_latency = 150;
+
+    double MAC_total_cycle;
+    double L1_total_cycle;
+    double noc_total_cycle;
+    double L2_total_cycle;
+    double DRAM_total_cycle;
+    double total_cycle;
 };
 
 #endif

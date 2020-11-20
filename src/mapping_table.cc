@@ -48,6 +48,7 @@ void mapping_table_t::print_stats() {
     print_tile_size();
     print_access_cnts();
     print_energy_stats();
+    print_cycle_stats();
 }
 
 void mapping_table_t::put_val(parameter_t D, component_t U, unsigned num_) {
@@ -351,6 +352,92 @@ void mapping_table_t::update_energy_stats() {
     energy_stats.total();
 }
 
+void mapping_table_t::update_cycle_stats() {
+    // DRAM accesses
+    size_t between_DRAM_L2_is = tile_sizes.L2.input_tile * DRAM_access_cnts.is.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.is.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.is.output_cnts;
+    size_t between_DRAM_L2_ws = tile_sizes.L2.input_tile * DRAM_access_cnts.ws.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.ws.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.ws.output_cnts;
+    size_t between_DRAM_L2_os = tile_sizes.L2.input_tile * DRAM_access_cnts.os.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.os.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.os.output_cnts;
+    // L2 accesses 
+    size_t between_L2_L1_is = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts;
+    size_t between_L2_L1_ws = tile_sizes.L1.input_tile * L2_access_cnts.ws.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.ws.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.ws.output_cnts;
+    size_t between_L2_L1_os = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts;
+    // NoC accesses TODO: input modeling 
+    size_t between_L1_L1_is = tile_sizes.L1.input_tile * noc_access_cnts.is.input_cnts / noc_info.requesting.input_pes
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.is.weight_cnts / noc_info.requesting.weight_pes 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.is.output_cnts / noc_info.requesting.output_pes;
+    size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts / noc_info.requesting.input_pes 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts / noc_info.requesting.weight_pes 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts / noc_info.requesting.output_pes;
+    size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts / noc_info.requesting.input_pes 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts / noc_info.requesting.weight_pes 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts / noc_info.requesting.output_pes;
+    // L1 accesses 
+    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts;
+    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts;
+    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
+    // MAC total cycles
+    cycle_stats.MAC_total_cycle = mac_cnts * cycle_stats.MAC_latency / noc_info.total_active_pes;
+    // Between L1 and MAC
+    if(L1_dataflow == dataflow_t::IS) {
+        cycle_stats.L1_total_cycle = between_L1_MAC_is * cycle_stats.L1_latency / noc_info.total_active_pes;
+    }
+    else if(L1_dataflow == dataflow_t::WS) {
+        cycle_stats.L1_total_cycle = between_L1_MAC_ws * cycle_stats.L1_latency / noc_info.total_active_pes;
+    }
+    else if(L1_dataflow == dataflow_t::OS) {
+        cycle_stats.L1_total_cycle = between_L1_MAC_os * cycle_stats.L1_latency / noc_info.total_active_pes;
+    }
+    // Between L2 and L1
+    if(L1_dataflow == dataflow_t::IS) {
+        cycle_stats.L2_total_cycle = between_L2_L1_is * cycle_stats.L2_latency;
+        cycle_stats.L1_total_cycle += between_L2_L1_is * cycle_stats.L1_latency;
+        cycle_stats.noc_total_cycle = between_L1_L1_is * cycle_stats.noc_latency * 2;
+    }
+    else if(L1_dataflow == dataflow_t::WS) {
+        cycle_stats.L2_total_cycle = between_L2_L1_ws * cycle_stats.L2_latency;
+        cycle_stats.L1_total_cycle += between_L2_L1_ws * cycle_stats.L1_latency;
+        cycle_stats.noc_total_cycle = between_L1_L1_ws * cycle_stats.noc_latency * 2;
+    }
+    else if(L1_dataflow == dataflow_t::OS) {
+        cycle_stats.L2_total_cycle = between_L2_L1_os * cycle_stats.L2_latency;
+        cycle_stats.L1_total_cycle += between_L2_L1_os * cycle_stats.L1_latency;
+        cycle_stats.noc_total_cycle = between_L1_L1_os * cycle_stats.noc_latency * 2;
+    }
+    // Between DRAM and L2
+    if(L2_dataflow == dataflow_t::IS) {
+        cycle_stats.DRAM_total_cycle = between_DRAM_L2_is * cycle_stats.DRAM_latency; 
+        cycle_stats.L2_total_cycle += between_DRAM_L2_is * cycle_stats.L2_latency;
+    }
+    else if(L2_dataflow == dataflow_t::WS) {
+        cycle_stats.DRAM_total_cycle = between_DRAM_L2_ws * cycle_stats.DRAM_latency; 
+        cycle_stats.L2_total_cycle += between_DRAM_L2_ws * cycle_stats.L2_latency;
+
+    }
+    else if(L2_dataflow == dataflow_t::OS) {
+        cycle_stats.DRAM_total_cycle = between_DRAM_L2_os * cycle_stats.DRAM_latency; 
+        cycle_stats.L2_total_cycle += between_DRAM_L2_os * cycle_stats.L2_latency;
+    }
+    cycle_stats.total();
+}
+
 void mapping_table_t::print_tile_size() {
     std::cout << "# TILE SIZES" << std::endl;
     std::cout << std::setw(12) << "TILES  |" 
@@ -495,6 +582,27 @@ void mapping_table_t::print_energy_stats() {
     std::cout << std::setw(12) << " TOTAL  |" 
               << std::setw(10)  << ""
               << std::setw(15) << std::setprecision(10) << energy_stats.total_energy << std::endl; 
+    handler.print_line(43, "-");
+}
+
+void mapping_table_t::print_cycle_stats() {
+    std::cout << "# CYCLE STATS" << std::endl;
+    std::cout << std::setw(12) << "COMPONENT  |" 
+              << std::setw(10) << "CYCLE" << std::endl; 
+    handler.print_line(43, "-");
+    std::cout << std::setw(12) << "  MAC  |" 
+              << std::setw(15) << std::setprecision(10) << cycle_stats.MAC_total_cycle << std::endl; 
+    std::cout << std::setw(12) << "  L1   |" 
+              << std::setw(15) << std::setprecision(10) << cycle_stats.L1_total_cycle << std::endl; 
+    std::cout << std::setw(12) << "  NoC  |" 
+              << std::setw(15) << std::setprecision(10) << cycle_stats.noc_total_cycle << std::endl; 
+    std::cout << std::setw(12) << "  L2   |" 
+              << std::setw(15) << std::setprecision(10) << cycle_stats.L2_total_cycle << std::endl; 
+    std::cout << std::setw(12) << " DRAM  |" 
+              << std::setw(15) << std::setprecision(10) << cycle_stats.DRAM_total_cycle << std::endl; 
+    handler.print_line(43, "-");
+    std::cout << std::setw(12) << " TOTAL  |" 
+              << std::setw(15) << std::setprecision(10) << cycle_stats.total_cycle << std::endl; 
     handler.print_line(43, "-");
 }
 

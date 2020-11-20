@@ -152,4 +152,9 @@ energy_stats_t::energy_stats_t() {
 energy_stats_t::~energy_stats_t() {
 }
 
+/* Cycle constants */
+cycle_stats_t::cycle_stats_t() {
+}
 
+cycle_stats_t::~cycle_stats_t() {
+}
