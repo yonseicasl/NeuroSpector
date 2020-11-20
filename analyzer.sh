@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # Configurations
-map_arg=configs/mappings/eyeriss_alexnet.csv
+map_arg=configs/mappings/eyeriss_resnet.csv
 
 # Usage
 print_help() {
