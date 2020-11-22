@@ -135,8 +135,10 @@ public:
 //    float DRAM_read_write_avg = 440;
 
     double MAC_total_energy;
-    // Affected by MAC dataflow & non-requesting PEs
+    // Affected by MAC dataflow
     double L1_total_energy;
+    // Affected by non-requesting PEs
+    double noc_total_energy;
     // Affected by L2 dataflow & requesting PEs
     double L2_total_energy;
     // Affected by L2 dataflow

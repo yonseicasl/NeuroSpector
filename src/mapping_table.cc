@@ -333,17 +333,17 @@ void mapping_table_t::update_energy_stats() {
     if(L1_dataflow == dataflow_t::IS) {
         energy_stats.L2_total_energy = between_L2_L1_is * energy_stats.L2_read_write_avg;
         energy_stats.L1_total_energy += between_L2_L1_is_for_L1;
-        energy_stats.L1_total_energy += between_L1_L1_is * 2;
+        energy_stats.noc_total_energy = between_L1_L1_is * 2;
     }
     else if(L1_dataflow == dataflow_t::WS) {
         energy_stats.L2_total_energy = between_L2_L1_ws * energy_stats.L2_read_write_avg;
         energy_stats.L1_total_energy += between_L2_L1_ws_for_L1;
-        energy_stats.L1_total_energy += between_L1_L1_ws * 2;
+        energy_stats.noc_total_energy = between_L1_L1_ws * 2;
     }
     else if(L1_dataflow == dataflow_t::OS) {
         energy_stats.L2_total_energy = between_L2_L1_os * energy_stats.L2_read_write_avg;
         energy_stats.L1_total_energy += between_L2_L1_os_for_L1;
-        energy_stats.L1_total_energy += between_L1_L1_os * 2;
+        energy_stats.noc_total_energy = between_L1_L1_os * 2;
     }
     // Between DRAM and L2
     if(L2_dataflow == dataflow_t::IS) {
@@ -586,6 +586,9 @@ void mapping_table_t::print_energy_stats() {
     std::cout << std::setw(12) << "  L1   |" 
               << std::setw(10)  << static_cast<unsigned>(L1_dataflow)
               << std::setw(15) << std::setprecision(10) << energy_stats.L1_total_energy << std::endl; 
+    std::cout << std::setw(12) << "  NoC  |" 
+              << std::setw(10)  << "NONE" 
+              << std::setw(15) << std::setprecision(10) << energy_stats.noc_total_energy << std::endl; 
     std::cout << std::setw(12) << "  L2   |" 
               << std::setw(10)  << static_cast<unsigned>(L2_dataflow)
               << std::setw(15) << std::setprecision(10) << energy_stats.L2_total_energy << std::endl; 
