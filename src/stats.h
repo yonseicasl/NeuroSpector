@@ -116,7 +116,7 @@ public:
     ~energy_stats_t();
     void init();
     void print_stats();
-    void total() { total_energy = MAC_total_energy + L1_total_energy + L2_total_energy + DRAM_total_energy; }
+    void total() { total_energy = MAC_total_energy + L1_total_energy + noc_total_energy + L2_total_energy + DRAM_total_energy; }
 
     // Eyeriss 45nm (pJ)
     float MAC_operand_avg = 2.2;
