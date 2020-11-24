@@ -207,7 +207,7 @@ void mapping_table_t::update_access_cnts() {
     if(noc_exists) {
         unsigned non_requesting_input_pes = noc_info.total_active_pes - noc_info.requesting.input_pes;
         unsigned non_requesting_weight_pes = noc_info.total_active_pes - noc_info.requesting.weight_pes;
-        unsigned non_requesting_output_pes = noc_info.total_active_pes - noc_info.requesting.input_pes;
+        unsigned non_requesting_output_pes = noc_info.total_active_pes - noc_info.requesting.output_pes;
         // NoC access counts
         // IS
         noc_access_cnts.is.input_cnts = L2_access_cnts.is.input_cnts * non_requesting_input_pes;
