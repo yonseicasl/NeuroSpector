@@ -364,45 +364,45 @@ void mapping_table_t::update_energy_stats() {
 
 void mapping_table_t::update_cycle_stats() {
     // DRAM accesses
-    size_t between_DRAM_L2_is = DRAM_access_cnts.is.input_cnts 
-                              + DRAM_access_cnts.is.weight_cnts 
-                              + DRAM_access_cnts.is.output_cnts;
-    size_t between_DRAM_L2_ws = DRAM_access_cnts.ws.input_cnts 
-                              + DRAM_access_cnts.ws.weight_cnts 
-                              + DRAM_access_cnts.ws.output_cnts;
-    size_t between_DRAM_L2_os = DRAM_access_cnts.os.input_cnts 
-                              + DRAM_access_cnts.os.weight_cnts 
-                              + DRAM_access_cnts.os.output_cnts;
+    size_t between_DRAM_L2_is = tile_sizes.L2.input_tile * DRAM_access_cnts.is.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.is.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.is.output_cnts;
+    size_t between_DRAM_L2_ws = tile_sizes.L2.input_tile * DRAM_access_cnts.ws.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.ws.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.ws.output_cnts;
+    size_t between_DRAM_L2_os = tile_sizes.L2.input_tile * DRAM_access_cnts.os.input_cnts 
+                              + tile_sizes.L2.weight_tile * DRAM_access_cnts.os.weight_cnts 
+                              + tile_sizes.L2.output_tile * DRAM_access_cnts.os.output_cnts;
     // L2 accesses 
-    size_t between_L2_L1_is = L2_access_cnts.is.input_cnts 
-                            + L2_access_cnts.is.weight_cnts 
-                            + L2_access_cnts.is.output_cnts;
-    size_t between_L2_L1_ws = L2_access_cnts.ws.input_cnts 
-                            + L2_access_cnts.ws.weight_cnts 
-                            + L2_access_cnts.ws.output_cnts;
-    size_t between_L2_L1_os = L2_access_cnts.os.input_cnts 
-                            + L2_access_cnts.os.weight_cnts 
-                            + L2_access_cnts.os.output_cnts;
+    size_t between_L2_L1_is = tile_sizes.L1.input_tile * L2_access_cnts.is.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.is.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.is.output_cnts;
+    size_t between_L2_L1_ws = tile_sizes.L1.input_tile * L2_access_cnts.ws.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.ws.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.ws.output_cnts;
+    size_t between_L2_L1_os = tile_sizes.L1.input_tile * L2_access_cnts.os.input_cnts 
+                            + tile_sizes.L1.weight_tile * L2_access_cnts.os.weight_cnts 
+                            + tile_sizes.L1.output_tile * L2_access_cnts.os.output_cnts;
     // NoC accesses TODO: input modeling 
-    size_t between_L1_L1_is = noc_access_cnts.is.input_cnts / noc_info.requesting.input_pes
-                            + noc_access_cnts.is.weight_cnts / noc_info.requesting.weight_pes 
-                            + noc_access_cnts.is.output_cnts / noc_info.requesting.output_pes;
-    size_t between_L1_L1_ws = noc_access_cnts.ws.input_cnts / noc_info.requesting.input_pes 
-                            + noc_access_cnts.ws.weight_cnts / noc_info.requesting.weight_pes 
-                            + noc_access_cnts.ws.output_cnts / noc_info.requesting.output_pes;
-    size_t between_L1_L1_os = noc_access_cnts.os.input_cnts / noc_info.requesting.input_pes 
-                            + noc_access_cnts.os.weight_cnts / noc_info.requesting.weight_pes 
-                            + noc_access_cnts.os.output_cnts / noc_info.requesting.output_pes;
+    size_t between_L1_L1_is = tile_sizes.L1.input_tile * noc_access_cnts.is.input_cnts / noc_info.requesting.input_pes
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.is.weight_cnts / noc_info.requesting.weight_pes 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.is.output_cnts / noc_info.requesting.output_pes;
+    size_t between_L1_L1_ws = tile_sizes.L1.input_tile * noc_access_cnts.ws.input_cnts / noc_info.requesting.input_pes 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.ws.weight_cnts / noc_info.requesting.weight_pes 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.ws.output_cnts / noc_info.requesting.output_pes;
+    size_t between_L1_L1_os = tile_sizes.L1.input_tile * noc_access_cnts.os.input_cnts / noc_info.requesting.input_pes 
+                            + tile_sizes.L1.weight_tile * noc_access_cnts.os.weight_cnts / noc_info.requesting.weight_pes 
+                            + tile_sizes.L1.output_tile * noc_access_cnts.os.output_cnts / noc_info.requesting.output_pes;
     // L1 accesses 
-    size_t between_L1_MAC_is = L1_access_cnts.is.input_cnts 
-                             + L1_access_cnts.is.weight_cnts 
-                             + L1_access_cnts.is.output_cnts;
-    size_t between_L1_MAC_ws = L1_access_cnts.ws.input_cnts 
-                             + L1_access_cnts.ws.weight_cnts 
-                             + L1_access_cnts.ws.output_cnts;
-    size_t between_L1_MAC_os = L1_access_cnts.os.input_cnts 
-                             + L1_access_cnts.os.weight_cnts 
-                             + L1_access_cnts.os.output_cnts;
+    size_t between_L1_MAC_is = tile_sizes.MAC.input_tile * L1_access_cnts.is.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.is.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.is.output_cnts;
+    size_t between_L1_MAC_ws = tile_sizes.MAC.input_tile * L1_access_cnts.ws.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.ws.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.ws.output_cnts;
+    size_t between_L1_MAC_os = tile_sizes.MAC.input_tile * L1_access_cnts.os.input_cnts 
+                             + tile_sizes.MAC.weight_tile * L1_access_cnts.os.weight_cnts 
+                             + tile_sizes.MAC.output_tile * L1_access_cnts.os.output_cnts;
     // MAC total cycles
     size_t active_macs = get_val(parameter_t::K, component_t::MAC) * get_val(parameter_t::B, component_t::MAC)
                        * get_val(parameter_t::P, component_t::MAC) * get_val(parameter_t::Q, component_t::MAC)
