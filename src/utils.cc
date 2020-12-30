@@ -27,6 +27,7 @@ void handler_t::print_line(unsigned num_, std::string str_) {
     }
     std::cout << std::endl;
 }
+
 void handler_t::make_dir(std::string name_) {
     if(mkdir(name_.c_str(), 0776) == -1 && errno != EEXIST) { 
         std::cerr << "Error: Fail to create " << name_ << std::endl; 

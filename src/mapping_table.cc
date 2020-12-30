@@ -21,15 +21,15 @@ void mapping_table_t::print_stats() {
     component_t last_component = static_cast<component_t>(U_size);
     parameter_t last_parameter = static_cast<parameter_t>(D_size);
     std::cout << "   U \\ D   |  ";
-    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+    for(const auto &&d : enum_range<parameter_t>(last_parameter)) {
         std::cout << D_str.at(static_cast<unsigned>(d)) << "("
                   << std::setw(3) << layer_vals.at(static_cast<unsigned>(d)) << ") ";
     }
     std::cout << std::endl;
     handler.print_line(63, "-");
-    for(const auto &u : enum_range<component_t>(last_component)) {
+    for(const auto &&u : enum_range<component_t>(last_component)) {
         std::cout << U_str.at(static_cast<unsigned>(u)) << "  |"; 
-        for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+        for(const auto &&d : enum_range<parameter_t>(last_parameter)) {
             std::cout << std::setw(7) << get_val(d, u);
         }
         std::cout << std::endl;
@@ -67,7 +67,7 @@ unsigned mapping_table_t::get_product(parameter_t D, component_t U) {
     component_t next_U = static_cast<component_t>(static_cast<unsigned>(U) + 1);
     unsigned column = static_cast<unsigned>(D);
     unsigned product = 1;
-    for(const auto &u : enum_range<component_t>(next_U)) {
+    for(const auto &&u : enum_range<component_t>(next_U)) {
         unsigned row  = static_cast<unsigned>(u);
         product *= degrees.at(column + 7 * row);
     }
@@ -84,7 +84,7 @@ unsigned mapping_table_t::get_reverse_product(parameter_t D, component_t U) {
 }
 
 void mapping_table_t::update_dram_row() {
-    for(const auto &d : enum_range<parameter_t>(parameter_t::SIZE)) {
+    for(const auto &&d : enum_range<parameter_t>(parameter_t::SIZE)) {
        unsigned val = layer_vals.at(static_cast<unsigned>(d)) / get_product(d, component_t::L2);
        unsigned remainder = layer_vals.at(static_cast<unsigned>(d)) % get_product(d, component_t::L2);
        if(remainder > 0)
@@ -626,7 +626,7 @@ void mapping_table_t::print_cycle_stats() {
 //unsigned mapping_table_t::get_row_product(component_t U) {
 //    parameter_t last_parameter = static_cast<parameter_t>(D_size);
 //    unsigned product = 1;
-//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+//    for(const auto &&d : enum_range<parameter_t>(last_parameter)) {
 //        product *= get_val(d, U);
 //    }
 //    return product;
@@ -637,7 +637,7 @@ void mapping_table_t::print_cycle_stats() {
 //    unsigned cnt = 0;
 //    unsigned max_idx = 0;
 //    unsigned max_val = 1;
-//    for(const auto &d : enum_range<parameter_t>(last_parameter)) {
+//    for(const auto &&d : enum_range<parameter_t>(last_parameter)) {
 //        if(cnt == 0) 
 //            max_val = layer_vals.at(cnt) / get_product(d, component_t::L2);
 //        else {
