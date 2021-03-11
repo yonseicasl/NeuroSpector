@@ -5,168 +5,152 @@
 #include <string>
 #include <vector>
 
-#include "configs.h"
+#include "accelerator.h"
+#include "enums.h"
+#include "mapping_table.h"
 #include "utils.h"
 
-enum class dataflow_t {
-    IS, WS, OS, NO, SIZE
-};
-
-/* Accelerator */
-class accelerator_t {
+/* Stats */
+class stats_t {
 public:
-    accelerator_t(accelerator_configs_t &accelerator_configs_);
-    ~accelerator_t();
-    void init();
-    void print_stats();
+    stats_t(const accelerator_t *accelerator_, const mapping_table_t *mapping_table_);
+    ~stats_t();
 
-    std::string name;
-    // PRECISION
-    unsigned input_precision;
-    unsigned weight_precision;
-    unsigned output_precision;
-    // MAC
-    unsigned mac_per_pe;
-    unsigned mac_width;
-    dataflow_t L0_dataflow;
-    // L1
-    bool L1_mode; // Shared: 0 / Separate: 1
-    unsigned L1_total_size;
-    unsigned L1_input_size;
-    unsigned L1_weight_size;
-    unsigned L1_output_size;
-    dataflow_t L1_dataflow;
-    // X, Y
-    bool array_mode; // flexible: 0 / fixed: 1
-    unsigned array_size_x;
-    unsigned array_size_y;
-    unsigned array_map_x;
-    unsigned array_map_y;
-    // L2
-    unsigned L2_shared_size;
-    dataflow_t L2_dataflow;
+    void print_stats() const;
+    void print_csv() const;
+    void update_stats();
+    size_t get_total_energy() const { return total_energy; }
+    size_t get_dram_energy() const { return dram_energy; }
+    size_t get_total_cycle() const { return total_cycle; }
+    double get_total_edp() const { return total_edp; }
+    
+    struct iteration_t {
+        size_t input_rd_it;
+        size_t filter_rd_it;
+        size_t output_rd_it;
+        size_t output_wt_it;
+    };
 
 private:
-    accelerator_configs_t &accelerator_configs;
-};
-
-/* Tile sizes */
-class tile_size_t {
-public:
-    tile_size_t();
-    ~tile_size_t();
-    void init();
-    void print_stats();
-
-    struct info_t {
-        size_t input_tile;
-        size_t weight_tile;
-        size_t output_tile;
-    };
-
-    info_t MAC;
-    info_t L1;
-    info_t L2;
-    info_t DRAM;
-};
-
-/* NoC information */
-class noc_info_t {
-public:
-    noc_info_t();
-    ~noc_info_t();
-    void init();
-    void print_stats();
-
-    struct info_t {
-        unsigned input_pes;
-        unsigned weight_pes;
-        unsigned output_pes;
-    };
-
-    float pe_utilization;
-    unsigned total_active_pes;
-    info_t requesting;
-};
-
-/* Access counts */
-class access_cnts_t {
-public:
-    access_cnts_t();
-    ~access_cnts_t();
-    void init();
-    void print_stats();
-
-    struct info_t {
-        info_t() : input_cnts(0), weight_cnts(0), output_cnts(0) {}
-        size_t input_cnts;
-        size_t weight_cnts;
-        size_t output_cnts;
-    };
-
-    info_t is;
-    info_t ws;
-    info_t os;
-};
-
-/* Energy stats */
-class energy_stats_t {
-public:
-    energy_stats_t();
-    ~energy_stats_t();
-    void init();
-    void print_stats();
-    void total() { total_energy = MAC_total_energy + L1_total_energy + noc_total_energy + L2_total_energy + DRAM_total_energy; }
-
-    // Eyeriss 45nm (pJ)
-    float MAC_operand_avg = 2.2;
-    float L1_read_write_input = 0.19;
-    float L1_read_write_weight = 0.94;
-    float L1_read_write_output = 0.25;
-    float L2_read_write_avg = 7.5;
-    float DRAM_read_write_avg = 440;
-
-    // Simba 45nm (pJ)
-//    float MAC_operand_avg = 2.2;
-//    float L1_read_write_input = 0.81;
-//    float L1_read_write_weight = 1.45;
-//    float L1_read_write_output = 0.58;
-//    float L2_read_write_avg = 7.71;
-//    float DRAM_read_write_avg = 440;
-
-    double MAC_total_energy;
-    // Affected by MAC dataflow
-    double L1_total_energy;
-    // Affected by non-requesting PEs
-    double noc_total_energy;
-    // Affected by L2 dataflow & requesting PEs
-    double L2_total_energy;
-    // Affected by L2 dataflow
-    double DRAM_total_energy;
+    // Update stats
+    void update_tile_size();
+    void update_iteration();
+    void update_active_components();
+    void update_noc();
+    void update_energy();
+    void update_utilization();
+    void update_cycle();
+    void update_edp();
+    // Tile size
+    size_t mac_input_tile_size; 
+    size_t mac_filter_tile_size;
+    size_t mac_output_tile_size; 
+    size_t l1_input_tile_size; 
+    size_t l1_filter_tile_size;
+    size_t l1_output_tile_size; 
+    size_t l2_input_tile_size; 
+    size_t l2_filter_tile_size;
+    size_t l2_output_tile_size;
+    // Iteration 
+    iteration_t l1_iteration;
+    iteration_t l2_iteration;
+    iteration_t dram_iteration;
+    // NoC
+    size_t num_s0_input_hosts;
+    size_t num_s0_filter_hosts;
+    size_t num_s0_output_hosts;
+    size_t num_s1_input_hosts;
+    size_t num_s1_filter_hosts;
+    size_t num_s1_output_hosts;
+//    size_t num_s2_input_hosts;
+//    size_t num_s2_filter_hosts;
+//    size_t num_s2_output_hosts;
+    // Active components
+    size_t num_active_macs;
+    size_t num_active_pes;
+    size_t num_active_accelerators;
+    // Energy
+    double mac_energy;
+    double l1_energy;
+    double l2_energy;
+    double dram_energy;
+    double s0_noc_energy;
+    double s1_noc_energy;
+    double s2_noc_energy;
     double total_energy;
+    // Utilization
+    //float s0_utilization;
+    float l1_utilization;
+    float s1_utilization;
+    float l2_utilization;
+    //float s2_utilization;
+    // Cycle
+    size_t mac_cycle;
+    //double s0_noc_cycle;
+    size_t l1_cycle;
+    //double s1_noc_cycle;
+    size_t l2_cycle;
+    //double s2_noc_cycle;
+    size_t dram_cycle;
+    size_t total_cycle;
+    // EDP
+    double total_edp;
+    // Requisites 
+    const accelerator_t *accelerator;
+    const mapping_table_t *mapping_table;
 };
 
-/* Cycle stats */
-class cycle_stats_t {
+/* Energy reference */
+class energy_ref_t {
 public:
-    cycle_stats_t();
-    ~cycle_stats_t();
-    void init();
-    void print_stats();
-    void total() { total_cycle = MAC_total_cycle + L1_total_cycle + noc_total_cycle + L2_total_cycle + DRAM_total_cycle; }
+    energy_ref_t();
+    ~energy_ref_t();
+    // Eyeriss 45nm (pJ)
+    float mac_operation = 0.075;
 
-    float MAC_latency = 1;
-    float L1_latency = 2;
-    float noc_latency = 2;
-    float L2_latency = 15;
-    float DRAM_latency = 150;
+    // L1 Separated (24/448/48)
+//    float l1_input_ingress = 0.05;
+//    float l1_input_egress = 0.05;
+//    float l1_filter_ingress = 0.94;
+//    float l1_filter_egress = 0.94;
+//    float l1_output_ingress = 0.10;
+//    float l1_output_egress = 0.10;
+    // L1 Shared (520B)
+    float l1_input_ingress = 0.96;
+    float l1_input_egress = 0.96;
+    float l1_filter_ingress = 0.96;
+    float l1_filter_egress = 0.96;
+    float l1_output_ingress = 0.96;
+    float l1_output_egress = 0.96;
+    // L2 128 KB
+    float l2_input_ingress = 13.5;
+    float l2_input_egress = 13.5;
+    float l2_filter_ingress = 13.5;
+    float l2_filter_egress = 13.5;
+    float l2_output_ingress = 13.5;
+    float l2_output_egress = 13.5;
 
-    double MAC_total_cycle;
-    double L1_total_cycle;
-    double noc_total_cycle;
-    double L2_total_cycle;
-    double DRAM_total_cycle;
-    double total_cycle;
+    float dram_ingress = 200;
+    float dram_egress = 200;
+    // Simba 45nm (pJ)
+    //float mac_energy = 2.2;
+    //float l1_input_energy = 0.81;
+    //float l1_filter_energy = 1.45;
+    //float l1_output_energy = 0.58;
+    //float l2_shared_energy = 7.71;
+    //float dram_energy = 440;
+};
+
+/* Cycle reference */
+class cycle_ref_t {
+public: 
+    cycle_ref_t(); 
+    ~cycle_ref_t();
+
+    size_t mac_operation = 1;
+    size_t l1_access = 1;
+    size_t l2_access = 2;
+    size_t dram_access = 30;
 };
 
 #endif

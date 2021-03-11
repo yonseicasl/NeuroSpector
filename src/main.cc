@@ -1,3 +1,4 @@
+#include <ctime>
 #include <iostream>
 #include <string>
 
@@ -10,43 +11,71 @@ static handler_t handler;
 
 using namespace std;
 
+void print_usage(char **argv) {
+    cerr << "# Analyzer" << endl;
+    cerr << "  Usage: " << argv[0] << "A [accelerator.cfg] [mapping.csv]" << endl;
+    cerr << "  Usage: " << argv[0] << "A [accelerator.cfg] [mapping.csv] [Layer index > 0]" << endl;
+    cerr << "# Optimizer" << endl;
+    cerr << "  Dataflows: fixed or flexible" << endl;
+    cerr << "  Usage: " << argv[0] << "O [accelerator.cfg] [network.csv] [Dataflows]" << endl;
+    cerr << "  Usage: " << argv[0] << "O [accelerator.cfg] [network.csv] [Dataflows] [Layer index > 0]" << endl;
+    exit(1);
+}
+
 int main(int argc, char **argv) {
+    clock_t start;
+    clock_t finish;
+    // Start time
+    start = time(nullptr);
     // Analyzer
     if(*argv[1] == 'A') {
-        mapping_configs_t mapping_configs(argv[2]);
-        analyzer_t *analyzer = new analyzer_t(mapping_configs);
-        if(argc == 4) {
-            unsigned layer_idx = std::stoi(argv[3]);
+        // Analyzer initialization
+        analyzer_t *analyzer = new analyzer_t(argv[2], argv[3]);
+        // Analyzing
+        if(argc == 5) {
+            unsigned layer_idx = stoi(argv[4]);
             if(layer_idx == 0)
                 handler.print_err(err_type_t::INVAILD, "Layer index must be more than 0");
             analyzer->print_stats(layer_idx);
         }
         else
-            analyzer->print_stats(0);
+            analyzer->print_stats();
         delete analyzer;
     }
     // Optimizer
     else if(*argv[1] == 'O') {
-        accelerator_configs_t accelerator_configs(argv[2]);
-        network_configs_t network_configs(argv[3]);
-        optimizer_t *optimizer = new optimizer_t(accelerator_configs, network_configs);
-        optimizer->optimize();
-        if(argc == 5) {
-            unsigned layer_idx = std::stoi(argv[4]);
+        // Dataflow: fiexed (true) or flexible (false)
+        bool is_fixed = true;
+        string is_fixed_str(argv[4]);
+        if(is_fixed_str.compare("fixed") == 0) 
+            is_fixed = true;
+        else if(is_fixed_str.compare("flexible") == 0) 
+            is_fixed = false;
+        else
+            handler.print_err(err_type_t::INVAILD, "Dataflow policy: fixed or flexible");
+        // Optimizer initialization
+        unsigned num_threads = stoi(argv[6]);
+        optimizer_t *optimizer = new optimizer_t(argv[2], argv[3], is_fixed, num_threads);
+        // Optimizing
+        if(argc == 7) {
+            unsigned layer_idx = stoi(argv[5]);
             if(layer_idx == 0)
                 handler.print_err(err_type_t::INVAILD, "Layer index must be more than 0");
-            optimizer->print_stats(layer_idx);
+            optimizer->run_brute_force(layer_idx);
+            //optimizer->run_level_by_level(layer_idx);
         }
         else
-            optimizer->print_stats(0);
+            optimizer->run_brute_force();
         delete optimizer;
     }
-    else {
-        cerr << "Usage: " << argv[0] << "A [mapping.csv]" << endl;
-        cerr << "Usage: " << argv[0] << "A [mapping.csv] [Layer index > 0]" << endl;
-        cerr << "Usage: " << argv[0] << "O [accelerator.csv] [network.csv]" << endl;
-        cerr << "Usage: " << argv[0] << "O [accelerator.csv] [network.csv] [Layer index > 0]" << endl;
-        exit(1);
-    }
+    else 
+        print_usage(argv);
+    // Finish time
+    finish = time(nullptr);
+    cout << "\n# TIME: " 
+         << (finish - start) / 3600 << " hr "
+         << (finish - start) / 60 << " min "
+         << (finish - start) % 60 << " sec " << endl;
+
     return 0;
 }
