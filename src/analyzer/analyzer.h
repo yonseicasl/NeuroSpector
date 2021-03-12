@@ -29,8 +29,7 @@ private:
     bool s1_x_validity(const unsigned idx_) const;      
     bool s1_y_validity(const unsigned idx_) const;      
     bool l2_validity(const unsigned idx_) const;      
-    bool s2_x_validity(const unsigned idx_) const;      
-    bool s2_y_validity(const unsigned idx_) const;      
+    bool s2_validity(const unsigned idx_) const;      
     // Update stats
     void update_stats(unsigned idx_);        
     // Variables & containers

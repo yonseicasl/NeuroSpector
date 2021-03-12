@@ -35,7 +35,7 @@ enum class parameter_t {
 
 // Components: U (mapping table rows) 
 enum class component_t { 
-    MAC, S0, L1, S1_X, S1_Y, L2, S2_X, S2_Y, DRAM, SIZE 
+    MAC, S0, L1, S1_X, S1_Y, L2, S2, DRAM, SIZE 
 };
 
 #endif

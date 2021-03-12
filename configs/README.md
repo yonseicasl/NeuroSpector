@@ -3,7 +3,7 @@
 ## 1. Accelerator (./accelerators)
 - An accelerator must have at least one MAC unit, and can be configured in various ways with temporal components [T] and spatial arrangement [S].
 - Temporal components (e.g., MAC, L1, and L2) can exploit data reuse depending on dataflow types (e.g., IS, WS, and OS). 
-- Spatial arrangement (e.g., S0, S1_X, S1_Y, S2_X, and S2_Y) can increase data-level parallelism and computational thorughput.
+- Spatial arrangement (e.g., S0, S1_X, S1_Y, S2) can increase data-level parallelism and computational thorughput.
 - [Eyeriss](https://ieeexplore.ieee.org/document/7738524) accelerator example:
   <p align="center"><img src="../img/eyeriss.png" width="25%"></p>
 
@@ -115,15 +115,14 @@ ex) S1_X,14
       ex) L2_TYPE,ONLY_ONE_I,I_SIZE(B),BYPASS(or FIFO)
       ~~~    
 
-#### (6) S2_X & S2_Y [S]: # of multiple accelerators
+#### (6) S2 [S]: # of multiple accelerators
 - Communication between accelerators: 1 (TRUE) | 0 (FALSE)
 ~~~
 ex) S2_NOC_EXISTS,0
 ~~~
-- Spatial arrangement (X and Y direction)
+- Spatial arrangement 
 ~~~
-ex) S2_X,1
-    S2_Y,1
+ex) S2,1
 ~~~
 
 ## 2. Mapping Table (./mappings)

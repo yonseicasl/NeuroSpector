@@ -202,9 +202,9 @@ std::vector<unsigned> mapping_table_t::get_layer_values() const {
     return layer_values; 
 }
 
-std::vector<unsigned> mapping_table_t::get_l2_degrees() const {
-    std::vector<unsigned> l2_degrees;
+std::vector<unsigned> mapping_table_t::get_row_degrees(const component_t U) const {
+    std::vector<unsigned> rtn_degrees;
     for(unsigned column = 0; column < D_size; column++) 
-        l2_degrees.push_back(degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)));
-    return l2_degrees;
+        rtn_degrees.push_back(degrees.at(column + D_size * static_cast<unsigned>(U)));
+    return rtn_degrees;
 }

@@ -47,10 +47,8 @@ public:
     unsigned l2_shared_size() const;
     buffer_type_t l2_type() const;
     dataflow_t l2_dataflow() const;
-    // S2_X & S2_Y [S]
-    bool s2_noc_exists() const;
-    unsigned s2_size_x() const;
-    unsigned s2_size_y() const;
+    // S2 [S]
+    unsigned s2_size() const;
     
 private:
     acc_cfg_t *acc_cfg;

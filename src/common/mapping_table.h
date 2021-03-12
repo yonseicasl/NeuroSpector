@@ -40,7 +40,7 @@ public:
     void swap_degrees(const std::vector<unsigned>& degrees_);
     std::vector<unsigned> get_degrees() const; 
     std::vector<unsigned> get_layer_values() const;
-    std::vector<unsigned> get_l2_degrees() const;
+    std::vector<unsigned> get_row_degrees(const component_t U) const;
 
 private:
     unsigned D_size;                        // Mapping table column size
@@ -51,8 +51,8 @@ private:
     std::vector<unsigned> degrees;          // Mapping degrees
     std::string layer_name;                 
     std::string D_str = "KBPQCSR";
-    std::string U_str = "MAC [T]S0  [S]L1  [T]S1_X[S]S1_Y[S]L2  [T]S2_X[S]S2_Y[S]DRAM   ";
-    std::string csv_str = " MAC,  S0,  L1,S1_X,S1_Y,  L2,S2_X,S2_Y,DRAM,";
+    std::string U_str = "MAC [T]S0  [S]L1  [T]S1_X[S]S1_Y[S]L2  [T]S2     DRAM   ";
+    std::string csv_str = " MAC,  S0,  L1,S1_X,S1_Y,  L2,  S2,DRAM,";
 };
 
 #endif 

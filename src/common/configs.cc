@@ -74,8 +74,7 @@ acc_cfg_t::acc_cfg_t(std::string cfg_path_)
       s1_noc_exists(false), s1_size_x(1), s1_size_y(1), 
       l2_input_bypass(false), l2_filter_bypass(false), l2_output_bypass(false),
       l2_input_size(0), l2_filter_size(0), l2_output_size(0), l2_shared_size(0), 
-      l2_type(buffer_type_t::SIZE), l2_dataflow(dataflow_t::SIZE), 
-      s2_noc_exists(false), s2_size_x(1), s2_size_y(1) { 
+      l2_type(buffer_type_t::SIZE), l2_dataflow(dataflow_t::SIZE), s2_size(1) { 
     parse();
 }
 
@@ -284,19 +283,9 @@ void acc_cfg_t::parse() {
                 }
                 else handler.print_err(err_type_t::INVAILD, "L2 TYPE");
             }
-            // S2_X & S2_Y [S]
-            else if(line.find("S2_NOC_EXISTS") != std::string::npos) {
-                unsigned exists_u = get_line_uint(line, 1);
-                if(exists_u == 1) s2_noc_exists = true;
-                else if(exists_u == 0) s2_noc_exists = false;
-                else handler.print_err(err_type_t::INVAILD, "S2_NOC_EXISTS");
-                continue;
-            }
-            else if(line.find("S2_X") != std::string::npos) {
-                s2_size_x = get_line_uint(line, 1); continue;
-            }
-            else if(line.find("S2_Y") != std::string::npos) {
-                s2_size_y = get_line_uint(line, 1); continue;
+            // S2 [S]
+            else if(line.find("S2") != std::string::npos) {
+                s2_size = get_line_uint(line, 1); continue;
             }
             else 
                 handler.print_err(err_type_t::INVAILD, "ACC parsing");
@@ -407,11 +396,7 @@ void map_cfg_t::parse() {
                         get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
-                    else if(row == 6 && line.find("S2_X") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
-                        if(!std::getline(config_file, line)) is_eof = true;
-                    }
-                    else if(row == 7 && line.find("S2_Y") != std::string::npos) {
+                    else if(row == 6 && line.find("S2") != std::string::npos) {
                         get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }

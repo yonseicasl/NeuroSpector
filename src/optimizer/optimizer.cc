@@ -28,8 +28,7 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
     exists.push_back(accelerator->s1_size_x() > 1 ? true : false);
     exists.push_back(accelerator->s1_size_y() > 1 ? true : false);
     exists.push_back(accelerator->l2_type() != buffer_type_t::NONE ? true : false);
-    exists.push_back(accelerator->s2_size_x() > 1 ? true : false);
-    exists.push_back(accelerator->s2_size_y() > 1 ? true : false);
+    exists.push_back(accelerator->s2_size() > 1 ? true : false);
     exists.push_back(true); // DRAM 
     // # of existent levels
     for(unsigned u = 0; u < U_size; u++) {
@@ -78,9 +77,6 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     global_similar_mapping_tables.assign(num_threads, tmp);
     // Mapping space generation
     mapping_space_t mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1)->get_layer_values());
-    // TODO: Mapping space reduction with spatial levels 
-    // space_reduction();
-    // std::cout << "# THE NUMBER OF REDUCED PERMUTATIONS: " << mapping_space.get_num_permutations() << std::endl;
     // Threads initialization
     std::vector<std::thread> workers;
     std::mutex m;
@@ -173,6 +169,47 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
         stats.print_stats();
 #endif
         delete for_stats;
+    }
+}
+
+void optimizer_t::run_2level_by_2level(const unsigned idx_) {
+    accelerator->print_stats();
+    std::cout << "# NETWORK    : " << network_name << std::endl;
+    std::cout << "# NUM THREADS: " << num_threads << std::endl;
+
+    bool df_fixed = true;
+    unsigned used_levels = 0; 
+    // Mapping space generation
+    for(unsigned i = 0; i < 3; i++) {
+        // L2 & S2
+        if(i == 0) {
+            if(accelerator->s2_size() > 1) used_levels++;
+            if(accelerator->l2_type() != buffer_type_t::NONE) used_levels++;
+            if(used_levels == 0) continue;
+            mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1)->get_layer_values());
+
+            if(df_fixed) {
+
+            }
+            else {
+
+            }
+        }
+        // L1 & S1
+        else if(i == 1) {
+            if(accelerator->s1_size_y() > 1) used_levels++;
+            if(accelerator->s1_size_y() > 1) used_levels++;
+            if(accelerator->l1_type() != buffer_type_t::NONE) used_levels++;
+            if(used_levels == 0) continue;
+
+        }
+        // MAC & S0
+        else {
+            if(accelerator->macs_per_pe() * accelerator->mac_width() > 1) used_levels++;
+            if(used_levels == 0) continue;
+
+        }
+        used_levels = 0;
     }
 }
 
@@ -339,9 +376,8 @@ bool optimizer_t::check_validity(const mapping_table_t *mapping_table_) const {
              & l1_validity(mapping_table_)
              & s1_x_validity(mapping_table_)
              & s1_y_validity(mapping_table_)
-             & l2_validity(mapping_table_);
-    //s2_x_validity(mapping_table_);
-    //s2_y_validity(mapping_table_);
+             & l2_validity(mapping_table_)
+             & s2_validity(mapping_table_);
     return rtn;
 }
 
@@ -477,22 +513,21 @@ bool optimizer_t::l2_validity(const mapping_table_t *mapping_table_) const {
     return validity;
 }     
 
-bool optimizer_t::s2_x_validity(const mapping_table_t *mapping_table_) const {
+bool optimizer_t::s2_validity(const mapping_table_t *mapping_table_) const {
     bool validity = true;
-    unsigned s2_size_x_val = 1;
-    for(unsigned column = 0; column < D_size; column++)
-        s2_size_x_val *= mapping_table_->get_degree(static_cast<parameter_t>(column), component_t::S2_X);
-    if(s2_size_x_val > accelerator->s2_size_x()) 
-        validity = false;
-    return validity;
-}     
-
-bool optimizer_t::s2_y_validity(const mapping_table_t *mapping_table_) const {
-    bool validity = true;
-    unsigned s2_size_y_val = 1;
-    for(unsigned column = 0; column < D_size; column++)
-        s2_size_y_val *= mapping_table_->get_degree(static_cast<parameter_t>(column), component_t::S2_Y);
-    if(s2_size_y_val > accelerator->s2_size_y()) 
+    unsigned s2_size_val = 1;
+    for(unsigned column = 0; column < D_size; column++) {
+        // Only K, B, P, and Q
+        if(column == 0 || column == 1 || column == 2 || column == 3)
+            s2_size_val *= mapping_table_->get_degree(static_cast<parameter_t>(column), component_t::S2);
+        else {
+            if(mapping_table_->get_degree(static_cast<parameter_t>(column), component_t::S2) > 1) {
+                validity = false;
+                break;
+            }
+        }
+    }
+    if(s2_size_val > accelerator->s2_size()) 
         validity = false;
     return validity;
 }     

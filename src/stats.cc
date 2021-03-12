@@ -256,20 +256,13 @@ void stats_t::update_active_components() {
                    * mapping_table->get_degree(parameter_t::C, component_t::S1_Y)
                    * mapping_table->get_degree(parameter_t::S, component_t::S1_Y)
                    * mapping_table->get_degree(parameter_t::R, component_t::S1_Y);
-    num_active_accelerators = mapping_table->get_degree(parameter_t::K, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::B, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::P, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::Q, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::C, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::S, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::R, component_t::S2_X)
-                            * mapping_table->get_degree(parameter_t::K, component_t::S2_Y)
-                            * mapping_table->get_degree(parameter_t::B, component_t::S2_Y)
-                            * mapping_table->get_degree(parameter_t::P, component_t::S2_Y)
-                            * mapping_table->get_degree(parameter_t::Q, component_t::S2_Y)
-                            * mapping_table->get_degree(parameter_t::C, component_t::S2_Y)
-                            * mapping_table->get_degree(parameter_t::S, component_t::S2_Y)
-                            * mapping_table->get_degree(parameter_t::R, component_t::S2_Y);
+    num_active_accelerators = mapping_table->get_degree(parameter_t::K, component_t::S2)
+                            * mapping_table->get_degree(parameter_t::B, component_t::S2)
+                            * mapping_table->get_degree(parameter_t::P, component_t::S2)
+                            * mapping_table->get_degree(parameter_t::Q, component_t::S2)
+                            * mapping_table->get_degree(parameter_t::C, component_t::S2)
+                            * mapping_table->get_degree(parameter_t::S, component_t::S2)
+                            * mapping_table->get_degree(parameter_t::R, component_t::S2);
 }
 
 void stats_t::update_noc() {
@@ -341,7 +334,7 @@ void stats_t::update_noc() {
                         * mapping_table->get_degree(parameter_t::B, component_t::S1_Y)
                         * mapping_table->get_degree(parameter_t::P, component_t::S1_Y)
                         * mapping_table->get_degree(parameter_t::Q, component_t::S1_Y);
-    // TODO: S2_X & S2_Y
+    // TODO: S2
 }
 
 void stats_t::update_energy() {

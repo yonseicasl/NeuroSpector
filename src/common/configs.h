@@ -64,10 +64,8 @@ public:
     unsigned l2_shared_size;
     buffer_type_t l2_type;
     dataflow_t l2_dataflow;
-    // S2_X & S2_Y [S]
-    bool s2_noc_exists;
-    unsigned s2_size_x;
-    unsigned s2_size_y;
+    // S2 [S]
+    unsigned s2_size;
 };
 
 /* Mapping table configuration (for analyzer) */

@@ -18,8 +18,7 @@ analyzer_t::analyzer_t(const std::string& acc_cfg_path_,
     exists.push_back(accelerator->s1_size_x() > 1 ? true : false);
     exists.push_back(accelerator->s1_size_y() > 1 ? true : false);
     exists.push_back(accelerator->l2_type() != buffer_type_t::NONE ? true : false);
-    exists.push_back(accelerator->s2_size_x() > 1 ? true : false);
-    exists.push_back(accelerator->s2_size_y() > 1 ? true : false);
+    exists.push_back(accelerator->s2_size() > 1 ? true : false);
     exists.push_back(true); // DRAM 
     // Mapping tables & stat containers initialization
     map_cfg_t *map_cfg = new map_cfg_t(map_cfg_path_);
@@ -88,8 +87,7 @@ void analyzer_t::check_validity(const unsigned idx_) const {
     if(!s1_x_validity(idx_)) { std::cout << "# Mapping table " << idx_ << " is invalid at S1_X [S]" << std::endl; exit(1); }    
     if(!s1_y_validity(idx_)) { std::cout << "# Mapping table " << idx_ << " is invalid at S1_Y [S]" << std::endl; exit(1); }    
     if(!l2_validity(idx_)) { std::cout << "# Mapping table " << idx_ << " is invalid at L2 [T]" << std::endl; exit(1); }    
-    if(!s2_x_validity(idx_)) { std::cout << "# Mapping table " << idx_ << " is invalid at S2_X [S]" << std::endl; exit(1); }     
-    if(!s2_y_validity(idx_)) { std::cout << "# Mapping table " << idx_ << " is invalid at S2_Y [S]" << std::endl; exit(1); }     
+    if(!s2_validity(idx_)) { std::cout << "# Mapping table " << idx_ << " is invalid at S2 [S]" << std::endl; exit(1); }     
     return;
 }
 
@@ -225,22 +223,21 @@ bool analyzer_t::l2_validity(const unsigned idx_) const {
     return validity;
 }     
 
-bool analyzer_t::s2_x_validity(const unsigned idx_) const {
+bool analyzer_t::s2_validity(const unsigned idx_) const {
     bool validity = true;
-    unsigned s2_size_x_val = 1;
-    for(unsigned column = 0; column < D_size; column++)
-        s2_size_x_val *= mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S2_X);
-    if(s2_size_x_val > accelerator->s2_size_x()) 
-        validity = false;
-    return validity;
-}     
-
-bool analyzer_t::s2_y_validity(const unsigned idx_) const {
-    bool validity = true;
-    unsigned s2_size_y_val = 1;
-    for(unsigned column = 0; column < D_size; column++)
-        s2_size_y_val *= mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S2_Y);
-    if(s2_size_y_val > accelerator->s2_size_y()) 
+    unsigned s2_size_val = 1;
+    // Only K, B, P, and Q
+    for(unsigned column = 0; column < D_size; column++) {
+        if(column == 0 || column == 1 || column == 2 || column == 3)
+            s2_size_val *= mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S2);
+        else {
+            if(mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S2) > 1) {
+                validity = false;
+                break;
+            }
+        }
+    }
+    if(s2_size_val > accelerator->s2_size()) 
         validity = false;
     return validity;
 }     

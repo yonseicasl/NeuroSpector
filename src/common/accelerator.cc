@@ -195,13 +195,11 @@ void accelerator_t::print_stats() const {
         }
         handler.print_line(line_num, "-");
     }
-    // S2_X & S2_Y [S]
-    if(acc_cfg->s2_size_x * acc_cfg->s2_size_y > 1) {
-        std::cout << "# S2_X & S2_Y [S]" << std::endl;
+    // S2 [S]
+    if(acc_cfg->s2_size > 1) {
+        std::cout << "# S2 [S]" << std::endl;
         handler.print_line(setw_num, "*");
-        std::cout << std::setw(setw_num) << "S2 NOC EXISTS: " << acc_cfg->s2_noc_exists << "\n"
-                  << std::setw(setw_num) << "S2 SIZE X    : " << acc_cfg->s2_size_x << "\n"
-                  << std::setw(setw_num) << "S2 SIZE Y    : " << acc_cfg->s2_size_y << std::endl;
+        std::cout << std::setw(setw_num) << "S2 SIZE      : " << acc_cfg->s2_size << std::endl;
         handler.print_line(line_num, "-");
     }
 }
@@ -319,9 +317,5 @@ buffer_type_t accelerator_t::l2_type() const { return acc_cfg->l2_type; }
 
 dataflow_t accelerator_t::l2_dataflow() const { return acc_cfg->l2_dataflow; }
 
-// S2_X & S2_Y [S]
-bool accelerator_t::s2_noc_exists() const { return acc_cfg->s2_noc_exists; }
-
-unsigned accelerator_t::s2_size_x() const { return acc_cfg->s2_size_x; }
-
-unsigned accelerator_t::s2_size_y() const { return acc_cfg->s2_size_y; }
+// S2 [S]
+unsigned accelerator_t::s2_size() const { return acc_cfg->s2_size; }

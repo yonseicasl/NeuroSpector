@@ -29,6 +29,7 @@ public:
     // Optimizer APIs
     void run_brute_force();                         // Run brute-force optimizing of all layers
     void run_brute_force(const unsigned idx_);      // Run brute-force optimizing of the target layer
+    void run_2level_by_2level(const unsigned idx_);
 
 private:
     // Mapping worker
@@ -46,8 +47,7 @@ private:
     bool s1_x_validity(const mapping_table_t *mapping_table_) const; 
     bool s1_y_validity(const mapping_table_t *mapping_table_) const;
     bool l2_validity(const mapping_table_t *mapping_table_) const;
-    bool s2_x_validity(const mapping_table_t *mapping_table_) const;
-    bool s2_y_validity(const mapping_table_t *mapping_table_) const; 
+    bool s2_validity(const mapping_table_t *mapping_table_) const;
     // Variables & containers
     bool is_fixed;                                  // Dataflow: fixed (true) or flexible (false)
     unsigned D_size;                                // Mapping table column size
