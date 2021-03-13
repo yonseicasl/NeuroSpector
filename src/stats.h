@@ -13,7 +13,8 @@
 /* Stats */
 class stats_t {
 public:
-    stats_t(const accelerator_t *accelerator_, const mapping_table_t *mapping_table_);
+    stats_t(const accelerator_t *accelerator_, 
+            const mapping_table_t *mapping_table_);
     ~stats_t();
 
     void print_stats() const;
@@ -21,6 +22,8 @@ public:
     void update_stats();
     size_t get_total_energy() const { return total_energy; }
     size_t get_dram_energy() const { return dram_energy; }
+    size_t get_l2_energy() const { return l2_energy; }
+    size_t get_l1_energy() const { return l1_energy; }
     size_t get_total_cycle() const { return total_cycle; }
     double get_total_edp() const { return total_edp; }
     

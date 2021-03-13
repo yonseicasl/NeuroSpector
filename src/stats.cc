@@ -5,7 +5,8 @@ static energy_ref_t energy_ref;
 static cycle_ref_t cycle_ref;
 
 /* Stats */
-stats_t::stats_t(const accelerator_t *accelerator_, const mapping_table_t *mapping_table_)
+stats_t::stats_t(const accelerator_t *accelerator_, 
+                const mapping_table_t *mapping_table_)
     : accelerator(accelerator_), mapping_table(mapping_table_) {
 }
 
