@@ -426,7 +426,7 @@ void stats_t::update_energy() {
 }
 
 void stats_t::update_utilization() {
-    s0_utilization = float(num_active_macs) / (accelerator->macs_per_pe() * accelerator->mac_width());
+    s0_utilization = float(num_active_macs) / (accelerator->macs_per_pe() * accelerator->mac_width()) * 100;
     l1_utilization = float(l1_input_tile_size + l1_filter_tile_size + l1_output_tile_size) 
                    / (accelerator->l1_input_size() + accelerator->l1_filter_size() + accelerator->l1_output_size() + accelerator->l1_shared_size()) * 100;
     s1_utilization = float(num_active_pes) / (accelerator->s1_size_x() * accelerator->s1_size_y()) * 100;
