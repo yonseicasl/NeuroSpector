@@ -33,21 +33,21 @@ public:
 
 private:
     // Mapping worker
-    void mapping_worker(const unsigned idx_, 
-                        const unsigned tid_, 
-                        const mapping_space_t& mapping_space_,
-                        const component_t start_,
-                        const component_t end_,
-                        std::mutex& m_); 
+    void brute_force_worker(const unsigned idx_, 
+                            const unsigned tid_, 
+                            const mapping_space_t& mapping_space_,
+                            const component_t start_,
+                            const component_t end_,
+                            std::mutex& m_); 
     // Check each mapping table with the accelerator
-    bool check_validity(const mapping_table_t *mapping_table_) const; 
-    bool mac_validity(const mapping_table_t *mapping_table_) const;    
-    bool s0_validity(const mapping_table_t *mapping_table_) const; 
-    bool l1_validity(const mapping_table_t *mapping_table_) const;
-    bool s1_x_validity(const mapping_table_t *mapping_table_) const; 
-    bool s1_y_validity(const mapping_table_t *mapping_table_) const;
-    bool l2_validity(const mapping_table_t *mapping_table_) const;
-    bool s2_validity(const mapping_table_t *mapping_table_) const;
+    bool check_validity(const mapping_table_t& mapping_table_) const; 
+    bool mac_validity(const mapping_table_t& mapping_table_) const;    
+    bool s0_validity(const mapping_table_t& mapping_table_) const; 
+    bool l1_validity(const mapping_table_t& mapping_table_) const;
+    bool s1_x_validity(const mapping_table_t& mapping_table_) const; 
+    bool s1_y_validity(const mapping_table_t& mapping_table_) const;
+    bool l2_validity(const mapping_table_t& mapping_table_) const;
+    bool s2_validity(const mapping_table_t& mapping_table_) const;
     // Variables & containers
     bool is_fixed;                                  // TODO: Dataflow: fixed (true) or flexible (false)
     unsigned D_size;                                // Mapping table column size

@@ -14,7 +14,7 @@
 class stats_t {
 public:
     stats_t(const accelerator_t *accelerator_, 
-            const mapping_table_t *mapping_table_);
+            const mapping_table_t& mapping_table_);
     ~stats_t();
 
     void print_stats() const;
@@ -94,7 +94,7 @@ private:
     double total_edp;
     // Requisites 
     const accelerator_t *accelerator;
-    const mapping_table_t *mapping_table;
+    const mapping_table_t mapping_table;
 };
 
 /* Energy reference */

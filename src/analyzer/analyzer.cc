@@ -25,12 +25,12 @@ analyzer_t::analyzer_t(const std::string& acc_cfg_path_,
     network_name = map_cfg->network_name;
     for(size_t idx = 0; idx < map_cfg->mapping_tables.size(); idx++) {
         // Mapping table
-        mapping_table_t *mapping_table = new mapping_table_t(exists, 
-                                                             map_cfg->mapping_tables.at(idx).name,
-                                                             map_cfg->mapping_tables.at(idx).values,
-                                                             map_cfg->mapping_tables.at(idx).stride);
-        mapping_table->init_degrees(map_cfg->mapping_tables.at(idx).degrees);
-        mapping_table->update_dram_row();
+        mapping_table_t mapping_table(exists, 
+                                      map_cfg->mapping_tables.at(idx).name,
+                                      map_cfg->mapping_tables.at(idx).values,
+                                      map_cfg->mapping_tables.at(idx).stride);
+        mapping_table.init_degrees(map_cfg->mapping_tables.at(idx).degrees);
+        mapping_table.update_dram_row();
         mapping_tables.push_back(mapping_table); 
         // Stat container
         stats_t *stats = new stats_t(accelerator, mapping_table);
@@ -43,7 +43,6 @@ analyzer_t::analyzer_t(const std::string& acc_cfg_path_,
 analyzer_t::~analyzer_t() {
     delete accelerator;
     for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
-        delete mapping_tables.at(idx);
         delete all_stats.at(idx);
     }
 }
@@ -58,7 +57,7 @@ void analyzer_t::print_stats() const {
         mapping_tables.at(idx)->print_csv();
         all_stats.at(idx)->print_csv();
 #else
-        mapping_tables.at(idx)->print_stats();
+        mapping_tables.at(idx).print_stats();
         all_stats.at(idx)->print_stats();
 #endif
     }
@@ -70,10 +69,10 @@ void analyzer_t::print_stats(const unsigned idx_) const {
     std::cout << "\n# NETWORK: " << network_name << std::endl;
     check_validity(idx_ - 1);
 #ifdef CSV
-    mapping_tables.at(idx_ - 1)->print_csv();
+    mapping_tables.at(idx_ - 1).print_csv();
     all_stats.at(idx_ - 1)->print_csv();
 #else
-    mapping_tables.at(idx_ - 1)->print_stats();
+    mapping_tables.at(idx_ - 1).print_stats();
     all_stats.at(idx_ - 1)->print_stats();
 #endif
     return;
@@ -99,13 +98,13 @@ bool analyzer_t::s0_validity(const unsigned idx_) const {
     bool validity = true;
     unsigned macs_per_pe_val = 1;
     unsigned mac_width_val = 1;
-    macs_per_pe_val *= mapping_tables.at(idx_)->get_degree(parameter_t::K, component_t::S0)
-                     * mapping_tables.at(idx_)->get_degree(parameter_t::B, component_t::S0)
-                     * mapping_tables.at(idx_)->get_degree(parameter_t::P, component_t::S0)
-                     * mapping_tables.at(idx_)->get_degree(parameter_t::Q, component_t::S0);
-    mac_width_val *= mapping_tables.at(idx_)->get_degree(parameter_t::C, component_t::S0)
-                   * mapping_tables.at(idx_)->get_degree(parameter_t::R, component_t::S0)
-                   * mapping_tables.at(idx_)->get_degree(parameter_t::S, component_t::S0);
+    macs_per_pe_val *= mapping_tables.at(idx_).get_degree(parameter_t::K, component_t::S0)
+                     * mapping_tables.at(idx_).get_degree(parameter_t::B, component_t::S0)
+                     * mapping_tables.at(idx_).get_degree(parameter_t::P, component_t::S0)
+                     * mapping_tables.at(idx_).get_degree(parameter_t::Q, component_t::S0);
+    mac_width_val *= mapping_tables.at(idx_).get_degree(parameter_t::C, component_t::S0)
+                   * mapping_tables.at(idx_).get_degree(parameter_t::R, component_t::S0)
+                   * mapping_tables.at(idx_).get_degree(parameter_t::S, component_t::S0);
     if(macs_per_pe_val > accelerator->macs_per_pe() || mac_width_val > accelerator->mac_width()) 
         validity = false;
     return validity;
@@ -117,38 +116,38 @@ bool analyzer_t::l1_validity(const unsigned idx_) const {
     switch(accelerator->l1_type()) {
         case buffer_type_t::NONE: break;
         case buffer_type_t::SEPARATED: 
-            if(!accelerator->l1_input_bypass() && mapping_tables.at(idx_)->get_input_tile_size(component_t::L1) > accelerator->l1_input_size())
+            if(!accelerator->l1_input_bypass() && mapping_tables.at(idx_).get_input_tile_size(component_t::L1) > accelerator->l1_input_size())
                 validity = false;
-            if(!accelerator->l1_filter_bypass() && mapping_tables.at(idx_)->get_filter_tile_size(component_t::L1) > accelerator->l1_filter_size())
+            if(!accelerator->l1_filter_bypass() && mapping_tables.at(idx_).get_filter_tile_size(component_t::L1) > accelerator->l1_filter_size())
                 validity = false;
-            if(!accelerator->l1_output_bypass() && mapping_tables.at(idx_)->get_output_tile_size(component_t::L1) > accelerator->l1_output_size())
+            if(!accelerator->l1_output_bypass() && mapping_tables.at(idx_).get_output_tile_size(component_t::L1) > accelerator->l1_output_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED: 
-            shared_tile_size = mapping_tables.at(idx_)->get_input_tile_size(component_t::L1) 
-                             + mapping_tables.at(idx_)->get_filter_tile_size(component_t::L1)
-                             + mapping_tables.at(idx_)->get_output_tile_size(component_t::L1);
+            shared_tile_size = mapping_tables.at(idx_).get_input_tile_size(component_t::L1) 
+                             + mapping_tables.at(idx_).get_filter_tile_size(component_t::L1)
+                             + mapping_tables.at(idx_).get_output_tile_size(component_t::L1);
             if(shared_tile_size > accelerator->l1_shared_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED_IF: 
-            shared_tile_size = mapping_tables.at(idx_)->get_input_tile_size(component_t::L1) 
-                             + mapping_tables.at(idx_)->get_filter_tile_size(component_t::L1);
-            if((!accelerator->l1_output_bypass() && mapping_tables.at(idx_)->get_output_tile_size(component_t::L1) > accelerator->l1_output_size()) 
+            shared_tile_size = mapping_tables.at(idx_).get_input_tile_size(component_t::L1) 
+                             + mapping_tables.at(idx_).get_filter_tile_size(component_t::L1);
+            if((!accelerator->l1_output_bypass() && mapping_tables.at(idx_).get_output_tile_size(component_t::L1) > accelerator->l1_output_size()) 
                 || shared_tile_size > accelerator->l1_shared_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED_FO: 
-            shared_tile_size = mapping_tables.at(idx_)->get_filter_tile_size(component_t::L1) 
-                             + mapping_tables.at(idx_)->get_output_tile_size(component_t::L1);
-            if((!accelerator->l1_input_bypass() && mapping_tables.at(idx_)->get_input_tile_size(component_t::L1) > accelerator->l1_input_size()) 
+            shared_tile_size = mapping_tables.at(idx_).get_filter_tile_size(component_t::L1) 
+                             + mapping_tables.at(idx_).get_output_tile_size(component_t::L1);
+            if((!accelerator->l1_input_bypass() && mapping_tables.at(idx_).get_input_tile_size(component_t::L1) > accelerator->l1_input_size()) 
                 || shared_tile_size > accelerator->l1_shared_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED_OI: 
-            shared_tile_size = mapping_tables.at(idx_)->get_input_tile_size(component_t::L1) 
-                             + mapping_tables.at(idx_)->get_output_tile_size(component_t::L1);
-            if((!accelerator->l1_filter_bypass() && mapping_tables.at(idx_)->get_filter_tile_size(component_t::L1) > accelerator->l1_filter_size()) 
+            shared_tile_size = mapping_tables.at(idx_).get_input_tile_size(component_t::L1) 
+                             + mapping_tables.at(idx_).get_output_tile_size(component_t::L1);
+            if((!accelerator->l1_filter_bypass() && mapping_tables.at(idx_).get_filter_tile_size(component_t::L1) > accelerator->l1_filter_size()) 
                 || shared_tile_size > accelerator->l1_shared_size())
                 validity = false;
             break;
@@ -161,7 +160,7 @@ bool analyzer_t::s1_x_validity(const unsigned idx_) const {
     bool validity = true;
     unsigned s1_size_x_val = 1;
     for(unsigned column = 0; column < D_size; column++)
-        s1_size_x_val *= mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S1_X);
+        s1_size_x_val *= mapping_tables.at(idx_).get_degree(static_cast<parameter_t>(column), component_t::S1_X);
     if(s1_size_x_val > accelerator->s1_size_x()) 
         validity = false;
     return validity;
@@ -171,7 +170,7 @@ bool analyzer_t::s1_y_validity(const unsigned idx_) const {
     bool validity = true;
     unsigned s1_size_y_val = 1;
     for(unsigned column = 0; column < D_size; column++)
-        s1_size_y_val *= mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S1_Y);
+        s1_size_y_val *= mapping_tables.at(idx_).get_degree(static_cast<parameter_t>(column), component_t::S1_Y);
     if(s1_size_y_val > accelerator->s1_size_y()) 
         validity = false;
     return validity;
@@ -183,38 +182,38 @@ bool analyzer_t::l2_validity(const unsigned idx_) const {
     switch(accelerator->l2_type()) {
         case buffer_type_t::NONE: break;
         case buffer_type_t::SEPARATED: 
-            if(!accelerator->l2_input_bypass() && mapping_tables.at(idx_)->get_input_tile_size(component_t::L2) > accelerator->l2_input_size())
+            if(!accelerator->l2_input_bypass() && mapping_tables.at(idx_).get_input_tile_size(component_t::L2) > accelerator->l2_input_size())
                 validity = false;
-            if(!accelerator->l2_filter_bypass() && mapping_tables.at(idx_)->get_filter_tile_size(component_t::L2) > accelerator->l2_filter_size())
+            if(!accelerator->l2_filter_bypass() && mapping_tables.at(idx_).get_filter_tile_size(component_t::L2) > accelerator->l2_filter_size())
                 validity = false;
-            if(!accelerator->l2_output_bypass() && mapping_tables.at(idx_)->get_output_tile_size(component_t::L2) > accelerator->l2_output_size())
+            if(!accelerator->l2_output_bypass() && mapping_tables.at(idx_).get_output_tile_size(component_t::L2) > accelerator->l2_output_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED: 
-            shared_tile_size = mapping_tables.at(idx_)->get_input_tile_size(component_t::L2) 
-                             + mapping_tables.at(idx_)->get_filter_tile_size(component_t::L2)
-                             + mapping_tables.at(idx_)->get_output_tile_size(component_t::L2);
+            shared_tile_size = mapping_tables.at(idx_).get_input_tile_size(component_t::L2) 
+                             + mapping_tables.at(idx_).get_filter_tile_size(component_t::L2)
+                             + mapping_tables.at(idx_).get_output_tile_size(component_t::L2);
             if(shared_tile_size > accelerator->l2_shared_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED_IF: 
-            shared_tile_size = mapping_tables.at(idx_)->get_input_tile_size(component_t::L2) 
-                             + mapping_tables.at(idx_)->get_filter_tile_size(component_t::L2);
-            if((!accelerator->l2_output_bypass() && mapping_tables.at(idx_)->get_output_tile_size(component_t::L2) > accelerator->l2_output_size()) 
+            shared_tile_size = mapping_tables.at(idx_).get_input_tile_size(component_t::L2) 
+                             + mapping_tables.at(idx_).get_filter_tile_size(component_t::L2);
+            if((!accelerator->l2_output_bypass() && mapping_tables.at(idx_).get_output_tile_size(component_t::L2) > accelerator->l2_output_size()) 
                 || shared_tile_size > accelerator->l2_shared_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED_FO: 
-            shared_tile_size = mapping_tables.at(idx_)->get_filter_tile_size(component_t::L2) 
-                             + mapping_tables.at(idx_)->get_output_tile_size(component_t::L2);
-            if((!accelerator->l2_input_bypass() && mapping_tables.at(idx_)->get_input_tile_size(component_t::L2) > accelerator->l2_input_size()) 
+            shared_tile_size = mapping_tables.at(idx_).get_filter_tile_size(component_t::L2) 
+                             + mapping_tables.at(idx_).get_output_tile_size(component_t::L2);
+            if((!accelerator->l2_input_bypass() && mapping_tables.at(idx_).get_input_tile_size(component_t::L2) > accelerator->l2_input_size()) 
                 || shared_tile_size > accelerator->l2_shared_size())
                 validity = false;
             break;
         case buffer_type_t::SHARED_OI: 
-            shared_tile_size = mapping_tables.at(idx_)->get_input_tile_size(component_t::L2) 
-                             + mapping_tables.at(idx_)->get_output_tile_size(component_t::L2);
-            if((!accelerator->l2_filter_bypass() && mapping_tables.at(idx_)->get_filter_tile_size(component_t::L2) > accelerator->l2_filter_size()) 
+            shared_tile_size = mapping_tables.at(idx_).get_input_tile_size(component_t::L2) 
+                             + mapping_tables.at(idx_).get_output_tile_size(component_t::L2);
+            if((!accelerator->l2_filter_bypass() && mapping_tables.at(idx_).get_filter_tile_size(component_t::L2) > accelerator->l2_filter_size()) 
                 || shared_tile_size > accelerator->l2_shared_size())
                 validity = false;
             break;
@@ -229,9 +228,9 @@ bool analyzer_t::s2_validity(const unsigned idx_) const {
     // Only K, B, P, and Q
     for(unsigned column = 0; column < D_size; column++) {
         if(column == 0 || column == 1 || column == 2 || column == 3)
-            s2_size_val *= mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S2);
+            s2_size_val *= mapping_tables.at(idx_).get_degree(static_cast<parameter_t>(column), component_t::S2);
         else {
-            if(mapping_tables.at(idx_)->get_degree(static_cast<parameter_t>(column), component_t::S2) > 1) {
+            if(mapping_tables.at(idx_).get_degree(static_cast<parameter_t>(column), component_t::S2) > 1) {
                 validity = false;
                 break;
             }

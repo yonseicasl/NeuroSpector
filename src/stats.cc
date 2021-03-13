@@ -6,8 +6,9 @@ static cycle_ref_t cycle_ref;
 
 /* Stats */
 stats_t::stats_t(const accelerator_t *accelerator_, 
-                const mapping_table_t *mapping_table_)
-    : accelerator(accelerator_), mapping_table(mapping_table_) {
+                 const mapping_table_t& mapping_table_)
+    : accelerator(accelerator_), 
+      mapping_table(mapping_table_) {
 }
 
 stats_t::~stats_t() {
@@ -139,15 +140,15 @@ void stats_t::update_stats() {
 
 void stats_t::update_tile_size() {
     // Temporal tile sizes
-    mac_input_tile_size = mapping_table->get_input_tile_size(component_t::MAC);     // Size: 1
-    mac_filter_tile_size = mapping_table->get_filter_tile_size(component_t::MAC);   // Size: 1
-    mac_output_tile_size = mapping_table->get_filter_tile_size(component_t::MAC);   // Size: 1
-    l1_input_tile_size = mapping_table->get_input_tile_size(component_t::L1);
-    l1_filter_tile_size = mapping_table->get_filter_tile_size(component_t::L1);
-    l1_output_tile_size = mapping_table->get_output_tile_size(component_t::L1);
-    l2_input_tile_size = mapping_table->get_input_tile_size(component_t::L2);
-    l2_filter_tile_size = mapping_table->get_filter_tile_size(component_t::L2);
-    l2_output_tile_size = mapping_table->get_output_tile_size(component_t::L2);
+    mac_input_tile_size = mapping_table.get_input_tile_size(component_t::MAC);     // Size: 1
+    mac_filter_tile_size = mapping_table.get_filter_tile_size(component_t::MAC);   // Size: 1
+    mac_output_tile_size = mapping_table.get_filter_tile_size(component_t::MAC);   // Size: 1
+    l1_input_tile_size = mapping_table.get_input_tile_size(component_t::L1);
+    l1_filter_tile_size = mapping_table.get_filter_tile_size(component_t::L1);
+    l1_output_tile_size = mapping_table.get_output_tile_size(component_t::L1);
+    l2_input_tile_size = mapping_table.get_input_tile_size(component_t::L2);
+    l2_filter_tile_size = mapping_table.get_filter_tile_size(component_t::L2);
+    l2_output_tile_size = mapping_table.get_output_tile_size(component_t::L2);
     // Bypass adjustment
     if(accelerator->l1_input_bypass())
         l1_input_tile_size = mac_input_tile_size; 
@@ -165,9 +166,9 @@ void stats_t::update_tile_size() {
 
 void stats_t::update_iteration() {
     // Iteration without dataflow 
-    size_t l1_iteration_tmp = mapping_table->get_iteration(component_t::L1);
-    size_t l2_iteration_tmp = mapping_table->get_iteration(component_t::L2);
-    size_t dram_iteration_tmp = mapping_table->get_iteration(component_t::DRAM);
+    size_t l1_iteration_tmp = mapping_table.get_iteration(component_t::L1);
+    size_t l2_iteration_tmp = mapping_table.get_iteration(component_t::L2);
+    size_t dram_iteration_tmp = mapping_table.get_iteration(component_t::DRAM);
     size_t h_upper = 0;
     size_t h_lower = 0;
     size_t w_upper = 0;
@@ -179,19 +180,19 @@ void stats_t::update_iteration() {
     l1_iteration.output_wt_it = l1_iteration_tmp;
     switch(accelerator->mac_dataflow()) {
         case dataflow_t::IS: 
-            h_upper = (mapping_table->get_product(parameter_t::P, component_t::MAC) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::MAC);
-            h_lower = (mapping_table->get_product(parameter_t::P, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L1);
-            w_upper = (mapping_table->get_product(parameter_t::Q, component_t::MAC) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::MAC);
-            w_lower = (mapping_table->get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::L1);
-            l1_iteration.input_rd_it = mapping_table->get_degree(parameter_t::B, component_t::L1)
-                                     * mapping_table->get_degree(parameter_t::C, component_t::L1)
-                                     * ((h_lower - h_upper) / mapping_table->get_stride() + 1)
-                                     * ((w_lower - w_upper) / mapping_table->get_stride() + 1);
+            h_upper = (mapping_table.get_product(parameter_t::P, component_t::MAC) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::MAC);
+            h_lower = (mapping_table.get_product(parameter_t::P, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L1);
+            w_upper = (mapping_table.get_product(parameter_t::Q, component_t::MAC) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::MAC);
+            w_lower = (mapping_table.get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L1);
+            l1_iteration.input_rd_it = mapping_table.get_degree(parameter_t::B, component_t::L1)
+                                     * mapping_table.get_degree(parameter_t::C, component_t::L1)
+                                     * ((h_lower - h_upper) / mapping_table.get_stride() + 1)
+                                     * ((w_lower - w_upper) / mapping_table.get_stride() + 1);
             break;
         case dataflow_t::WS: 
-            l1_iteration.filter_rd_it /= (mapping_table->get_degree(parameter_t::B, component_t::L1) 
-                                          * mapping_table->get_degree(parameter_t::P, component_t::L1) 
-                                          * mapping_table->get_degree(parameter_t::Q, component_t::L1));
+            l1_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L1) 
+                                          * mapping_table.get_degree(parameter_t::P, component_t::L1) 
+                                          * mapping_table.get_degree(parameter_t::Q, component_t::L1));
             break;
         case dataflow_t::NONE: // Nothing to do
             break;
@@ -204,25 +205,25 @@ void stats_t::update_iteration() {
     l2_iteration.output_wt_it = l2_iteration_tmp;
     switch(accelerator->l1_dataflow()) {
         case dataflow_t::IS: 
-            h_upper = (mapping_table->get_product(parameter_t::P, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L1);
-            h_lower = (mapping_table->get_product(parameter_t::P, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L2);
-            w_upper = (mapping_table->get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::L1);
-            w_lower = (mapping_table->get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::L2);
-            l2_iteration.input_rd_it = mapping_table->get_degree(parameter_t::B, component_t::L2)
-                                     * mapping_table->get_degree(parameter_t::C, component_t::L2)
-                                     * ((h_lower - h_upper) / mapping_table->get_stride() + 1)
-                                     * ((w_lower - w_upper) / mapping_table->get_stride() + 1);
+            h_upper = (mapping_table.get_product(parameter_t::P, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L1);
+            h_lower = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
+            w_upper = (mapping_table.get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L1);
+            w_lower = (mapping_table.get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L2);
+            l2_iteration.input_rd_it = mapping_table.get_degree(parameter_t::B, component_t::L2)
+                                     * mapping_table.get_degree(parameter_t::C, component_t::L2)
+                                     * ((h_lower - h_upper) / mapping_table.get_stride() + 1)
+                                     * ((w_lower - w_upper) / mapping_table.get_stride() + 1);
             break;
         case dataflow_t::WS: 
-            l2_iteration.filter_rd_it /= (mapping_table->get_degree(parameter_t::B, component_t::L2) 
-                                          * mapping_table->get_degree(parameter_t::P, component_t::L2) 
-                                          * mapping_table->get_degree(parameter_t::Q, component_t::L2));
+            l2_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L2) 
+                                          * mapping_table.get_degree(parameter_t::P, component_t::L2) 
+                                          * mapping_table.get_degree(parameter_t::Q, component_t::L2));
             break;
         case dataflow_t::OS: 
             l2_iteration.output_rd_it = 0;
-            l2_iteration.output_wt_it /= (mapping_table->get_degree(parameter_t::C, component_t::L2) 
-                                          * mapping_table->get_degree(parameter_t::S, component_t::L2) 
-                                          * mapping_table->get_degree(parameter_t::R, component_t::L2));
+            l2_iteration.output_wt_it /= (mapping_table.get_degree(parameter_t::C, component_t::L2) 
+                                          * mapping_table.get_degree(parameter_t::S, component_t::L2) 
+                                          * mapping_table.get_degree(parameter_t::R, component_t::L2));
             break;
         default: handler.print_err(err_type_t::INVAILD, "L1 DATAFLOW"); break;
     }
@@ -233,25 +234,25 @@ void stats_t::update_iteration() {
     dram_iteration.output_wt_it = dram_iteration_tmp;
     switch(accelerator->l2_dataflow()) {
         case dataflow_t::IS: 
-            h_upper = (mapping_table->get_product(parameter_t::P, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L2);
-            h_lower = (mapping_table->get_product(parameter_t::P, component_t::DRAM) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::DRAM);
-            w_upper = (mapping_table->get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::L2);
-            w_lower = (mapping_table->get_product(parameter_t::Q, component_t::DRAM) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::DRAM);
-            dram_iteration.input_rd_it = mapping_table->get_degree(parameter_t::B, component_t::DRAM)
-                                       * mapping_table->get_degree(parameter_t::C, component_t::DRAM)
-                                       * ((h_lower - h_upper) / mapping_table->get_stride() + 1)
-                                       * ((w_lower - w_upper) / mapping_table->get_stride() + 1);
+            h_upper = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
+            h_lower = (mapping_table.get_product(parameter_t::P, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::DRAM);
+            w_upper = (mapping_table.get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L2);
+            w_lower = (mapping_table.get_product(parameter_t::Q, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::DRAM);
+            dram_iteration.input_rd_it = mapping_table.get_degree(parameter_t::B, component_t::DRAM)
+                                       * mapping_table.get_degree(parameter_t::C, component_t::DRAM)
+                                       * ((h_lower - h_upper) / mapping_table.get_stride() + 1)
+                                       * ((w_lower - w_upper) / mapping_table.get_stride() + 1);
             break;
         case dataflow_t::WS: 
-            dram_iteration.filter_rd_it /= (mapping_table->get_degree(parameter_t::B, component_t::DRAM) 
-                                            * mapping_table->get_degree(parameter_t::P, component_t::DRAM) 
-                                            * mapping_table->get_degree(parameter_t::Q, component_t::DRAM));
+            dram_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::DRAM) 
+                                            * mapping_table.get_degree(parameter_t::P, component_t::DRAM) 
+                                            * mapping_table.get_degree(parameter_t::Q, component_t::DRAM));
             break;
         case dataflow_t::OS: 
             dram_iteration.output_rd_it = 0;
-            dram_iteration.output_wt_it /= (mapping_table->get_degree(parameter_t::C, component_t::DRAM) 
-                                            * mapping_table->get_degree(parameter_t::S, component_t::DRAM) 
-                                            * mapping_table->get_degree(parameter_t::R, component_t::DRAM));
+            dram_iteration.output_wt_it /= (mapping_table.get_degree(parameter_t::C, component_t::DRAM) 
+                                            * mapping_table.get_degree(parameter_t::S, component_t::DRAM) 
+                                            * mapping_table.get_degree(parameter_t::R, component_t::DRAM));
             break;
         default: handler.print_err(err_type_t::INVAILD, "L2 DATAFLOW"); break;
     }
@@ -276,128 +277,128 @@ void stats_t::update_iteration() {
 }
 
 void stats_t::update_active_components() {
-    num_active_macs = mapping_table->get_degree(parameter_t::K, component_t::S0)
-                    * mapping_table->get_degree(parameter_t::B, component_t::S0)
-                    * mapping_table->get_degree(parameter_t::P, component_t::S0)
-                    * mapping_table->get_degree(parameter_t::Q, component_t::S0)
-                    * mapping_table->get_degree(parameter_t::C, component_t::S0)
-                    * mapping_table->get_degree(parameter_t::S, component_t::S0)
-                    * mapping_table->get_degree(parameter_t::R, component_t::S0);
-    num_active_pes = mapping_table->get_degree(parameter_t::K, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::B, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::P, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::Q, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::C, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::S, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::R, component_t::S1_X)
-                   * mapping_table->get_degree(parameter_t::K, component_t::S1_Y)
-                   * mapping_table->get_degree(parameter_t::B, component_t::S1_Y)
-                   * mapping_table->get_degree(parameter_t::P, component_t::S1_Y)
-                   * mapping_table->get_degree(parameter_t::Q, component_t::S1_Y)
-                   * mapping_table->get_degree(parameter_t::C, component_t::S1_Y)
-                   * mapping_table->get_degree(parameter_t::S, component_t::S1_Y)
-                   * mapping_table->get_degree(parameter_t::R, component_t::S1_Y);
-    num_active_accs = mapping_table->get_degree(parameter_t::K, component_t::S2)
-                            * mapping_table->get_degree(parameter_t::B, component_t::S2)
-                            * mapping_table->get_degree(parameter_t::P, component_t::S2)
-                            * mapping_table->get_degree(parameter_t::Q, component_t::S2)
-                            * mapping_table->get_degree(parameter_t::C, component_t::S2)
-                            * mapping_table->get_degree(parameter_t::S, component_t::S2)
-                            * mapping_table->get_degree(parameter_t::R, component_t::S2);
+    num_active_macs = mapping_table.get_degree(parameter_t::K, component_t::S0)
+                    * mapping_table.get_degree(parameter_t::B, component_t::S0)
+                    * mapping_table.get_degree(parameter_t::P, component_t::S0)
+                    * mapping_table.get_degree(parameter_t::Q, component_t::S0)
+                    * mapping_table.get_degree(parameter_t::C, component_t::S0)
+                    * mapping_table.get_degree(parameter_t::S, component_t::S0)
+                    * mapping_table.get_degree(parameter_t::R, component_t::S0);
+    num_active_pes = mapping_table.get_degree(parameter_t::K, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::B, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::P, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::Q, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::C, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::S, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::R, component_t::S1_X)
+                   * mapping_table.get_degree(parameter_t::K, component_t::S1_Y)
+                   * mapping_table.get_degree(parameter_t::B, component_t::S1_Y)
+                   * mapping_table.get_degree(parameter_t::P, component_t::S1_Y)
+                   * mapping_table.get_degree(parameter_t::Q, component_t::S1_Y)
+                   * mapping_table.get_degree(parameter_t::C, component_t::S1_Y)
+                   * mapping_table.get_degree(parameter_t::S, component_t::S1_Y)
+                   * mapping_table.get_degree(parameter_t::R, component_t::S1_Y);
+    num_active_accs = mapping_table.get_degree(parameter_t::K, component_t::S2)
+                            * mapping_table.get_degree(parameter_t::B, component_t::S2)
+                            * mapping_table.get_degree(parameter_t::P, component_t::S2)
+                            * mapping_table.get_degree(parameter_t::Q, component_t::S2)
+                            * mapping_table.get_degree(parameter_t::C, component_t::S2)
+                            * mapping_table.get_degree(parameter_t::S, component_t::S2)
+                            * mapping_table.get_degree(parameter_t::R, component_t::S2);
 }
 
 void stats_t::update_noc() {
     // S0 input
-    num_s0_input_hosts = mapping_table->get_degree(parameter_t::B, component_t::S0)
-                       * mapping_table->get_degree(parameter_t::C, component_t::S0);
-    size_t P_s0 = mapping_table->get_degree(parameter_t::P, component_t::S0);
-    size_t S_s0 = mapping_table->get_degree(parameter_t::S, component_t::S0);
-    size_t Q_s0 = mapping_table->get_degree(parameter_t::Q, component_t::S0);
-    size_t R_s0 = mapping_table->get_degree(parameter_t::R, component_t::S0);
+    num_s0_input_hosts = mapping_table.get_degree(parameter_t::B, component_t::S0)
+                       * mapping_table.get_degree(parameter_t::C, component_t::S0);
+    size_t P_s0 = mapping_table.get_degree(parameter_t::P, component_t::S0);
+    size_t S_s0 = mapping_table.get_degree(parameter_t::S, component_t::S0);
+    size_t Q_s0 = mapping_table.get_degree(parameter_t::Q, component_t::S0);
+    size_t R_s0 = mapping_table.get_degree(parameter_t::R, component_t::S0);
     if(P_s0 > 1 && S_s0 > 1) 
-        num_s0_input_hosts *= ((P_s0 - 1) * mapping_table->get_stride() + S_s0);
+        num_s0_input_hosts *= ((P_s0 - 1) * mapping_table.get_stride() + S_s0);
     else 
         num_s0_input_hosts *= (P_s0 * S_s0);
     if(Q_s0 > 1 && R_s0 > 1) 
-        num_s0_input_hosts *= ((Q_s0 - 1) * mapping_table->get_stride() + R_s0);
+        num_s0_input_hosts *= ((Q_s0 - 1) * mapping_table.get_stride() + R_s0);
     else 
         num_s0_input_hosts *= (Q_s0 * R_s0);
     // S0 filter & output
-    num_s0_filter_hosts = mapping_table->get_degree(parameter_t::K, component_t::S0)
-                        * mapping_table->get_degree(parameter_t::C, component_t::S0)
-                        * mapping_table->get_degree(parameter_t::S, component_t::S0)
-                        * mapping_table->get_degree(parameter_t::R, component_t::S0);
-    num_s0_output_hosts = mapping_table->get_degree(parameter_t::K, component_t::S0)
-                        * mapping_table->get_degree(parameter_t::B, component_t::S0)
-                        * mapping_table->get_degree(parameter_t::P, component_t::S0)
-                        * mapping_table->get_degree(parameter_t::Q, component_t::S0);
+    num_s0_filter_hosts = mapping_table.get_degree(parameter_t::K, component_t::S0)
+                        * mapping_table.get_degree(parameter_t::C, component_t::S0)
+                        * mapping_table.get_degree(parameter_t::S, component_t::S0)
+                        * mapping_table.get_degree(parameter_t::R, component_t::S0);
+    num_s0_output_hosts = mapping_table.get_degree(parameter_t::K, component_t::S0)
+                        * mapping_table.get_degree(parameter_t::B, component_t::S0)
+                        * mapping_table.get_degree(parameter_t::P, component_t::S0)
+                        * mapping_table.get_degree(parameter_t::Q, component_t::S0);
     // S1_X & S1_Y input
-    num_s1_input_hosts = mapping_table->get_degree(parameter_t::B, component_t::S1_X)
-                       * mapping_table->get_degree(parameter_t::C, component_t::S1_X)
-                       * mapping_table->get_degree(parameter_t::B, component_t::S1_Y)
-                       * mapping_table->get_degree(parameter_t::C, component_t::S1_Y);
-    size_t P_s1 = mapping_table->get_degree(parameter_t::P, component_t::S1_X)
-                * mapping_table->get_degree(parameter_t::P, component_t::S1_Y);
-    size_t S_s1 = mapping_table->get_degree(parameter_t::S, component_t::S1_X)
-                * mapping_table->get_degree(parameter_t::S, component_t::S1_Y);
-    size_t Q_s1 = mapping_table->get_degree(parameter_t::Q, component_t::S1_X)
-                * mapping_table->get_degree(parameter_t::Q, component_t::S1_Y);
-    size_t R_s1 = mapping_table->get_degree(parameter_t::R, component_t::S1_X)
-                * mapping_table->get_degree(parameter_t::R, component_t::S1_Y);
+    num_s1_input_hosts = mapping_table.get_degree(parameter_t::B, component_t::S1_X)
+                       * mapping_table.get_degree(parameter_t::C, component_t::S1_X)
+                       * mapping_table.get_degree(parameter_t::B, component_t::S1_Y)
+                       * mapping_table.get_degree(parameter_t::C, component_t::S1_Y);
+    size_t P_s1 = mapping_table.get_degree(parameter_t::P, component_t::S1_X)
+                * mapping_table.get_degree(parameter_t::P, component_t::S1_Y);
+    size_t S_s1 = mapping_table.get_degree(parameter_t::S, component_t::S1_X)
+                * mapping_table.get_degree(parameter_t::S, component_t::S1_Y);
+    size_t Q_s1 = mapping_table.get_degree(parameter_t::Q, component_t::S1_X)
+                * mapping_table.get_degree(parameter_t::Q, component_t::S1_Y);
+    size_t R_s1 = mapping_table.get_degree(parameter_t::R, component_t::S1_X)
+                * mapping_table.get_degree(parameter_t::R, component_t::S1_Y);
     if(P_s1 > 1 && S_s1 > 1) 
-        num_s1_input_hosts *= ((P_s1 - 1) * mapping_table->get_stride() + S_s1);
+        num_s1_input_hosts *= ((P_s1 - 1) * mapping_table.get_stride() + S_s1);
     else 
         num_s1_input_hosts *= (P_s1 * S_s1);
     if(Q_s1 > 1 && R_s1 > 1) 
-        num_s1_input_hosts *= ((Q_s1 - 1) * mapping_table->get_stride() + R_s1);
+        num_s1_input_hosts *= ((Q_s1 - 1) * mapping_table.get_stride() + R_s1);
     else 
         num_s1_input_hosts *= (Q_s1 * R_s1);
     // S1_X & S1_Y filter & output
-    num_s1_filter_hosts = mapping_table->get_degree(parameter_t::K, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::C, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::S, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::R, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::K, component_t::S1_Y)
-                        * mapping_table->get_degree(parameter_t::C, component_t::S1_Y)
-                        * mapping_table->get_degree(parameter_t::S, component_t::S1_Y)
-                        * mapping_table->get_degree(parameter_t::R, component_t::S1_Y);
-    num_s1_output_hosts = mapping_table->get_degree(parameter_t::K, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::B, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::P, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::Q, component_t::S1_X)
-                        * mapping_table->get_degree(parameter_t::K, component_t::S1_Y)
-                        * mapping_table->get_degree(parameter_t::B, component_t::S1_Y)
-                        * mapping_table->get_degree(parameter_t::P, component_t::S1_Y)
-                        * mapping_table->get_degree(parameter_t::Q, component_t::S1_Y);
+    num_s1_filter_hosts = mapping_table.get_degree(parameter_t::K, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::C, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::S, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::R, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::K, component_t::S1_Y)
+                        * mapping_table.get_degree(parameter_t::C, component_t::S1_Y)
+                        * mapping_table.get_degree(parameter_t::S, component_t::S1_Y)
+                        * mapping_table.get_degree(parameter_t::R, component_t::S1_Y);
+    num_s1_output_hosts = mapping_table.get_degree(parameter_t::K, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::B, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::P, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::Q, component_t::S1_X)
+                        * mapping_table.get_degree(parameter_t::K, component_t::S1_Y)
+                        * mapping_table.get_degree(parameter_t::B, component_t::S1_Y)
+                        * mapping_table.get_degree(parameter_t::P, component_t::S1_Y)
+                        * mapping_table.get_degree(parameter_t::Q, component_t::S1_Y);
     // S2 input
-    num_s2_input_hosts = mapping_table->get_degree(parameter_t::B, component_t::S2)
-                       * mapping_table->get_degree(parameter_t::C, component_t::S2);
-    size_t P_s2 = mapping_table->get_degree(parameter_t::P, component_t::S2);
-    size_t S_s2 = mapping_table->get_degree(parameter_t::S, component_t::S2);
-    size_t Q_s2 = mapping_table->get_degree(parameter_t::Q, component_t::S2);
-    size_t R_s2 = mapping_table->get_degree(parameter_t::R, component_t::S2);
+    num_s2_input_hosts = mapping_table.get_degree(parameter_t::B, component_t::S2)
+                       * mapping_table.get_degree(parameter_t::C, component_t::S2);
+    size_t P_s2 = mapping_table.get_degree(parameter_t::P, component_t::S2);
+    size_t S_s2 = mapping_table.get_degree(parameter_t::S, component_t::S2);
+    size_t Q_s2 = mapping_table.get_degree(parameter_t::Q, component_t::S2);
+    size_t R_s2 = mapping_table.get_degree(parameter_t::R, component_t::S2);
     if(P_s2 > 1 && S_s2 > 1) 
-        num_s2_input_hosts *= ((P_s2 - 1) * mapping_table->get_stride() + S_s2);
+        num_s2_input_hosts *= ((P_s2 - 1) * mapping_table.get_stride() + S_s2);
     else 
         num_s2_input_hosts *= (P_s2 * S_s2);
     if(Q_s2 > 1 && R_s2 > 1) 
-        num_s2_input_hosts *= ((Q_s2 - 1) * mapping_table->get_stride() + R_s2);
+        num_s2_input_hosts *= ((Q_s2 - 1) * mapping_table.get_stride() + R_s2);
     else 
         num_s2_input_hosts *= (Q_s2 * R_s2);
     // S2 filter
-    num_s2_filter_hosts = mapping_table->get_degree(parameter_t::K, component_t::S2)
-                        * mapping_table->get_degree(parameter_t::C, component_t::S2)
-                        * mapping_table->get_degree(parameter_t::S, component_t::S2)
-                        * mapping_table->get_degree(parameter_t::R, component_t::S2);
-    num_s2_output_hosts = mapping_table->get_degree(parameter_t::K, component_t::S2)
-                        * mapping_table->get_degree(parameter_t::B, component_t::S2)
-                        * mapping_table->get_degree(parameter_t::P, component_t::S2)
-                        * mapping_table->get_degree(parameter_t::Q, component_t::S2);
+    num_s2_filter_hosts = mapping_table.get_degree(parameter_t::K, component_t::S2)
+                        * mapping_table.get_degree(parameter_t::C, component_t::S2)
+                        * mapping_table.get_degree(parameter_t::S, component_t::S2)
+                        * mapping_table.get_degree(parameter_t::R, component_t::S2);
+    num_s2_output_hosts = mapping_table.get_degree(parameter_t::K, component_t::S2)
+                        * mapping_table.get_degree(parameter_t::B, component_t::S2)
+                        * mapping_table.get_degree(parameter_t::P, component_t::S2)
+                        * mapping_table.get_degree(parameter_t::Q, component_t::S2);
 }
 
 void stats_t::update_energy() {
     // Between MAC and L1 with 'l1 iteration' and S0 NoC
-    mac_energy = mapping_table->get_num_macs() * energy_ref.mac_operation;
+    mac_energy = mapping_table.get_num_macs() * energy_ref.mac_operation;
     l1_energy = mac_input_tile_size * l1_iteration.input_rd_it * num_s0_input_hosts * energy_ref.l1_input_egress
               + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * energy_ref.l1_filter_egress
               + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * energy_ref.l1_output_egress
@@ -438,7 +439,7 @@ void stats_t::update_utilization() {
 }
 
 void stats_t::update_cycle() {
-    mac_cycle = mapping_table->get_iteration(component_t::L1) * cycle_ref.mac_operation;
+    mac_cycle = mapping_table.get_iteration(component_t::L1) * cycle_ref.mac_operation;
     l1_cycle = (l1_iteration.input_rd_it + l1_iteration.filter_rd_it + l1_iteration.output_rd_it + l1_iteration.output_wt_it) * cycle_ref.l1_access;
     l2_cycle = (l2_iteration.input_rd_it + l2_iteration.filter_rd_it + l2_iteration.output_rd_it + l2_iteration.output_wt_it) * cycle_ref.l2_access;
     dram_cycle = (dram_iteration.input_rd_it + dram_iteration.filter_rd_it + dram_iteration.output_rd_it + dram_iteration.output_wt_it) * cycle_ref.dram_access;
