@@ -178,7 +178,6 @@ void stats_t::update_iteration() {
     l1_iteration.output_wt_it = l1_iteration_tmp;
     switch(accelerator->mac_dataflow()) {
         case dataflow_t::IS: 
-            // l1_iteration.input_rd_it /= mapping_table->get_degree(parameter_t::K, component_t::L1); 
             h_upper = (mapping_table->get_product(parameter_t::P, component_t::MAC) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::MAC);
             h_lower = (mapping_table->get_product(parameter_t::P, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L1);
             w_upper = (mapping_table->get_product(parameter_t::Q, component_t::MAC) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::MAC);
@@ -204,7 +203,6 @@ void stats_t::update_iteration() {
     l2_iteration.output_wt_it = l2_iteration_tmp;
     switch(accelerator->l1_dataflow()) {
         case dataflow_t::IS: 
-            //l2_iteration.input_rd_it /= mapping_table->get_degree(parameter_t::K, component_t::L2);
             h_upper = (mapping_table->get_product(parameter_t::P, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L1);
             h_lower = (mapping_table->get_product(parameter_t::P, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L2);
             w_upper = (mapping_table->get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::L1);
@@ -234,7 +232,6 @@ void stats_t::update_iteration() {
     dram_iteration.output_wt_it = dram_iteration_tmp;
     switch(accelerator->l2_dataflow()) {
         case dataflow_t::IS: 
-            //dram_iteration.input_rd_it /= mapping_table->get_degree(parameter_t::K, component_t::DRAM);
             h_upper = (mapping_table->get_product(parameter_t::P, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::L2);
             h_lower = (mapping_table->get_product(parameter_t::P, component_t::DRAM) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::S, component_t::DRAM);
             w_upper = (mapping_table->get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table->get_stride() + mapping_table->get_product(parameter_t::R, component_t::L2);
@@ -444,13 +441,15 @@ void stats_t::update_cycle() {
     l1_cycle = (l1_iteration.input_rd_it + l1_iteration.filter_rd_it + l1_iteration.output_rd_it + l1_iteration.output_wt_it) * cycle_ref.l1_access;
     l2_cycle = (l2_iteration.input_rd_it + l2_iteration.filter_rd_it + l2_iteration.output_rd_it + l2_iteration.output_wt_it) * cycle_ref.l2_access;
     dram_cycle = (dram_iteration.input_rd_it + dram_iteration.filter_rd_it + dram_iteration.output_rd_it + dram_iteration.output_wt_it) * cycle_ref.dram_access;
-    // Separated buffer adjustment
+    // L1 separated buffer adjustment
     if(accelerator->l1_type() == buffer_type_t::SEPARATED) {
         if(l1_iteration.input_rd_it >= l1_iteration.filter_rd_it)
             l1_cycle -= l1_iteration.filter_rd_it * cycle_ref.l1_access;
         else
             l1_cycle -= l1_iteration.input_rd_it * cycle_ref.l1_access;
     }
+    // TODO: support more buffer types 
+    
     // Bypass adjustment
     if(accelerator->l1_input_bypass())
         l2_cycle -= l2_iteration.input_rd_it * cycle_ref.l2_access;
