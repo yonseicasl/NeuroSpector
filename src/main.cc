@@ -61,8 +61,8 @@ int main(int argc, char **argv) {
             unsigned layer_idx = stoi(argv[5]);
             if(layer_idx == 0)
                 handler.print_err(err_type_t::INVAILD, "Layer index must be more than 0");
-            optimizer->run_brute_force(layer_idx);
-            //optimizer->run_2level_by_2level(layer_idx);
+            //optimizer->run_brute_force(layer_idx);
+            optimizer->run_2level_by_2level(layer_idx);
         }
         else
             optimizer->run_brute_force();

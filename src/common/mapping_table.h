@@ -52,7 +52,7 @@ private:
     std::vector<unsigned> degrees;          // Mapping degrees
     std::string layer_name;                 
     std::string D_str = "KBPQCSR";
-    std::string U_str = "MAC [T]S0  [S]L1  [T]S1_X[S]S1_Y[S]L2  [T]S2     DRAM   ";
+    std::string U_str = "MAC [T]S0  [S]L1  [T]S1_X[S]S1_Y[S]L2  [T]S2  [S]DRAM   ";
     std::string csv_str = " MAC,  S0,  L1,S1_X,S1_Y,  L2,  S2,DRAM,";
 };
 
