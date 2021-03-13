@@ -49,14 +49,14 @@ private:
     bool l2_validity(const mapping_table_t *mapping_table_) const;
     bool s2_validity(const mapping_table_t *mapping_table_) const;
     // Variables & containers
-    bool is_fixed;                                  // Dataflow: fixed (true) or flexible (false)
+    bool is_fixed;                                  // TODO: Dataflow: fixed (true) or flexible (false)
     unsigned D_size;                                // Mapping table column size
     unsigned U_size;                                // Mapping table row size
     unsigned num_levels;                            // # of existent levels
     accelerator_t *accelerator;                     // Target accelerator 
     std::string network_name;                       // DNN name
     std::vector<bool> exists;                       // Component exist bits from MAC to DRAM
-    std::vector<mapping_table_t*> mapping_tables;   // Mapping tables from the mapping configuration
+    std::vector<mapping_table_t> mapping_tables;    // Mapping tables from the mapping configuration
     // For multi-threading
     unsigned num_threads;
     uint64_t global_total_cnt;

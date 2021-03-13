@@ -39,10 +39,10 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
     net_cfg_t *net_cfg = new net_cfg_t(net_cfg_path_);
     network_name = net_cfg->network_name;
     for(size_t idx = 0; idx < net_cfg->layers.size(); idx++) {
-        mapping_table_t *mapping_table = new mapping_table_t(exists, 
-                                                             net_cfg->layers.at(idx).name, 
-                                                             net_cfg->layers.at(idx).values,
-                                                             net_cfg->layers.at(idx).stride);
+        mapping_table_t mapping_table(exists, 
+                                      net_cfg->layers.at(idx).name, 
+                                      net_cfg->layers.at(idx).values,
+                                      net_cfg->layers.at(idx).stride);
         mapping_tables.push_back(mapping_table); 
     }
     delete net_cfg;
@@ -50,9 +50,6 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
 
 optimizer_t::~optimizer_t() {
     delete accelerator;
-    for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
-        delete mapping_tables.at(idx);
-    }
 }
 
 // Optimizer APIs
@@ -67,16 +64,16 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     // Global initialization 
     global_min_energy.assign(num_threads, -1);
     global_best_mapping_table.assign(num_threads, mapping_table_t(exists,
-                                                                  mapping_tables.at(idx_ - 1)->get_layer_name(),
-                                                                  mapping_tables.at(idx_ - 1)->get_layer_values(),
-                                                                  mapping_tables.at(idx_ - 1)->get_stride()));
+                                                                  mapping_tables.at(idx_ - 1).get_layer_name(),
+                                                                  mapping_tables.at(idx_ - 1).get_layer_values(),
+                                                                  mapping_tables.at(idx_ - 1).get_stride()));
     std::vector<mapping_table_t> tmp(1, mapping_table_t(exists,
-                                                        mapping_tables.at(idx_ - 1)->get_layer_name(),
-                                                        mapping_tables.at(idx_ - 1)->get_layer_values(),
-                                                        mapping_tables.at(idx_ - 1)->get_stride()));
+                                                        mapping_tables.at(idx_ - 1).get_layer_name(),
+                                                        mapping_tables.at(idx_ - 1).get_layer_values(),
+                                                        mapping_tables.at(idx_ - 1).get_stride()));
     global_similar_mapping_tables.assign(num_threads, tmp);
     // Mapping space generation
-    mapping_space_t mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1)->get_layer_values());
+    mapping_space_t mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     // Threads initialization
     std::vector<std::thread> workers;
     std::mutex m;
@@ -121,11 +118,16 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     handler.print_line(60, "*");
 #ifdef CSV
     std::cout << "# OF VALID MAPPINGS,# OF INVALID MAPPINGS,TOTAL # OF MAPPINGS,# OF BEST MAPPINGS\n"  
-              << global_valid_cnt << "," << global_total_cnt - global_valid_cnt << "," << mapping_space.get_num_permutations() << "," << global_similar_mapping_tables.at(best_tid).size() + 1 << std::endl;
+              << global_valid_cnt << "," 
+              << global_total_cnt - global_valid_cnt << "," 
+              << mapping_space.get_num_permutations() << "," 
+              << global_similar_mapping_tables.at(best_tid).size() + 1 << std::endl;
     handler.print_line(60, "*");
 #else
-    std::cout << "# NUM OF VALID MAPPINGS  : " << std::setw(15) << global_valid_cnt << " (" << std::fixed << std::setprecision(2) << float(global_valid_cnt) / global_total_cnt * 100 << "%)" << std::endl; 
-    std::cout << "# NUM OF INVALID MAPPINGS: " << std::setw(15) << global_total_cnt - global_valid_cnt << " (" << std::fixed << std::setprecision(2) << float(global_total_cnt - global_valid_cnt) / global_total_cnt * 100 << "%)" << std::endl; 
+    std::cout << "# NUM OF VALID MAPPINGS  : " << std::setw(15) << global_valid_cnt 
+                                                                << " (" << std::fixed << std::setprecision(2) << float(global_valid_cnt) / global_total_cnt * 100 << "%)" << std::endl; 
+    std::cout << "# NUM OF INVALID MAPPINGS: " << std::setw(15) << global_total_cnt - global_valid_cnt 
+                                                                << " (" << std::fixed << std::setprecision(2) << float(global_total_cnt - global_valid_cnt) / global_total_cnt * 100 << "%)" << std::endl; 
     std::cout << "# TOTAL NUM OF MAPPINGS  : " << std::setw(15) << mapping_space.get_num_permutations() << " (100%)" << std::endl;
     std::cout << "# NUM OF BEST MAPPINGS   : " << std::setw(15) << global_similar_mapping_tables.at(best_tid).size() + 1 << std::endl;
     handler.print_line(60, "*");
@@ -137,9 +139,9 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     global_best_mapping_table.at(best_tid).print_stats();
 #endif
     mapping_table_t *for_stats = new mapping_table_t(exists, 
-                                                     mapping_tables.at(idx_ - 1)->get_layer_name(),
-                                                     mapping_tables.at(idx_ - 1)->get_layer_values(),
-                                                     mapping_tables.at(idx_ - 1)->get_stride());
+                                                     mapping_tables.at(idx_ - 1).get_layer_name(),
+                                                     mapping_tables.at(idx_ - 1).get_layer_values(),
+                                                     mapping_tables.at(idx_ - 1).get_stride());
     for_stats->swap_degrees(global_best_mapping_table.at(best_tid).get_degrees());
     stats_t stats(accelerator, for_stats);
     stats.update_stats();
@@ -157,9 +159,9 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
         global_similar_mapping_tables.at(best_tid).at(i).print_stats();
 #endif
         mapping_table_t *for_stats = new mapping_table_t(exists, 
-                                                         mapping_tables.at(idx_ - 1)->get_layer_name(),
-                                                         mapping_tables.at(idx_ - 1)->get_layer_values(),
-                                                         mapping_tables.at(idx_ - 1)->get_stride());
+                                                         mapping_tables.at(idx_ - 1).get_layer_name(),
+                                                         mapping_tables.at(idx_ - 1).get_layer_values(),
+                                                         mapping_tables.at(idx_ - 1).get_stride());
         for_stats->swap_degrees(global_best_mapping_table.at(best_tid).get_degrees());
         stats_t stats(accelerator, for_stats);
         stats.update_stats();
@@ -179,10 +181,7 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
 
     unsigned used_levels = 0; 
     unsigned min_energy = -1;
-    mapping_table_t best_mapping(exists,
-                                 mapping_tables.at(idx_ - 1)->get_layer_name(),
-                                 mapping_tables.at(idx_ - 1)->get_layer_values(),
-                                 mapping_tables.at(idx_ - 1)->get_stride());
+    mapping_table_t best_mapping = mapping_tables.at(idx_ - 1);
     // Mapping space generation
     for(unsigned i = 0; i < 3; i++) {
         // L2 & S2
@@ -190,7 +189,7 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
             if(accelerator->s2_size() > 1) used_levels++;
             if(accelerator->l2_type() != buffer_type_t::NONE) used_levels++;
             if(used_levels == 0) continue;
-            mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1)->get_layer_values());
+            mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1).get_layer_values());
 
         }
         // L1 & S1
@@ -219,13 +218,13 @@ void optimizer_t::mapping_worker(const unsigned idx_,
                                  const component_t end_,
                                  std::mutex& m_) {
     mapping_table_t *current_mapping_table = new mapping_table_t(exists, 
-                                                                 mapping_tables.at(idx_ - 1)->get_layer_name(),
-                                                                 mapping_tables.at(idx_ - 1)->get_layer_values(),
-                                                                 mapping_tables.at(idx_ - 1)->get_stride());
+                                                                 mapping_tables.at(idx_ - 1).get_layer_name(),
+                                                                 mapping_tables.at(idx_ - 1).get_layer_values(),
+                                                                 mapping_tables.at(idx_ - 1).get_stride());
     mapping_table_t *local_best_mapping_table = new mapping_table_t(exists, 
-                                                                    mapping_tables.at(idx_ - 1)->get_layer_name(), 
-                                                                    mapping_tables.at(idx_ - 1)->get_layer_values(), 
-                                                                    mapping_tables.at(idx_ - 1)->get_stride());
+                                                                    mapping_tables.at(idx_ - 1).get_layer_name(), 
+                                                                    mapping_tables.at(idx_ - 1).get_layer_values(), 
+                                                                    mapping_tables.at(idx_ - 1).get_stride());
     stats_t *current_stats = new stats_t(accelerator, current_mapping_table);
     size_t min_energy = -1;
     size_t min_cycle = -1;
@@ -273,9 +272,9 @@ void optimizer_t::mapping_worker(const unsigned idx_,
                                         }
                                         else if(min_cycle == current_stats->get_total_cycle()) {
                                             mapping_table_t similar_mapping_table(exists, 
-                                                                                  mapping_tables.at(idx_ - 1)->get_layer_name(), 
-                                                                                  mapping_tables.at(idx_ - 1)->get_layer_values(), 
-                                                                                  mapping_tables.at(idx_ - 1)->get_stride());
+                                                                                  mapping_tables.at(idx_ - 1).get_layer_name(), 
+                                                                                  mapping_tables.at(idx_ - 1).get_layer_values(), 
+                                                                                  mapping_tables.at(idx_ - 1).get_stride());
                                             similar_mapping_table.swap_degrees(current_mapping_table->get_degrees());
                                             similar_mapping_tables.push_back(similar_mapping_table);
                                             match_cnt++;
@@ -305,9 +304,9 @@ void optimizer_t::mapping_worker(const unsigned idx_,
                                         }
                                         else if(min_energy == current_stats->get_total_energy()) {
                                             mapping_table_t similar_mapping_table(exists, 
-                                                                                  mapping_tables.at(idx_ - 1)->get_layer_name(), 
-                                                                                  mapping_tables.at(idx_ - 1)->get_layer_values(), 
-                                                                                  mapping_tables.at(idx_ - 1)->get_stride());
+                                                                                  mapping_tables.at(idx_ - 1).get_layer_name(), 
+                                                                                  mapping_tables.at(idx_ - 1).get_layer_values(), 
+                                                                                  mapping_tables.at(idx_ - 1).get_stride());
                                             similar_mapping_table.swap_degrees(current_mapping_table->get_degrees());
                                             similar_mapping_tables.push_back(similar_mapping_table);
                                             match_cnt++;
@@ -332,9 +331,9 @@ void optimizer_t::mapping_worker(const unsigned idx_,
                                         if(match_cnt == 0)
                                             similar_mapping_tables.clear();
                                         mapping_table_t similar_mapping_table(exists, 
-                                                                              mapping_tables.at(idx_ - 1)->get_layer_name(), 
-                                                                              mapping_tables.at(idx_ - 1)->get_layer_values(), 
-                                                                              mapping_tables.at(idx_ - 1)->get_stride());
+                                                                              mapping_tables.at(idx_ - 1).get_layer_name(), 
+                                                                              mapping_tables.at(idx_ - 1).get_layer_values(), 
+                                                                              mapping_tables.at(idx_ - 1).get_stride());
                                         similar_mapping_table.swap_degrees(current_mapping_table->get_degrees());
                                         similar_mapping_tables.push_back(similar_mapping_table);
                                         match_cnt++;

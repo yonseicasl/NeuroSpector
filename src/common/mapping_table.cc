@@ -18,6 +18,16 @@ mapping_table_t::mapping_table_t(const std::vector<bool>& exists_,
         handler.print_err(err_type_t::INVAILD, "# of layer values");
 }
 
+mapping_table_t::mapping_table_t(const mapping_table_t& rhs_) 
+    : D_size(rhs_.D_size),
+      U_size(rhs_.U_size), 
+      stride(rhs_.stride), 
+      exists(rhs_.exists),
+      layer_values(rhs_.layer_values),
+      degrees(rhs_.degrees), 
+      layer_name(rhs_.layer_name) {
+}
+
 mapping_table_t::~mapping_table_t() {
 }
 

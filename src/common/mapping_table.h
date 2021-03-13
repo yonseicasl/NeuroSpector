@@ -16,6 +16,7 @@ public:
                     const std::string& layer_name_,
                     const std::vector<unsigned>& layer_values_, 
                     const unsigned stride_);
+    mapping_table_t(const mapping_table_t& rhs_);
     ~mapping_table_t();
     // Initialization APIs
     void init_degrees(const std::vector<unsigned>& src_);
