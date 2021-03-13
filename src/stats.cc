@@ -13,14 +13,14 @@ stats_t::~stats_t() {
 }
 
 void stats_t::print_stats() const {
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "  L1 TILE SIZE (I): " << l1_input_tile_size << "\n"
               << "  L1 TILE SIZE (F): " << l1_filter_tile_size << "\n"
               << "  L1 TILE SIZE (O): " << l1_output_tile_size << std::endl;
     std::cout << "  L2 TILE SIZE (I): " << l2_input_tile_size << "\n"
               << "  L2 TILE SIZE (F): " << l2_filter_tile_size << "\n"
               << "  L2 TILE SIZE (O): " << l2_output_tile_size << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "  L1 ITERATION (I): " << l1_iteration.input_rd_it << "\n"
               << "  L1 ITERATION (F): " << l1_iteration.filter_rd_it << "\n"
               << "  L1 ITERATION (O): " << l1_iteration.output_rd_it + l1_iteration.output_wt_it << std::endl;
@@ -30,7 +30,7 @@ void stats_t::print_stats() const {
     std::cout << "DRAM ITERATION (I): " << dram_iteration.input_rd_it << "\n"
               << "DRAM ITERATION (F): " << dram_iteration.filter_rd_it << "\n"
               << "DRAM ITERATION (O): " << dram_iteration.output_rd_it + dram_iteration.output_wt_it << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << " # OF S0 HOSTS (I): " << num_s0_input_hosts << "\n"
               << " # OF S0 HOSTS (F): " << num_s0_filter_hosts << "\n"
               << " # OF S0 HOSTS (O): " << num_s0_output_hosts << std::endl;
@@ -40,29 +40,29 @@ void stats_t::print_stats() const {
     std::cout << " # OF S2 HOSTS (I): " << num_s2_input_hosts << "\n"
               << " # OF S2 HOSTS (F): " << num_s2_filter_hosts << "\n"
               << " # OF S2 HOSTS (O): " << num_s2_output_hosts << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "        MAC ENERGY: " << mac_energy << " (" << float(mac_energy) / total_energy * 100 << "%)" << "\n"
               << "         L1 ENERGY: " << l1_energy << " (" << float(l1_energy) / total_energy * 100 << "%)" << "\n"
               << "         L2 ENERGY: " << l2_energy << " (" << float(l2_energy) / total_energy * 100 << "%)" << "\n"
               << "       DRAM ENERGY: " << dram_energy << " (" << float(dram_energy) / total_energy * 100 << "%)" << "\n"
               << "      TOTAL ENERGY: " << total_energy << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "  # OF ACTIVE MACs: " << num_active_macs << "\n"
               << "  # OF ACTIVE  PEs: " << num_active_pes << "\n"
               << "  # OF ACTIVE ACCs: " << num_active_accs << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "    S0 UTILIZATION: " << s0_utilization << " %" << "\n" 
               << "    L1 UTILIZATION: " << l1_utilization << " %" << "\n" 
               << "    S1 UTILIZATION: " << s1_utilization << " %" << "\n"
               << "    L2 UTILIZATION: " << l2_utilization << " %" << "\n"
               << "    S2 UTILIZATION: " << s2_utilization << " %" << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "         MAC CYCLE: " << mac_cycle << " (" << float(mac_cycle) / total_cycle * 100 << "%)" << "\n"
               << "          L1 CYCLE: " << l1_cycle << " (" << float(l1_cycle) / total_cycle * 100 << "%)" << "\n"
               << "          L2 CYCLE: " << l2_cycle << " (" << float(l2_cycle) / total_cycle * 100 << "%)" << "\n"
               << "        DRAM CYCLE: " << dram_cycle << " (" << float(dram_cycle) / total_cycle * 100 << "%)" << "\n"
               << "       TOTAL CYCLE: " << total_cycle << std::endl;
-    handler.print_line(30, "*");
+    handler.print_line(50, "*");
     std::cout << "         TOTAL EDP: " << total_edp << "(J x CYCLE)" << std::endl;
     return;
 }

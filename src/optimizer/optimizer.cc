@@ -164,12 +164,12 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
         stats_t stats(accelerator, for_stats);
         stats.update_stats();
 #ifdef CSV
-        stats.print_csv();
+    stats.print_csv();
 #else
-        stats.print_stats();
+    stats.print_stats();
 #endif
-        delete for_stats;
-    }
+    delete for_stats;
+}
 }
 
 void optimizer_t::run_2level_by_2level(const unsigned idx_) {
@@ -177,8 +177,12 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
     std::cout << "# NETWORK    : " << network_name << std::endl;
     std::cout << "# NUM THREADS: " << num_threads << std::endl;
 
-    bool df_fixed = true;
     unsigned used_levels = 0; 
+    unsigned min_energy = -1;
+    mapping_table_t best_mapping(exists,
+                                 mapping_tables.at(idx_ - 1)->get_layer_name(),
+                                 mapping_tables.at(idx_ - 1)->get_layer_values(),
+                                 mapping_tables.at(idx_ - 1)->get_stride());
     // Mapping space generation
     for(unsigned i = 0; i < 3; i++) {
         // L2 & S2
@@ -188,12 +192,6 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
             if(used_levels == 0) continue;
             mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1)->get_layer_values());
 
-            if(df_fixed) {
-
-            }
-            else {
-
-            }
         }
         // L1 & S1
         else if(i == 1) {

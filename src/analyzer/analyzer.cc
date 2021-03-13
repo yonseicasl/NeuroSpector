@@ -1,6 +1,6 @@
 #include "analyzer.h"
 
-#define CSV
+//#define CSV
 
 static handler_t handler;
 
