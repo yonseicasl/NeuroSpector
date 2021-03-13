@@ -222,7 +222,7 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
                                                 if(entry->second.get_iteration(component_t::DRAM) > current_mapping_table.get_iteration(component_t::DRAM)) {
                                                     // Change the previous table to the current table
                                                     mapping_table_t to_be_saved(mapping_tables.at(idx_ - 1)); 
-                                                    to_be_saved.swap_degrees(current_mapping_table.get_degrees());
+                                                    entry->second.swap_degrees(current_mapping_table.get_degrees());
                                                     best_l2_mappings.insert(std::make_pair(current_stats.get_dram_energy(), to_be_saved));
                                                 }
                                             }

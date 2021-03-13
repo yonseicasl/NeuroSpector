@@ -1,8 +1,8 @@
 #!/bin/bash
 
 # Configurations
-acc_arg=configs/accelerators/eyeriss.cfg
-net_arg=configs/networks/alexnet.csv
+acc_arg=configs/accelerators/eyeriss-like.cfg
+net_arg=configs/networks/alexnet_b8.csv
 # Dataflows: fixed or flexible
 dataflows="fixed"
 num_threads=8
