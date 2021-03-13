@@ -62,35 +62,29 @@ private:
     size_t num_s1_input_hosts;
     size_t num_s1_filter_hosts;
     size_t num_s1_output_hosts;
-//    size_t num_s2_input_hosts;
-//    size_t num_s2_filter_hosts;
-//    size_t num_s2_output_hosts;
+    size_t num_s2_input_hosts;
+    size_t num_s2_filter_hosts;
+    size_t num_s2_output_hosts;
     // Active components
     size_t num_active_macs;
     size_t num_active_pes;
-    size_t num_active_accelerators;
+    size_t num_active_accs;
     // Energy
     double mac_energy;
     double l1_energy;
     double l2_energy;
     double dram_energy;
-    double s0_noc_energy;
-    double s1_noc_energy;
-    double s2_noc_energy;
     double total_energy;
     // Utilization
-    //float s0_utilization;
+    float s0_utilization;
     float l1_utilization;
     float s1_utilization;
     float l2_utilization;
-    //float s2_utilization;
+    float s2_utilization;
     // Cycle
     size_t mac_cycle;
-    //double s0_noc_cycle;
     size_t l1_cycle;
-    //double s1_noc_cycle;
     size_t l2_cycle;
-    //double s2_noc_cycle;
     size_t dram_cycle;
     size_t total_cycle;
     // EDP
