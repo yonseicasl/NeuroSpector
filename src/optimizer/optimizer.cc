@@ -166,7 +166,7 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     }
 }
 
-void optimizer_t::run_2level_by_2level(const unsigned idx_) {
+void optimizer_t::run_two_lv_by_two_lv(const unsigned idx_) {
     accelerator->print_stats();
     std::cout << "# NETWORK    : " << network_name << std::endl;
     //std::cout << "# NUM THREADS: " << num_threads << std::endl;
@@ -288,6 +288,13 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
                                                     min_energy = current_stats.get_l2_energy();
                                                     best_mappings.at(it_cnt).swap_degrees(current_mapping_table.get_degrees());
                                                 }
+                                                else if(min_energy == current_stats.get_l2_energy()) {
+                                                    if(best_mappings.at(it_cnt).get_iteration(component_t::L2) > current_mapping_table.get_iteration(component_t::L2))
+                                                        best_mappings.at(it_cnt).swap_degrees(current_mapping_table.get_degrees());
+                                                }
+                                                else {
+                                                    // Nothing to do
+                                                }
                                                 valid_cnt.at(1 + i * it_cnt)++;
                                             }
                                         }
@@ -311,19 +318,33 @@ void optimizer_t::run_2level_by_2level(const unsigned idx_) {
     }
     // Print stats
     handler.print_line(50, "*");
-    std::cout << "# ORIGINAL TOTAL PERMUTATIONS: " << original_mapping_space.get_num_permutations() << std::endl;
-    std::cout << "#    L2-S2 TOTAL PERMUTATIONS: " << total_cnt.at(0) << std::endl;
-    std::cout << "#    L2-S2 VALID PERMUTATIONS: " << valid_cnt.at(0) << std::endl;
+    std::cout << "#,ORIGINAL,L2-S2 TOTAL,L2-S2 VALID\n" 
+              << "," << original_mapping_space.get_num_permutations() 
+              << "," << total_cnt.at(0)
+              << "," << valid_cnt.at(0) << std::endl;
     for(unsigned i = 0; i < top_k; i++) {
-        std::cout << "# TOP " << i + 1 << std::endl;
-        std::cout << "#    L1-S1 TOTAL PERMUTATIONS: " << total_cnt.at(1 + i) << std::endl;
-        std::cout << "#    L1-S1 VALID PERMUTATIONS: " << valid_cnt.at(1 + i) << std::endl;
+        std::cout << "# TOP " << i + 1 << ",L1-S1 TOTAL,L1-S1 VALID\n"
+                  << "," << total_cnt.at(1 + i) 
+                  << "," << valid_cnt.at(1 + i) << std::endl;
     }
     for(unsigned i = 0; i < top_k; i++) {
-        std::cout << "# TOP " << i + 1 << std::endl;
-        std::cout << "#   MAC-S0 TOTAL PERMUTATIONS: " << total_cnt.at(1 + top_k + i) << std::endl;
-        std::cout << "#   MAC-S0 VALID PERMUTATIONS: " << valid_cnt.at(1 + top_k + i) << std::endl;
+        std::cout << "# TOP " << i + 1 << ",MAC-S0 TOTAL,MAC-S0 VALID\n"
+                  << "," << total_cnt.at(1 + top_k + i)
+                  << "," << valid_cnt.at(1 + top_k + i) << std::endl;
     }
+//    std::cout << "# ORIGINAL TOTAL PERMUTATIONS: " << original_mapping_space.get_num_permutations() << std::endl;
+//    std::cout << "#    L2-S2 TOTAL PERMUTATIONS: " << total_cnt.at(0) << std::endl;
+//    std::cout << "#    L2-S2 VALID PERMUTATIONS: " << valid_cnt.at(0) << std::endl;
+//    for(unsigned i = 0; i < top_k; i++) {
+//        std::cout << "# TOP " << i + 1 << std::endl;
+//        std::cout << "#    L1-S1 TOTAL PERMUTATIONS: " << total_cnt.at(1 + i) << std::endl;
+//        std::cout << "#    L1-S1 VALID PERMUTATIONS: " << valid_cnt.at(1 + i) << std::endl;
+//    }
+//    for(unsigned i = 0; i < top_k; i++) {
+//        std::cout << "# TOP " << i + 1 << std::endl;
+//        std::cout << "#   MAC-S0 TOTAL PERMUTATIONS: " << total_cnt.at(1 + top_k + i) << std::endl;
+//        std::cout << "#   MAC-S0 VALID PERMUTATIONS: " << valid_cnt.at(1 + top_k + i) << std::endl;
+//    }
     handler.print_line(50, "*");
     for(unsigned i = 0; i < best_mappings.size(); i++) {
         std::cout << "\n# TOP " << i + 1 << std::endl;

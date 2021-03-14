@@ -29,7 +29,7 @@ public:
     // Optimizer APIs
     void run_brute_force();                         // Run brute-force optimizing of all layers
     void run_brute_force(const unsigned idx_);      // Run brute-force optimizing of the target layer
-    void run_2level_by_2level(const unsigned idx_);
+    void run_two_lv_by_two_lv(const unsigned idx_);
 
 private:
     // Mapping worker
@@ -39,6 +39,10 @@ private:
                             const component_t start_,
                             const component_t end_,
                             std::mutex& m_); 
+//    void two_lv_worker(const unsigned idx_,
+//                       const unsigned top_k_,
+//                       const component_t start_,
+//                       const component_t end_,);
     // Check each mapping table with the accelerator
     bool check_validity(const mapping_table_t& mapping_table_) const; 
     bool mac_validity(const mapping_table_t& mapping_table_) const;    

@@ -62,7 +62,7 @@ int main(int argc, char **argv) {
             if(layer_idx == 0)
                 handler.print_err(err_type_t::INVAILD, "Layer index must be more than 0");
             //optimizer->run_brute_force(layer_idx);
-            optimizer->run_2level_by_2level(layer_idx);
+            optimizer->run_two_lv_by_two_lv(layer_idx);
         }
         else
             optimizer->run_brute_force();
@@ -73,9 +73,9 @@ int main(int argc, char **argv) {
     // Finish time
     finish = time(nullptr);
     cout << "\n# TIME: " 
-         << (finish - start) / 3600 << " hr "
+         << (finish - start) << endl;
+    cout << "\n# TIME: " 
          << (finish - start) / 60 << " min "
          << (finish - start) % 60 << " sec " << endl;
-
     return 0;
 }
