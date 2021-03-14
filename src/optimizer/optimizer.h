@@ -39,12 +39,17 @@ private:
                             const component_t start_,
                             const component_t end_,
                             std::mutex& m_); 
-//    void two_lv_worker(const unsigned idx_,
-//                       const unsigned top_k_,
-//                       const component_t start_,
-//                       const component_t end_,);
+    void two_lv_worker(const unsigned seq_,
+                       const unsigned top_k_,
+                       const mapping_space_t& mapping_space_,
+                       const component_t start_,
+                       const component_t end_,
+                       const mapping_table_t init_mapping_,
+                       uint64_t& valid_cnt_,
+                       std::vector<mapping_table_t>& best_mappings_);
     // Check each mapping table with the accelerator
-    bool check_validity(const mapping_table_t& mapping_table_) const; 
+    bool check_all_validity(const mapping_table_t& mapping_table_) const; 
+    bool check_validity(const component_t U, const mapping_table_t& mapping_table_) const; 
     bool mac_validity(const mapping_table_t& mapping_table_) const;    
     bool s0_validity(const mapping_table_t& mapping_table_) const; 
     bool l1_validity(const mapping_table_t& mapping_table_) const;
@@ -65,7 +70,7 @@ private:
     unsigned num_threads;
     uint64_t global_total_cnt;
     uint64_t global_valid_cnt;
-    std::vector<size_t> global_min_energy;
+    std::vector<double> global_min_energy;
     std::vector<mapping_table_t> global_best_mapping_table;
     std::vector<std::vector<mapping_table_t>> global_similar_mapping_tables;
 };

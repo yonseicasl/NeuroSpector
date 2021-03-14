@@ -92,7 +92,7 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     }
     // Sync
     unsigned best_tid = 0;
-    size_t best_energy = -1;
+    double best_energy = DBL_MAX;
     for(unsigned tid = 0; tid < num_threads; tid++) {
         if(best_energy > global_min_energy.at(tid)) {
             best_tid = tid;
@@ -169,169 +169,130 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
 void optimizer_t::run_two_lv_by_two_lv(const unsigned idx_) {
     accelerator->print_stats();
     std::cout << "# NETWORK    : " << network_name << std::endl;
-    //std::cout << "# NUM THREADS: " << num_threads << std::endl;
-    // Original mapping space generation
-    mapping_space_t original_mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     // Initialization
+    unsigned used_levels = 0;
+    unsigned top_k_first = 3;
+    unsigned top_k_second = 4;
+    unsigned top_k_third = 1;
+    std::vector<mapping_table_t> best_mappings_first;
+    std::vector<mapping_table_t> best_mappings_second;
+    std::vector<mapping_table_t> best_mappings_third;
     component_t start_component = component_t::L2;
     component_t end_component = component_t::DRAM;
-    unsigned used_levels = 0;
-    unsigned top_k = 3;
-    std::vector<uint64_t> valid_cnt(1 + 2 * top_k, 0);
-    std::vector<uint64_t> total_cnt(1 + 2 * top_k, 0);
-    std::map<size_t, mapping_table_t> best_l2_mappings;
-    best_l2_mappings.insert(std::make_pair(-1, mapping_table_t(mapping_tables.at(idx_ - 1))));
-    std::vector<mapping_table_t> best_mappings;
+    uint64_t total_cnt_first;
+    std::vector<uint64_t> total_cnt_second(top_k_first, 0);
+    std::vector<uint64_t> total_cnt_third(top_k_first * top_k_second, 0);
+    uint64_t valid_cnt_first;
+    std::vector<uint64_t> valid_cnt_second(top_k_first, 0);
+    std::vector<uint64_t> valid_cnt_third(top_k_first * top_k_second, 0);
     // Start finding best mappings
-    for(unsigned i = 0; i < 3; i++) {
+    for(unsigned seq = 0; seq < 3; seq++) {
         used_levels = 0;
         // L2 & S2
-        if(i == 0) {
+        if(seq == 0) {
             if(accelerator->s2_size() > 1) used_levels++;
             if(accelerator->l2_type() != buffer_type_t::NONE) used_levels++;
-            if(used_levels == 0) { start_component = component_t::L1; continue; }
+            if(used_levels == 0) { 
+                top_k_first = 1;
+                best_mappings_first.assign(top_k_first, mapping_tables.at(idx_ - 1));
+                start_component = component_t::L1; 
+                continue; 
+            }
             // Mapping space generation
             mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1).get_layer_values());
-            total_cnt.at(i) = mapping_space.get_num_permutations();
-            // Current mapping table
-            mapping_table_t current_mapping_table(mapping_tables.at(idx_ - 1));
-            // Start finding best mappings with lower DRAM cost
-            for(size_t k = 0; k < mapping_space.get_permutations(0).size(); k++) {
-                current_mapping_table.put_column_degrees(parameter_t::K, mapping_space.get_permutations(0).at(k), start_component, end_component);
-                for(size_t b = 0; b < mapping_space.get_permutations(1).size(); b++) {
-                    current_mapping_table.put_column_degrees(parameter_t::B, mapping_space.get_permutations(1).at(b), start_component, end_component);
-                    for(size_t p = 0; p < mapping_space.get_permutations(2).size(); p++) {
-                        current_mapping_table.put_column_degrees(parameter_t::P, mapping_space.get_permutations(2).at(p), start_component, end_component);
-                        for(size_t q = 0; q < mapping_space.get_permutations(3).size(); q++) {
-                            current_mapping_table.put_column_degrees(parameter_t::Q, mapping_space.get_permutations(3).at(q), start_component, end_component);
-                            for(size_t c = 0; c < mapping_space.get_permutations(4).size(); c++) {
-                                current_mapping_table.put_column_degrees(parameter_t::C, mapping_space.get_permutations(4).at(c), start_component, end_component);
-                                for(size_t s = 0; s < mapping_space.get_permutations(5).size(); s++) {
-                                    current_mapping_table.put_column_degrees(parameter_t::S, mapping_space.get_permutations(5).at(s), start_component, end_component);
-                                    for(size_t r = 0; r < mapping_space.get_permutations(6).size(); r++) {
-                                        current_mapping_table.put_column_degrees(parameter_t::R, mapping_space.get_permutations(6).at(r), start_component, end_component);
-                                        // Validity check
-                                        stats_t current_stats(accelerator, current_mapping_table);
-                                        if(l2_validity(current_mapping_table) & s2_validity(current_mapping_table)) {
-                                            // Update current stats
-                                            current_stats.update_stats();
-                                            // 'best_mappings' includes the same energy key value with the current mapping table's DRAM energy
-                                            auto entry = best_l2_mappings.find(current_stats.get_dram_energy());
-                                            if(entry != best_l2_mappings.end()) {
-                                                // DRAM iteration comparison 
-                                                if(entry->second.get_iteration(component_t::DRAM) > current_mapping_table.get_iteration(component_t::DRAM)) {
-                                                    // Change the previous table to the current table
-                                                    mapping_table_t to_be_saved(mapping_tables.at(idx_ - 1)); 
-                                                    entry->second.swap_degrees(current_mapping_table.get_degrees());
-                                                    best_l2_mappings.insert(std::make_pair(current_stats.get_dram_energy(), to_be_saved));
-                                                }
-                                            }
-                                            else {
-                                                // Comparison between the last candidate (highest energy) and the current mapping table's DRAM energy
-                                                if(std::prev(best_l2_mappings.end())->first > current_stats.get_dram_energy()) {
-                                                    mapping_table_t to_be_saved(mapping_tables.at(idx_ - 1)); 
-                                                    to_be_saved.swap_degrees(current_mapping_table.get_degrees());
-                                                    best_l2_mappings.insert(std::make_pair(current_stats.get_dram_energy(), to_be_saved));
-                                                }
-                                            }
-                                            valid_cnt.at(i)++;
-                                            if(best_l2_mappings.size() > top_k) 
-                                               best_l2_mappings.erase(std::prev(best_l2_mappings.end())); 
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-            }
+            total_cnt_first = mapping_space.get_num_permutations();
+            // Run two_lv_worker()
+            two_lv_worker(seq,
+                          top_k_first,
+                          mapping_space,
+                          start_component,
+                          end_component,
+                          mapping_tables.at(idx_ - 1),
+                          valid_cnt_first,
+                          best_mappings_first);
+            // Change start & end components
             start_component = component_t::L1;
             end_component = component_t::L2;
         }
         // L1 & S1
-        else if(i == 1) {
+        else if(seq == 1) {
             if(accelerator->s1_size_x() > 1) used_levels++;
             if(accelerator->s1_size_y() > 1) used_levels++;
             if(accelerator->l1_type() != buffer_type_t::NONE) used_levels++;
-            if(used_levels == 0) { start_component = component_t::S0; continue; }
-            unsigned it_cnt = 0;
-            for(auto it = best_l2_mappings.begin(); it != best_l2_mappings.end(); ++it) {
-                // Initialization
-                size_t min_energy = -1;
-                best_mappings.push_back(it->second); 
-                // Mapping space generation
-                mapping_space_t mapping_space(used_levels + 1, it->second.get_row_degrees(end_component));
-                total_cnt.at(1 + i * it_cnt) = mapping_space.get_num_permutations();
-                // Current mapping table
-                mapping_table_t current_mapping_table(it->second);
-                // Start finding best mappings with lower L2 cost
-                for(size_t k = 0; k < mapping_space.get_permutations(0).size(); k++) {
-                    current_mapping_table.put_column_degrees(parameter_t::K, mapping_space.get_permutations(0).at(k), start_component, end_component);
-                    for(size_t b = 0; b < mapping_space.get_permutations(1).size(); b++) {
-                        current_mapping_table.put_column_degrees(parameter_t::B, mapping_space.get_permutations(1).at(b), start_component, end_component);
-                        for(size_t p = 0; p < mapping_space.get_permutations(2).size(); p++) {
-                            current_mapping_table.put_column_degrees(parameter_t::P, mapping_space.get_permutations(2).at(p), start_component, end_component);
-                            for(size_t q = 0; q < mapping_space.get_permutations(3).size(); q++) {
-                                current_mapping_table.put_column_degrees(parameter_t::Q, mapping_space.get_permutations(3).at(q), start_component, end_component);
-                                for(size_t c = 0; c < mapping_space.get_permutations(4).size(); c++) {
-                                    current_mapping_table.put_column_degrees(parameter_t::C, mapping_space.get_permutations(4).at(c), start_component, end_component);
-                                    for(size_t s = 0; s < mapping_space.get_permutations(5).size(); s++) {
-                                        current_mapping_table.put_column_degrees(parameter_t::S, mapping_space.get_permutations(5).at(s), start_component, end_component);
-                                        for(size_t r = 0; r < mapping_space.get_permutations(6).size(); r++) {
-                                            current_mapping_table.put_column_degrees(parameter_t::R, mapping_space.get_permutations(6).at(r), start_component, end_component);
-                                            // Validity check
-                                            stats_t current_stats(accelerator, current_mapping_table);
-                                            if(l1_validity(current_mapping_table) & s1_x_validity(current_mapping_table) & s1_y_validity(current_mapping_table)) {
-                                                // Update current stats
-                                                current_stats.update_stats();
-                                                if(min_energy > current_stats.get_l2_energy()) {
-                                                    min_energy = current_stats.get_l2_energy();
-                                                    best_mappings.at(it_cnt).swap_degrees(current_mapping_table.get_degrees());
-                                                }
-                                                else if(min_energy == current_stats.get_l2_energy()) {
-                                                    if(best_mappings.at(it_cnt).get_iteration(component_t::L2) > current_mapping_table.get_iteration(component_t::L2))
-                                                        best_mappings.at(it_cnt).swap_degrees(current_mapping_table.get_degrees());
-                                                }
-                                                else {
-                                                    // Nothing to do
-                                                }
-                                                valid_cnt.at(1 + i * it_cnt)++;
-                                            }
-                                        }
-                                    }
-                                }
-                            }
-                        }
-                    }
-                }
-                it_cnt++;
+            if(used_levels == 0) { 
+                top_k_second = 1;
+                for(unsigned i = 0; i < top_k_first; i++)
+                    best_mappings_second.push_back(best_mappings_first.at(i));
+                start_component = component_t::S0; 
+                continue; 
             }
+            total_cnt_second.assign(top_k_first, 0);
+            valid_cnt_second.assign(top_k_first, 0);
+            for(unsigned i = 0; i < top_k_first; i++) {
+                // Mapping space generation
+                mapping_space_t mapping_space(used_levels + 1, best_mappings_first.at(i).get_row_degrees(end_component));
+                total_cnt_second.at(i) = mapping_space.get_num_permutations();
+                // Run two_lv_worker()
+                two_lv_worker(seq,
+                              top_k_second,
+                              mapping_space,
+                              start_component,
+                              end_component,
+                              best_mappings_first.at(i),
+                              valid_cnt_second.at(i),
+                              best_mappings_second);
+            }
+            // Change start & end components
             start_component = component_t::S0;
             end_component = component_t::L1;
         }
         // MAC & S0
         else {
             if(accelerator->macs_per_pe() * accelerator->mac_width() > 1) used_levels++;
-            if(used_levels == 0) continue;
-
+            if(used_levels == 0) {
+                top_k_third = 1;
+                for(unsigned i = 0; i < top_k_first * top_k_second; i++)
+                    best_mappings_third.push_back(best_mappings_second.at(i));
+                continue;
+            }
+            total_cnt_third.assign(top_k_first * top_k_second, 0);
+            valid_cnt_third.assign(top_k_first * top_k_second, 0);
+            for(unsigned i = 0; i < top_k_first * top_k_second; i++) {
+                // Mapping space generation
+                mapping_space_t mapping_space(used_levels + 1, best_mappings_second.at(i).get_row_degrees(end_component));
+                total_cnt_third.at(i) = mapping_space.get_num_permutations();
+                // Run two_lv_worker()
+                two_lv_worker(seq,
+                              top_k_third,
+                              mapping_space,
+                              start_component,
+                              end_component,
+                              best_mappings_second.at(i),
+                              valid_cnt_third.at(i),
+                              best_mappings_third);
+            }
         }
     }
+    // Original mapping space generation
+    mapping_space_t original_mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     // Print stats
-    handler.print_line(50, "*");
-    std::cout << "#,ORIGINAL,L2-S2 TOTAL,L2-S2 VALID\n" 
-              << "," << original_mapping_space.get_num_permutations() 
-              << "," << total_cnt.at(0)
-              << "," << valid_cnt.at(0) << std::endl;
-    for(unsigned i = 0; i < top_k; i++) {
-        std::cout << "# TOP " << i + 1 << ",L1-S1 TOTAL,L1-S1 VALID\n"
-                  << "," << total_cnt.at(1 + i) 
-                  << "," << valid_cnt.at(1 + i) << std::endl;
-    }
-    for(unsigned i = 0; i < top_k; i++) {
-        std::cout << "# TOP " << i + 1 << ",MAC-S0 TOTAL,MAC-S0 VALID\n"
-                  << "," << total_cnt.at(1 + top_k + i)
-                  << "," << valid_cnt.at(1 + top_k + i) << std::endl;
-    }
+//    handler.print_line(50, "*");
+#ifdef CSV
+//    std::cout << "#,ORIGINAL,L2-S2 TOTAL,L2-S2 VALID\n" 
+//              << "," << original_mapping_space.get_num_permutations() 
+//              << "," << total_cnt.at(0)
+//              << "," << valid_cnt.at(0) << std::endl;
+//    for(unsigned i = 0; i < top_k; i++) {
+//        std::cout << "# TOP " << i + 1 << ",L1-S1 TOTAL,L1-S1 VALID\n"
+//                  << "," << total_cnt.at(1 + i) 
+//                  << "," << valid_cnt.at(1 + i) << std::endl;
+//    }
+//    for(unsigned i = 0; i < top_k; i++) {
+//        std::cout << "# TOP " << i + 1 << ",MAC-S0 TOTAL,MAC-S0 VALID\n"
+//                  << "," << total_cnt.at(1 + top_k + i)
+//                  << "," << valid_cnt.at(1 + top_k + i) << std::endl;
+//    }
+#else
 //    std::cout << "# ORIGINAL TOTAL PERMUTATIONS: " << original_mapping_space.get_num_permutations() << std::endl;
 //    std::cout << "#    L2-S2 TOTAL PERMUTATIONS: " << total_cnt.at(0) << std::endl;
 //    std::cout << "#    L2-S2 VALID PERMUTATIONS: " << valid_cnt.at(0) << std::endl;
@@ -345,16 +306,113 @@ void optimizer_t::run_two_lv_by_two_lv(const unsigned idx_) {
 //        std::cout << "#   MAC-S0 TOTAL PERMUTATIONS: " << total_cnt.at(1 + top_k + i) << std::endl;
 //        std::cout << "#   MAC-S0 VALID PERMUTATIONS: " << valid_cnt.at(1 + top_k + i) << std::endl;
 //    }
+#endif
     handler.print_line(50, "*");
-    for(unsigned i = 0; i < best_mappings.size(); i++) {
-        std::cout << "\n# TOP " << i + 1 << std::endl;
-        stats_t current_stats(accelerator, best_mappings.at(i));
-        current_stats.update_stats();
-        //best_mappings.at(i).print_stats();
-        //current_stats.print_stats();
-        best_mappings.at(i).print_csv();
-        current_stats.print_csv();
+    for(unsigned i = 0; i < top_k_first; i++) {
+        for(unsigned j = 0; j < top_k_second; j++) {
+            for(unsigned k = 0; k < top_k_third; k++) {
+                std::cout << "\n# TOP " << i + 1 << "-" << j + 1 << "-" << k + 1 << std::endl;
+                stats_t curr_stats(accelerator, best_mappings_third.at(k + j * top_k_third + i * top_k_second * top_k_third));
+                curr_stats.update_stats();
+#ifdef CSV
+                best_mappings_third.at(k + j * top_k_third + i * top_k_second * top_k_third).print_csv();
+                curr_stats.print_csv();
+#else
+                best_mappings_third.at(k + j * top_k_third + i * top_k_second * top_k_third).print_stats();
+                curr_stats.print_stats();
+#endif
+            }
+        }
     }
+}
+
+void optimizer_t::two_lv_worker(const unsigned seq_,
+                                const unsigned top_k_,
+                                const mapping_space_t& mapping_space_,
+                                const component_t start_,
+                                const component_t end_,
+                                const mapping_table_t init_mapping_,
+                                uint64_t& valid_cnt_,
+                                std::vector<mapping_table_t>& best_mappings_) {
+    // Validation required components 
+    component_t check_1 = component_t::SIZE;
+    component_t check_2 = component_t::SIZE;
+    component_t energy_check = component_t::SIZE;
+    if(start_ == component_t::L2) {
+        check_1 = component_t::L2;
+        check_2 = component_t::S2;
+        energy_check = component_t::DRAM;
+    }
+    else if(start_ == component_t::L1) {
+        check_1 = component_t::L1;
+        check_2 = component_t::S1_X;
+        energy_check = component_t::L2;
+    }
+    else if(start_ == component_t::S0) {
+        check_1 = component_t::MAC;
+        check_2 = component_t::S0;
+        energy_check = component_t::L1;
+    }
+    else 
+        handler.print_err(err_type_t::INVAILD, "COMPONENT optimizer_t::two_lv_worker");
+    // Best mappings
+    std::map<size_t, mapping_table_t> local_best_mappings;
+    local_best_mappings.insert(std::make_pair(-1, init_mapping_));
+    // Current mapping table
+    mapping_table_t curr_mapping_table(init_mapping_);
+    // Start finding best mappings
+    for(size_t k = 0; k < mapping_space_.get_permutations(0).size(); k++) {
+        curr_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_, end_);
+        for(size_t b = 0; b < mapping_space_.get_permutations(1).size(); b++) {
+            curr_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), start_, end_);
+            for(size_t p = 0; p < mapping_space_.get_permutations(2).size(); p++) {
+                curr_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), start_, end_);
+                for(size_t q = 0; q < mapping_space_.get_permutations(3).size(); q++) {
+                    curr_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), start_, end_);
+                    for(size_t c = 0; c < mapping_space_.get_permutations(4).size(); c++) {
+                        curr_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), start_, end_);
+                        for(size_t s = 0; s < mapping_space_.get_permutations(5).size(); s++) {
+                            curr_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), start_, end_);
+                            for(size_t r = 0; r < mapping_space_.get_permutations(6).size(); r++) {
+                                curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_, end_);
+                                // Validity check
+                                if(check_validity(check_1, curr_mapping_table) & check_validity(check_2, curr_mapping_table)) {
+                                    // Update current stats
+                                    stats_t curr_stats(accelerator, curr_mapping_table);
+                                    curr_stats.update_stats();
+                                    // 'local_best_mappings' includes the same energy key value with the curr mapping table's energy
+                                    auto entry = local_best_mappings.find(curr_stats.get_energy(energy_check));
+                                    if(entry != local_best_mappings.end()) {
+                                        // DRAM iteration comparison 
+                                        if(entry->second.get_iteration(end_) > curr_mapping_table.get_iteration(end_)) {
+                                            // Change the previous table to the current table
+                                            mapping_table_t to_be_saved(init_mapping_); 
+                                            entry->second.swap_degrees(curr_mapping_table.get_degrees());
+                                            local_best_mappings.insert(std::make_pair(curr_stats.get_energy(energy_check), to_be_saved));
+                                        }
+                                    }
+                                    else {
+                                        // Comparison between the last candidate (highest energy) and the current mapping table's energy
+                                        if(std::prev(local_best_mappings.end())->first > curr_stats.get_energy(energy_check)) {
+                                            mapping_table_t to_be_saved(init_mapping_); 
+                                            to_be_saved.swap_degrees(curr_mapping_table.get_degrees());
+                                            local_best_mappings.insert(std::make_pair(curr_stats.get_energy(energy_check), to_be_saved));
+                                        }
+                                    }
+                                    valid_cnt_++;
+                                    if(local_best_mappings.size() > top_k_) 
+                                       local_best_mappings.erase(std::prev(local_best_mappings.end())); 
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    for(auto it = local_best_mappings.begin(); it != local_best_mappings.end(); ++it) 
+        best_mappings_.push_back(it->second);
+    return;
 }
 
 // Mapping worker
@@ -364,9 +422,9 @@ void optimizer_t::brute_force_worker(const unsigned idx_,
                                      const component_t start_,
                                      const component_t end_,
                                      std::mutex& m_) {
-    mapping_table_t current_mapping_table(mapping_tables.at(idx_ - 1));
+    mapping_table_t curr_mapping_table(mapping_tables.at(idx_ - 1));
     mapping_table_t local_best_mapping_table(mapping_tables.at(idx_ - 1)); 
-    size_t min_energy = -1;
+    double min_energy = DBL_MAX;
     size_t min_cycle = -1;
 #ifdef EDP
     double min_edp = DBL_MAX;
@@ -378,42 +436,42 @@ void optimizer_t::brute_force_worker(const unsigned idx_,
     // Thread index adjustment
     range_t range(tid_, num_threads, mapping_space_.get_layer_permutations(), std::ref(m_));
     for(size_t k = range.start_k; k < range.end_k; k++) {
-        current_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_, end_);
+        curr_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_, end_);
         for(size_t b = range.start_b; b < range.end_b; b++) {
-            current_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), start_, end_);
+            curr_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), start_, end_);
             for(size_t p = range.start_p; p < range.end_p; p++) {
-                current_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), start_, end_);
+                curr_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), start_, end_);
                 for(size_t q = range.start_q; q < range.end_q; q++) {
-                    current_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), start_, end_);
+                    curr_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), start_, end_);
                     for(size_t c = range.start_c; c < range.end_c; c++) {
-                        current_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), start_, end_);
+                        curr_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), start_, end_);
                         for(size_t s = range.start_s; s < range.end_s; s++) {
-                            current_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), start_, end_);
+                            curr_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), start_, end_);
                             for(size_t r = range.start_r; r < range.end_r; r++) {
-                                current_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_, end_);
+                                curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_, end_);
                                 // Find the best mapping table
-                                stats_t current_stats(accelerator, current_mapping_table);
-                                if(check_validity(current_mapping_table)) {
+                                stats_t curr_stats(accelerator, curr_mapping_table);
+                                if(check_all_validity(curr_mapping_table)) {
                                     valid_cnt++;
-                                    current_stats.update_stats();
+                                    curr_stats.update_stats();
 #ifdef ENERGY_DELAY
-                                    if(min_energy > current_stats.get_total_energy()) {
-                                        min_energy = current_stats.get_total_energy();
-                                        min_cycle = current_stats.get_total_cycle();
-                                        local_best_mapping_table.swap_degrees(current_mapping_table.get_degrees());
+                                    if(min_energy > curr_stats.get_total_energy()) {
+                                        min_energy = curr_stats.get_total_energy();
+                                        min_cycle = curr_stats.get_total_cycle();
+                                        local_best_mapping_table.swap_degrees(curr_mapping_table.get_degrees());
                                         match_cnt = 0;
                                     }
-                                    else if(min_energy == current_stats.get_total_energy()) {
+                                    else if(min_energy == curr_stats.get_total_energy()) {
                                         if(match_cnt == 0)
                                             similar_mapping_tables.clear();
-                                        if(min_cycle > current_stats.get_total_cycle()) {
-                                            min_cycle = current_stats.get_total_cycle();
-                                            local_best_mapping_table.swap_degrees(current_mapping_table.get_degrees());
+                                        if(min_cycle > curr_stats.get_total_cycle()) {
+                                            min_cycle = curr_stats.get_total_cycle();
+                                            local_best_mapping_table.swap_degrees(curr_mapping_table.get_degrees());
                                             match_cnt = 0;
                                         }
-                                        else if(min_cycle == current_stats.get_total_cycle()) {
+                                        else if(min_cycle == curr_stats.get_total_cycle()) {
                                             mapping_table_t similar_mapping_table(mapping_tables.at(idx_ - 1));
-                                            similar_mapping_table.swap_degrees(current_mapping_table.get_degrees());
+                                            similar_mapping_table.swap_degrees(curr_mapping_table.get_degrees());
                                             similar_mapping_tables.push_back(similar_mapping_table);
                                             match_cnt++;
                                         }
@@ -426,23 +484,23 @@ void optimizer_t::brute_force_worker(const unsigned idx_,
                                     }
 #endif
 #ifdef DELAY_ENERGY
-                                    if(min_cycle > current_stats.get_total_cycle()) {
-                                        min_energy = current_stats.get_total_energy();
-                                        min_cycle = current_stats.get_total_cycle();
-                                        local_best_mapping_table->swap_degrees(current_mapping_table->get_degrees());
+                                    if(min_cycle > curr_stats.get_total_cycle()) {
+                                        min_energy = curr_stats.get_total_energy();
+                                        min_cycle = curr_stats.get_total_cycle();
+                                        local_best_mapping_table->swap_degrees(curr_mapping_table->get_degrees());
                                         match_cnt = 0;
                                     }
-                                    else if(min_cycle == current_stats.get_total_cycle()) {
+                                    else if(min_cycle == curr_stats.get_total_cycle()) {
                                         if(match_cnt == 0)
                                             similar_mapping_tables.clear();
-                                        if(min_energy > current_stats.get_total_energy()) {
-                                            min_energy = current_stats.get_total_energy();
-                                            local_best_mapping_table->swap_degrees(current_mapping_table->get_degrees());
+                                        if(min_energy > curr_stats.get_total_energy()) {
+                                            min_energy = curr_stats.get_total_energy();
+                                            local_best_mapping_table->swap_degrees(curr_mapping_table->get_degrees());
                                             match_cnt = 0;
                                         }
-                                        else if(min_energy == current_stats.get_total_energy()) {
+                                        else if(min_energy == curr_stats.get_total_energy()) {
                                             mapping_table_t similar_mapping_table(mapping_tables.at(idx_ - 1));
-                                            similar_mapping_table.swap_degrees(current_mapping_table->get_degrees());
+                                            similar_mapping_table.swap_degrees(curr_mapping_table->get_degrees());
                                             similar_mapping_tables.push_back(similar_mapping_table);
                                             match_cnt++;
                                         }
@@ -455,18 +513,18 @@ void optimizer_t::brute_force_worker(const unsigned idx_,
                                     }
 #endif
 #ifdef EDP
-                                    if(min_edp > current_stats.get_total_edp()) {
-                                        min_energy = current_stats.get_total_energy();
-                                        min_cycle = current_stats.get_total_cycle();
-                                        min_edp = current_stats.get_total_edp();
-                                        local_best_mapping_table->swap_degrees(current_mapping_table->get_degrees());
+                                    if(min_edp > curr_stats.get_total_edp()) {
+                                        min_energy = curr_stats.get_total_energy();
+                                        min_cycle = curr_stats.get_total_cycle();
+                                        min_edp = curr_stats.get_total_edp();
+                                        local_best_mapping_table->swap_degrees(curr_mapping_table->get_degrees());
                                         match_cnt = 0;
                                     }
-                                    else if(min_edp == current_stats.get_total_edp()) {
+                                    else if(min_edp == curr_stats.get_total_edp()) {
                                         if(match_cnt == 0)
                                             similar_mapping_tables.clear();
                                         mapping_table_t similar_mapping_table(mapping_tables.at(idx_ - 1));
-                                        similar_mapping_table.swap_degrees(current_mapping_table->get_degrees());
+                                        similar_mapping_table.swap_degrees(curr_mapping_table->get_degrees());
                                         similar_mapping_tables.push_back(similar_mapping_table);
                                         match_cnt++;
                                     }
@@ -495,7 +553,7 @@ void optimizer_t::brute_force_worker(const unsigned idx_,
 }
 
 // Check each mapping table with the accelerator
-bool optimizer_t::check_validity(const mapping_table_t& mapping_table_) const {
+bool optimizer_t::check_all_validity(const mapping_table_t& mapping_table_) const {
     bool rtn = mac_validity(mapping_table_) 
              & s0_validity(mapping_table_) 
              & l1_validity(mapping_table_)
@@ -503,6 +561,21 @@ bool optimizer_t::check_validity(const mapping_table_t& mapping_table_) const {
              & s1_y_validity(mapping_table_)
              & l2_validity(mapping_table_)
              & s2_validity(mapping_table_);
+    return rtn;
+}
+
+bool optimizer_t::check_validity(const component_t U, const mapping_table_t& mapping_table_) const {
+    bool rtn = false;
+    switch(U) {
+        case component_t::MAC: rtn = mac_validity(mapping_table_); break;
+        case component_t::S0: rtn = s0_validity(mapping_table_); break;
+        case component_t::L1: rtn = l1_validity(mapping_table_); break;
+        case component_t::S1_X: rtn = s1_x_validity(mapping_table_) & s1_y_validity(mapping_table_); break;
+        case component_t::S1_Y: rtn = s1_x_validity(mapping_table_) & s1_y_validity(mapping_table_); break;
+        case component_t::L2: rtn = l2_validity(mapping_table_); break;
+        case component_t::S2: rtn = s2_validity(mapping_table_); break;
+        default: handler.print_err(err_type_t::INVAILD, "COMPONENT"); break;
+    }
     return rtn;
 }
 

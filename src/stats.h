@@ -19,13 +19,11 @@ public:
 
     void print_stats() const;
     void print_csv() const;
-    void update_stats();
-    size_t get_total_energy() const { return total_energy; }
-    size_t get_dram_energy() const { return dram_energy; }
-    size_t get_l2_energy() const { return l2_energy; }
-    size_t get_l1_energy() const { return l1_energy; }
+    double get_total_energy() const { return total_energy; }
+    double get_energy(component_t U) const;
     size_t get_total_cycle() const { return total_cycle; }
     double get_total_edp() const { return total_edp; }
+    void update_stats();
     
     struct iteration_t {
         size_t input_rd_it;
