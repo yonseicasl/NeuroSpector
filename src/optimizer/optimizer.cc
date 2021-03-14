@@ -116,6 +116,8 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     std::cout << "# EDP OPTIMIZATION" << std::endl;
 #endif
     handler.print_line(60, "*");
+
+
 #ifdef CSV
     std::cout << "# OF VALID MAPPINGS,# OF INVALID MAPPINGS,TOTAL # OF MAPPINGS,# OF BEST MAPPINGS\n"  
               << global_valid_cnt << "," 
@@ -133,6 +135,8 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     handler.print_line(60, "*");
 #endif
     std::cout << "\n# BEST MAPPING TABLE 0" << std::endl;
+
+
 #ifdef CSV
     global_best_mapping_table.at(best_tid).print_csv();
 #else
@@ -142,11 +146,15 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
     for_stats.swap_degrees(global_best_mapping_table.at(best_tid).get_degrees());
     stats_t stats(accelerator, for_stats);
     stats.update_stats();
+
+
 #ifdef CSV
     stats.print_csv();
 #else
     stats.print_stats();
 #endif
+
+
     for(size_t i = 0; i < global_similar_mapping_tables.at(best_tid).size(); i++) {
         std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
 #ifdef CSV
@@ -158,6 +166,8 @@ void optimizer_t::run_brute_force(const unsigned idx_) {
         for_stats.swap_degrees(global_best_mapping_table.at(best_tid).get_degrees());
         stats_t stats(accelerator, for_stats);
         stats.update_stats();
+
+
 #ifdef CSV
     stats.print_csv();
 #else
