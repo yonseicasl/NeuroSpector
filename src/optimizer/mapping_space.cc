@@ -172,10 +172,10 @@ range_t::range_t(const unsigned tid_,
         exit(1);
     }
     std::string str = "KBPQCSR";
-    m_.lock();
-    std::cout << "# TID " << std::setw(2) << tid_ << ": " << str.at(depth) << "(" << num_works << ") FROM " 
-              << std::setw(5) << start_idx << " TO " << std::setw(5) << end_idx << std::endl;
-    m_.unlock();
+//    m_.lock();
+//    std::cout << "# TID " << std::setw(2) << tid_ << ": " << str.at(depth) << "(" << num_works << ") FROM " 
+//              << std::setw(5) << start_idx << " TO " << std::setw(5) << end_idx << std::endl;
+//    m_.unlock();
 }
 
 range_t::~range_t() {
