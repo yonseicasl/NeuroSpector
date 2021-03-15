@@ -5,7 +5,6 @@
 #include <cmath>
 #include <iomanip>
 #include <iostream>
-#include <mutex>
 #include <string>
 #include <vector>
 
@@ -35,9 +34,7 @@ class range_t {
 public:
     range_t(const unsigned tid_, 
             const unsigned num_threads_,
-            const std::vector<std::vector<std::vector<unsigned>>>& layer_permutations_,
-            std::mutex& m_);
-            
+            const std::vector<std::vector<std::vector<unsigned>>>& layer_permutations_);
     ~range_t();
     
     size_t start_k;
@@ -54,8 +51,6 @@ public:
     size_t end_s;
     size_t start_r;
     size_t end_r;
-
-private:
 };
 
 #endif

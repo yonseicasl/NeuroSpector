@@ -80,8 +80,7 @@ void mapping_space_t::get_permutations(const unsigned idx_, const unsigned val_,
 /* Mapping space range per thread */
 range_t::range_t(const unsigned tid_, 
                  const unsigned num_threads_,
-                 const std::vector<std::vector<std::vector<unsigned>>>& layer_permutations_,
-                 std::mutex& m_) 
+                 const std::vector<std::vector<std::vector<unsigned>>>& layer_permutations_) 
     : start_k(0),
       end_k(layer_permutations_.at(0).size()),
       start_b(0),
@@ -172,10 +171,6 @@ range_t::range_t(const unsigned tid_,
         exit(1);
     }
     std::string str = "KBPQCSR";
-//    m_.lock();
-//    std::cout << "# TID " << std::setw(2) << tid_ << ": " << str.at(depth) << "(" << num_works << ") FROM " 
-//              << std::setw(5) << start_idx << " TO " << std::setw(5) << end_idx << std::endl;
-//    m_.unlock();
 }
 
 range_t::~range_t() {

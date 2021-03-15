@@ -1,7 +1,5 @@
 #include "analyzer.h"
 
-//#define CSV
-
 static handler_t handler;
 
 /* Analyzer */
@@ -54,7 +52,7 @@ void analyzer_t::print_stats() const {
     for(size_t idx = 0; idx < mapping_tables.size(); idx++) {
         check_validity(idx);
 #ifdef CSV
-        mapping_tables.at(idx)->print_csv();
+        mapping_tables.at(idx).print_csv();
         all_stats.at(idx)->print_csv();
 #else
         mapping_tables.at(idx).print_stats();

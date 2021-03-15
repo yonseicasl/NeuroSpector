@@ -23,30 +23,13 @@ class optimizer_t {
 public:
     optimizer_t(const std::string& acc_cfg_path_, 
                 const std::string& net_cfg_path_, 
-                const bool is_fixed_,
-                const unsigned num_threads_);                  
-    ~optimizer_t();
+                const bool is_fixed_);                  
+    virtual ~optimizer_t();
     // Optimizer APIs
-    void run_brute_force();                         // Run brute-force optimizing of all layers
-    void run_brute_force(const unsigned idx_);      // Run brute-force optimizing of the target layer
-    void run_two_lv_by_two_lv(const unsigned idx_);
+    virtual void run();
+    virtual void run(const unsigned idx_);
 
-private:
-    // Mapping worker
-    void brute_force_worker(const unsigned idx_, 
-                            const unsigned tid_, 
-                            const mapping_space_t& mapping_space_,
-                            const component_t start_,
-                            const component_t end_,
-                            std::mutex& m_); 
-    void two_lv_worker(const unsigned seq_,
-                       const unsigned top_k_,
-                       const mapping_space_t& mapping_space_,
-                       const component_t start_,
-                       const component_t end_,
-                       const mapping_table_t init_mapping_,
-                       uint64_t& valid_cnt_,
-                       std::vector<mapping_table_t>& best_mappings_);
+protected:
     // Check each mapping table with the accelerator
     bool check_all_validity(const mapping_table_t& mapping_table_) const; 
     bool check_validity(const component_t U, const mapping_table_t& mapping_table_) const; 
@@ -66,13 +49,78 @@ private:
     std::string network_name;                       // DNN name
     std::vector<bool> exists;                       // Component exist bits from MAC to DRAM
     std::vector<mapping_table_t> mapping_tables;    // Mapping tables from the mapping configuration
+};
+
+/* Brute-force */
+class brute_force_t : public optimizer_t {
+public:
+    brute_force_t(const std::string& acc_cfg_path_, 
+                  const std::string& net_cfg_path_,
+                  const opt_type_t opt_type_, 
+                  const unsigned num_threads_,
+                  const bool is_fixed_);                
+    ~brute_force_t();
+    // Optimizer APIs
+    void run();                         // Run brute-force optimizing of all layers
+    void run(const unsigned idx_);      // Run brute-force optimizing of the target layer
+
+private:
+    void global_reset(const unsigned idx_);
+    void print_stats();
+    // Mapping workers
+    void energy_worker(const unsigned tid_, 
+                       const mapping_table_t& init_mapping_,
+                       const mapping_space_t& mapping_space_,
+                       const dataflow_t l1_dataflow_,
+                       const dataflow_t l2_dataflow_,
+                       std::mutex& m_);
+    void cycle_worker(const unsigned tid_, 
+                      const mapping_table_t& init_mapping_,
+                      const mapping_space_t& mapping_space_,
+                      const dataflow_t l1_dataflow_,
+                      const dataflow_t l2_dataflow_,
+                      std::mutex& m_);
+    void edp_worker(const unsigned tid_, 
+                    const mapping_table_t& init_mapping_,
+                    const mapping_space_t& mapping_space_,
+                    const dataflow_t l1_dataflow_,
+                    const dataflow_t l2_dataflow_,
+                    std::mutex& m_);
+    // Variables
+    const opt_type_t opt_type;
+    uint64_t num_permutations;
     // For multi-threading
-    unsigned num_threads;
-    uint64_t global_total_cnt;
+    const unsigned num_threads;
     uint64_t global_valid_cnt;
-    std::vector<double> global_min_energy;
-    std::vector<mapping_table_t> global_best_mapping_table;
+    std::vector<double> global_min_stats;
+    std::vector<mapping_table_t> global_best_mapping_tables;
     std::vector<std::vector<mapping_table_t>> global_similar_mapping_tables;
+    // After sync
+    double final_min_stat;
+    std::vector<mapping_table_t> final_best_mappings;
+};
+
+/* Systematic */
+class systematic_t : public optimizer_t {
+public:
+    systematic_t(const std::string& acc_cfg_path_, 
+                 const std::string& net_cfg_path_, 
+                 const bool is_fixed_);                
+    ~systematic_t();
+    // Optimizer APIs
+    void run();                         // Run systematic optimizing of all layers
+    void run(const unsigned idx_);      // Run systematic optimizing of the target layer
+
+private:
+    // Mapping worker
+    void worker(const unsigned seq_,
+                const unsigned top_k_,
+                const mapping_space_t& mapping_space_,
+                const component_t start_,
+                const component_t end_,
+                const mapping_table_t init_mapping_,
+                uint64_t& valid_cnt_,
+                std::vector<mapping_table_t>& best_mappings_);
 };
 
 #endif

@@ -38,4 +38,9 @@ enum class component_t {
     MAC, S0, L1, S1_X, S1_Y, L2, S2, DRAM, SIZE 
 };
 
+/* Optimizer types */
+enum class opt_type_t {
+    B_F_ENERGY, B_F_CYCLE, B_F_EDP, SYSTEMATIC, SIZE
+};
+
 #endif

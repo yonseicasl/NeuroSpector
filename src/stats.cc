@@ -7,12 +7,45 @@ static cycle_ref_t cycle_ref;
 /* Stats */
 stats_t::stats_t(const accelerator_t *accelerator_, 
                  const mapping_table_t& mapping_table_)
-    : accelerator(accelerator_), 
+    : l1_dataflow(accelerator_->l1_dataflow()),
+      l2_dataflow(accelerator_->l2_dataflow()),
+      accelerator(accelerator_), 
       mapping_table(mapping_table_) {
+
+}
+
+stats_t::stats_t(const accelerator_t *accelerator_, 
+                 const mapping_table_t& mapping_table_,
+                 const dataflow_t l1_dataflow_, 
+                 const dataflow_t l2_dataflow_)
+    : l1_dataflow(l1_dataflow_),
+      l2_dataflow(l2_dataflow_),
+      accelerator(accelerator_), 
+      mapping_table(mapping_table_) {
+
 }
 
 stats_t::~stats_t() {
+
 }
+
+// stats_t's APIs
+double stats_t::get_total_energy() const { return total_energy; }
+
+double stats_t::get_energy(component_t U) const { 
+    double rtn = 0;
+    switch(U) {
+        case component_t::L1: rtn = l1_energy; break;
+        case component_t::L2: rtn = l2_energy; break;
+        case component_t::DRAM: rtn = dram_energy; break;
+        default: handler.print_err(err_type_t::INVAILD, "COMPONENT"); break;
+    }
+    return rtn; 
+}
+
+double stats_t::get_total_cycle() const { return total_cycle; }
+
+double stats_t::get_total_edp() const { return total_edp; }
 
 void stats_t::print_stats() const {
     handler.print_line(50, "*");
@@ -65,7 +98,7 @@ void stats_t::print_stats() const {
               << "        DRAM CYCLE: " << dram_cycle << " (" << float(dram_cycle) / total_cycle * 100 << "%)" << "\n"
               << "       TOTAL CYCLE: " << total_cycle << std::endl;
     handler.print_line(50, "*");
-    std::cout << "         TOTAL EDP: " << total_edp << "(J x CYCLE)" << std::endl;
+    std::cout << "         TOTAL EDP: " << total_edp << " (J x CYCLE)" << std::endl;
     return;
 }
 
@@ -124,17 +157,6 @@ void stats_t::print_csv() const {
               << "," << l2_utilization
               << "," << s2_utilization << std::endl;
     return;
-}
-
-double stats_t::get_energy(component_t U) const { 
-    double rtn = 0;
-    switch(U) {
-        case component_t::L1: rtn = l1_energy; break;
-        case component_t::L2: rtn = l2_energy; break;
-        case component_t::DRAM: rtn = dram_energy; break;
-        default: handler.print_err(err_type_t::INVAILD, "COMPONENT"); break;
-    }
-    return rtn; 
 }
 
 void stats_t::update_stats() { 
@@ -214,7 +236,7 @@ void stats_t::update_iteration() {
     l2_iteration.filter_rd_it = l2_iteration_tmp;
     l2_iteration.output_rd_it = l2_iteration_tmp;
     l2_iteration.output_wt_it = l2_iteration_tmp;
-    switch(accelerator->l1_dataflow()) {
+    switch(l1_dataflow) {
         case dataflow_t::IS: 
             h_upper = (mapping_table.get_product(parameter_t::P, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L1);
             h_lower = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
@@ -243,7 +265,7 @@ void stats_t::update_iteration() {
     dram_iteration.filter_rd_it = dram_iteration_tmp;
     dram_iteration.output_rd_it = dram_iteration_tmp;
     dram_iteration.output_wt_it = dram_iteration_tmp;
-    switch(accelerator->l2_dataflow()) {
+    switch(l2_dataflow) {
         case dataflow_t::IS: 
             h_upper = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
             h_lower = (mapping_table.get_product(parameter_t::P, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::DRAM);
@@ -487,14 +509,18 @@ void stats_t::update_edp() {
 
 /* Energy reference */
 energy_ref_t::energy_ref_t() {
+
 }
 
 energy_ref_t::~energy_ref_t() {
+
 }
 
 /* Cycle reference */
 cycle_ref_t::cycle_ref_t() {
+
 }
 
 cycle_ref_t::~cycle_ref_t() {
+
 }
