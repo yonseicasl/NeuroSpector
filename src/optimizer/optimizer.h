@@ -49,6 +49,9 @@ protected:
     std::string network_name;                       // DNN name
     std::vector<bool> exists;                       // Component exist bits from MAC to DRAM
     std::vector<mapping_table_t> mapping_tables;    // Mapping tables from the mapping configuration
+    // For flexible dataflows
+    std::vector<unsigned> l1_dataflow;
+    std::vector<unsigned> l2_dataflow;
 };
 
 /* Brute-force */
