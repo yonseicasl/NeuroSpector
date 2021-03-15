@@ -67,6 +67,7 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
             }
         }
     }
+    accelerator->print_stats();
 }
 
 optimizer_t::~optimizer_t() {

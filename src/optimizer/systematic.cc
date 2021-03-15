@@ -16,12 +16,12 @@ systematic_t::~systematic_t() {
 
 // Optimizer APIs
 void systematic_t::run() {
-    // TODO
+    for(unsigned idx = 0; idx < mapping_tables.size(); idx++) 
+        run(idx + 1);
     return;
 }
 
 void systematic_t::run(const unsigned idx_) {
-    accelerator->print_stats();
     std::cout << "# NETWORK    : " << network_name << std::endl;
     // Initialization
     unsigned used_levels = 0;

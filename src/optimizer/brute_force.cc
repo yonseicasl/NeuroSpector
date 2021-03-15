@@ -14,7 +14,6 @@ brute_force_t::brute_force_t(const std::string& acc_cfg_path_,
       num_threads(num_threads_),
       global_valid_cnt(0), 
       final_min_stat(DBL_MAX) {
-
 }             
 
 brute_force_t::~brute_force_t() {
@@ -23,12 +22,12 @@ brute_force_t::~brute_force_t() {
 
 // Optimizer APIs
 void brute_force_t::run() {
-    // TODO
+    for(unsigned idx = 0; idx < mapping_tables.size(); idx++) 
+        run(idx + 1);
     return;
 }
 
 void brute_force_t::run(const unsigned idx_) {
-    accelerator->print_stats();
     std::cout << "# NETWORK    : " << network_name << std::endl;
     std::cout << "# NUM THREADS: " << num_threads << std::endl;
     handler.print_line(50, "*");
