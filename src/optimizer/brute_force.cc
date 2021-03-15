@@ -14,6 +14,7 @@ brute_force_t::brute_force_t(const std::string& acc_cfg_path_,
       num_threads(num_threads_),
       global_valid_cnt(0), 
       final_min_stat(DBL_MAX) {
+
 }             
 
 brute_force_t::~brute_force_t() {
@@ -28,16 +29,13 @@ void brute_force_t::run() {
 }
 
 void brute_force_t::run(const unsigned idx_) {
-    std::cout << "# NETWORK    : " << network_name << std::endl;
-    std::cout << "# NUM THREADS: " << num_threads << std::endl;
-    handler.print_line(50, "*");
     // Mapping space generation
     mapping_space_t mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     num_permutations = mapping_space.get_num_permutations();
     // Fixed datatflows
     if(is_fixed) {
         // Global reset
-        global_reset(idx_);
+        reset_globals(idx_);
         // Threads initialization
         std::vector<std::thread> workers;
         std::mutex m;
@@ -172,6 +170,9 @@ void brute_force_t::run(const unsigned idx_) {
             }
         }
         // Print stats
+        std::cout << "# NETWORK    : " << network_name << std::endl;
+        std::cout << "# NUM THREADS: " << num_threads << std::endl;
+        handler.print_line(50, "*");
         print_stats();
         for(size_t i = 0; i < final_best_mappings.size(); i++) {
             std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
@@ -199,7 +200,7 @@ void brute_force_t::run(const unsigned idx_) {
         for(unsigned l1_df = 0; l1_df < l1_dataflow.size(); l1_df++) {
             for(unsigned l2_df = 0; l2_df < l2_dataflow.size(); l2_df++) {
                 // Global reset
-                global_reset(idx_);
+                reset_globals(idx_);
                 // Threads initialization
                 std::vector<std::thread> workers;
                 std::mutex m;
@@ -336,8 +337,11 @@ void brute_force_t::run(const unsigned idx_) {
                 // Print stats
 #ifdef SIMPLE
                 if(l1_df == 0 && l2_df == 0) {
-                    print_stats();
+                    std::cout << "# NETWORK    : " << network_name << std::endl;
                     std::cout << "# " << mapping_tables.at(idx_ - 1).get_layer_name() << std::endl;
+                    std::cout << "# NUM THREADS: " << num_threads << std::endl;
+                    handler.print_line(50, "*");
+                    print_stats();
                 }
                 handler.print_line(50, "*");
                 std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
@@ -346,6 +350,9 @@ void brute_force_t::run(const unsigned idx_) {
                 stats.update_stats();
                 stats.print_csv();
 #else
+                std::cout << "# NETWORK    : " << network_name << std::endl;
+                std::cout << "# NUM THREADS: " << num_threads << std::endl;
+                handler.print_line(50, "*");
                 print_stats();
                 handler.print_line(50, "*");
                 std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
@@ -371,7 +378,7 @@ void brute_force_t::run(const unsigned idx_) {
     }
 }
 
-void brute_force_t::global_reset(const unsigned idx_) {
+void brute_force_t::reset_globals(const unsigned idx_) {
     // Global clear
     global_min_stats.clear();
     global_best_mapping_tables.clear();
@@ -446,8 +453,8 @@ void brute_force_t::energy_worker(const unsigned tid_,
                             for(size_t r = range.start_r; r < range.end_r; r++) {
                                 curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), component_t::MAC, component_t::DRAM);
                                 // Find the best mapping table
-                                stats_t curr_stats(accelerator, curr_mapping_table, l1_dataflow_, l2_dataflow_);
                                 if(check_all_validity(curr_mapping_table)) {
+                                    stats_t curr_stats(accelerator, curr_mapping_table, l1_dataflow_, l2_dataflow_);
                                     curr_stats.update_stats();
                                     if(min_energy > curr_stats.get_total_energy()) {
                                         min_energy = curr_stats.get_total_energy();
@@ -500,79 +507,77 @@ void brute_force_t::cycle_worker(const unsigned tid_,
                                  const dataflow_t l1_dataflow_,
                                  const dataflow_t l2_dataflow_,
                                  std::mutex& m_) {
-//    mapping_table_t curr_mapping_table(mapping_tables.at(idx_ - 1));
-//    mapping_table_t local_best_mapping_table(mapping_tables.at(idx_ - 1)); 
-//    double min_energy = DBL_MAX;
-//    size_t min_cycle = -1;
-//    size_t match_cnt = 0;
-//    uint64_t total_cnt = 0;
-//    uint64_t valid_cnt = 0;
-//    std::vector<mapping_table_t> similar_mapping_tables;
-//    // Thread index adjustment
-//    range_t range(tid_, num_threads, mapping_space_.get_layer_permutations(), std::ref(m_));
-//    for(size_t k = range.start_k; k < range.end_k; k++) {
-//        curr_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_, end_);
-//        for(size_t b = range.start_b; b < range.end_b; b++) {
-//            curr_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), start_, end_);
-//            for(size_t p = range.start_p; p < range.end_p; p++) {
-//                curr_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), start_, end_);
-//                for(size_t q = range.start_q; q < range.end_q; q++) {
-//                    curr_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), start_, end_);
-//                    for(size_t c = range.start_c; c < range.end_c; c++) {
-//                        curr_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), start_, end_);
-//                        for(size_t s = range.start_s; s < range.end_s; s++) {
-//                            curr_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), start_, end_);
-//                            for(size_t r = range.start_r; r < range.end_r; r++) {
-//                                curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_, end_);
-//                                // Find the best mapping table
-//                                stats_t curr_stats(accelerator, curr_mapping_table);
-//                                if(check_all_validity(curr_mapping_table)) {
-//                                    valid_cnt++;
-//                                    curr_stats.update_stats();
-//                                    if(min_cycle > curr_stats.get_total_cycle()) {
-//                                        min_energy = curr_stats.get_total_energy();
-//                                        min_cycle = curr_stats.get_total_cycle();
-//                                        local_best_mapping_table->swap_degrees(curr_mapping_table->get_degrees());
-//                                        match_cnt = 0;
-//                                    }
-//                                    else if(min_cycle == curr_stats.get_total_cycle()) {
-//                                        if(match_cnt == 0)
-//                                            similar_mapping_tables.clear();
-//                                        if(min_energy > curr_stats.get_total_energy()) {
-//                                            min_energy = curr_stats.get_total_energy();
-//                                            local_best_mapping_table->swap_degrees(curr_mapping_table->get_degrees());
-//                                            match_cnt = 0;
-//                                        }
-//                                        else if(min_energy == curr_stats.get_total_energy()) {
-//                                            mapping_table_t similar_mapping_table(mapping_tables.at(idx_ - 1));
-//                                            similar_mapping_table.swap_degrees(curr_mapping_table->get_degrees());
-//                                            similar_mapping_tables.push_back(similar_mapping_table);
-//                                            match_cnt++;
-//                                        }
-//                                        else {
-//                                            // Nothing to do
-//                                        }
-//                                    }
-//                                    else {
-//                                        // Nothing to do
-//                                    }
-//                                }
-//                                total_cnt++;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    // Sync
-//    m_.lock();
-//    global_total_cnt += total_cnt;
-//    global_valid_cnt += valid_cnt;
-//    global_min_energy.at(tid_) = min_energy;
-//    global_best_mapping_table.at(tid_).swap_degrees(local_best_mapping_table.get_degrees());
-//    global_similar_mapping_tables.at(tid_).assign(similar_mapping_tables.begin(), similar_mapping_tables.end());
-//    m_.unlock();
+    // Initialze variables & containers
+    double min_energy = DBL_MAX;
+    double min_cycle = DBL_MAX;
+    uint64_t valid_cnt = 0;
+    unsigned similar_cnt = 0;
+    mapping_table_t curr_mapping_table(init_mapping_);
+    mapping_table_t local_best_mapping_table(init_mapping_); 
+    std::vector<mapping_table_t> similar_mapping_tables;
+    // Thread index adjustment
+    range_t range(tid_, num_threads, mapping_space_.get_layer_permutations());
+    // Start finding a local optimized mapping
+    for(size_t k = range.start_k; k < range.end_k; k++) {
+        curr_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), component_t::MAC, component_t::DRAM);
+        for(size_t b = range.start_b; b < range.end_b; b++) {
+            curr_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), component_t::MAC, component_t::DRAM);
+            for(size_t p = range.start_p; p < range.end_p; p++) {
+                curr_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), component_t::MAC, component_t::DRAM);
+                for(size_t q = range.start_q; q < range.end_q; q++) {
+                    curr_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), component_t::MAC, component_t::DRAM);
+                    for(size_t c = range.start_c; c < range.end_c; c++) {
+                        curr_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), component_t::MAC, component_t::DRAM);
+                        for(size_t s = range.start_s; s < range.end_s; s++) {
+                            curr_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), component_t::MAC, component_t::DRAM);
+                            for(size_t r = range.start_r; r < range.end_r; r++) {
+                                curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), component_t::MAC, component_t::DRAM);
+                                // Find the best mapping table
+                                if(check_all_validity(curr_mapping_table)) {
+                                    stats_t curr_stats(accelerator, curr_mapping_table, l1_dataflow_, l2_dataflow_);
+                                    curr_stats.update_stats();
+                                    if(min_cycle > curr_stats.get_total_cycle()) {
+                                        min_cycle = curr_stats.get_total_cycle();
+                                        min_energy = curr_stats.get_total_energy();
+                                        local_best_mapping_table.swap_degrees(curr_mapping_table.get_degrees());
+                                        similar_cnt = 0;
+                                    }
+                                    else if(min_cycle == curr_stats.get_total_cycle()) {
+                                        if(similar_cnt == 0)
+                                            similar_mapping_tables.clear();
+                                        if(min_energy > curr_stats.get_total_energy()) {
+                                            min_energy = curr_stats.get_total_energy();
+                                            local_best_mapping_table.swap_degrees(curr_mapping_table.get_degrees());
+                                            similar_cnt = 0;
+                                        }
+                                        else if(min_energy == curr_stats.get_total_energy()) {
+                                            mapping_table_t similar_mapping_table(curr_mapping_table);
+                                            similar_mapping_tables.push_back(similar_mapping_table);
+                                            similar_cnt++;
+                                        }
+                                        else {
+                                            // Nothing to do
+                                        }
+                                    }
+                                    else {
+                                        // Nothing to do
+                                    }
+                                    valid_cnt++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // Sync
+    m_.lock();
+    global_valid_cnt += valid_cnt;
+    global_min_stats.at(tid_) = min_cycle;
+    global_best_mapping_tables.at(tid_).swap_degrees(local_best_mapping_table.get_degrees());
+    global_similar_mapping_tables.at(tid_).assign(similar_mapping_tables.begin(), similar_mapping_tables.end());
+    m_.unlock();
     return;
 }
 
@@ -582,68 +587,64 @@ void brute_force_t::edp_worker(const unsigned tid_,
                                const dataflow_t l1_dataflow_,
                                const dataflow_t l2_dataflow_,
                                std::mutex& m_) {
-//    mapping_table_t curr_mapping_table(mapping_tables.at(idx_ - 1));
-//    mapping_table_t local_best_mapping_table(mapping_tables.at(idx_ - 1)); 
-//    double min_edp = DBL_MAX;
-//    size_t match_cnt = 0;
-//    uint64_t total_cnt = 0;
-//    uint64_t valid_cnt = 0;
-//    std::vector<mapping_table_t> similar_mapping_tables;
-//    // Thread index adjustment
-//    range_t range(tid_, num_threads, mapping_space_.get_layer_permutations(), std::ref(m_));
-//    for(size_t k = range.start_k; k < range.end_k; k++) {
-//        curr_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_, end_);
-//        for(size_t b = range.start_b; b < range.end_b; b++) {
-//            curr_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), start_, end_);
-//            for(size_t p = range.start_p; p < range.end_p; p++) {
-//                curr_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), start_, end_);
-//                for(size_t q = range.start_q; q < range.end_q; q++) {
-//                    curr_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), start_, end_);
-//                    for(size_t c = range.start_c; c < range.end_c; c++) {
-//                        curr_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), start_, end_);
-//                        for(size_t s = range.start_s; s < range.end_s; s++) {
-//                            curr_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), start_, end_);
-//                            for(size_t r = range.start_r; r < range.end_r; r++) {
-//                                curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_, end_);
-//                                // Find the best mapping table
-//                                stats_t curr_stats(accelerator, curr_mapping_table);
-//                                if(check_all_validity(curr_mapping_table)) {
-//                                    valid_cnt++;
-//                                    curr_stats.update_stats();
-//                                    if(min_edp > curr_stats.get_total_edp()) {
-//                                        min_energy = curr_stats.get_total_energy();
-//                                        min_cycle = curr_stats.get_total_cycle();
-//                                        min_edp = curr_stats.get_total_edp();
-//                                        local_best_mapping_table->swap_degrees(curr_mapping_table->get_degrees());
-//                                        match_cnt = 0;
-//                                    }
-//                                    else if(min_edp == curr_stats.get_total_edp()) {
-//                                        if(match_cnt == 0)
-//                                            similar_mapping_tables.clear();
-//                                        mapping_table_t similar_mapping_table(mapping_tables.at(idx_ - 1));
-//                                        similar_mapping_table.swap_degrees(curr_mapping_table->get_degrees());
-//                                        similar_mapping_tables.push_back(similar_mapping_table);
-//                                        match_cnt++;
-//                                    }
-//                                    else {
-//                                        // Nothing to do
-//                                    }
-//                                }
-//                                total_cnt++;
-//                            }
-//                        }
-//                    }
-//                }
-//            }
-//        }
-//    }
-//    // Sync
-//    m_.lock();
-//    global_total_cnt += total_cnt;
-//    global_valid_cnt += valid_cnt;
-//    global_min_energy.at(tid_) = min_energy;
-//    global_best_mapping_table.at(tid_).swap_degrees(local_best_mapping_table.get_degrees());
-//    global_similar_mapping_tables.at(tid_).assign(similar_mapping_tables.begin(), similar_mapping_tables.end());
-//    m_.unlock();
+    // Initialze variables & containers
+    double min_edp = DBL_MAX;
+    uint64_t valid_cnt = 0;
+    unsigned similar_cnt = 0;
+    mapping_table_t curr_mapping_table(init_mapping_);
+    mapping_table_t local_best_mapping_table(init_mapping_); 
+    std::vector<mapping_table_t> similar_mapping_tables;
+    // Thread index adjustment
+    range_t range(tid_, num_threads, mapping_space_.get_layer_permutations());
+    // Start finding a local optimized mapping
+    for(size_t k = range.start_k; k < range.end_k; k++) {
+        curr_mapping_table.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), component_t::MAC, component_t::DRAM);
+        for(size_t b = range.start_b; b < range.end_b; b++) {
+            curr_mapping_table.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), component_t::MAC, component_t::DRAM);
+            for(size_t p = range.start_p; p < range.end_p; p++) {
+                curr_mapping_table.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), component_t::MAC, component_t::DRAM);
+                for(size_t q = range.start_q; q < range.end_q; q++) {
+                    curr_mapping_table.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), component_t::MAC, component_t::DRAM);
+                    for(size_t c = range.start_c; c < range.end_c; c++) {
+                        curr_mapping_table.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), component_t::MAC, component_t::DRAM);
+                        for(size_t s = range.start_s; s < range.end_s; s++) {
+                            curr_mapping_table.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), component_t::MAC, component_t::DRAM);
+                            for(size_t r = range.start_r; r < range.end_r; r++) {
+                                curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), component_t::MAC, component_t::DRAM);
+                                // Find the best mapping table
+                                if(check_all_validity(curr_mapping_table)) {
+                                    stats_t curr_stats(accelerator, curr_mapping_table, l1_dataflow_, l2_dataflow_);
+                                    curr_stats.update_stats();
+                                    if(min_edp > curr_stats.get_total_edp()) {
+                                        min_edp = curr_stats.get_total_edp();
+                                        local_best_mapping_table.swap_degrees(curr_mapping_table.get_degrees());
+                                        similar_cnt = 0;
+                                    }
+                                    else if(min_edp == curr_stats.get_total_edp()) {
+                                        if(similar_cnt == 0)
+                                            similar_mapping_tables.clear();
+                                        mapping_table_t similar_mapping_table(curr_mapping_table);
+                                        similar_mapping_tables.push_back(similar_mapping_table);
+                                        similar_cnt++;
+                                    }
+                                    else {
+                                        // Nothing to do
+                                    }
+                                    valid_cnt++;
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+    // Sync
+    m_.lock();
+    global_valid_cnt += valid_cnt;
+    global_min_stats.at(tid_) = min_edp;
+    global_best_mapping_tables.at(tid_).swap_degrees(local_best_mapping_table.get_degrees());
+    global_similar_mapping_tables.at(tid_).assign(similar_mapping_tables.begin(), similar_mapping_tables.end());
+    m_.unlock();
     return;
 }

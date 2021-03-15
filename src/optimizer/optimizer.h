@@ -68,7 +68,7 @@ public:
     void run(const unsigned idx_);      // Run brute-force optimizing of the target layer
 
 private:
-    void global_reset(const unsigned idx_);
+    void reset_globals(const unsigned idx_);
     void print_stats();
     // Mapping workers
     void energy_worker(const unsigned tid_, 
@@ -115,15 +115,34 @@ public:
     void run(const unsigned idx_);      // Run systematic optimizing of the target layer
 
 private:
+    void reset_variables();
+    void print_stats();
     // Mapping worker
     void worker(const unsigned seq_,
                 const unsigned top_k_,
+                const mapping_table_t& init_mapping_,
                 const mapping_space_t& mapping_space_,
                 const component_t start_,
                 const component_t end_,
-                const mapping_table_t init_mapping_,
+                const dataflow_t l1_dataflow_,
+                const dataflow_t l2_dataflow_,
                 uint64_t& valid_cnt_,
                 std::vector<mapping_table_t>& best_mappings_);
+    // Variables & containers
+    unsigned used_levels;
+    std::vector<unsigned> static_top_k;
+    std::vector<unsigned> dynamic_top_k;
+    component_t start_component;
+    component_t end_component;
+    uint64_t num_permutations_first;
+    std::vector<uint64_t> num_permutations_second;
+    std::vector<uint64_t> num_permutations_third;
+    uint64_t valid_cnt_first;
+    std::vector<uint64_t> valid_cnt_second;
+    std::vector<uint64_t> valid_cnt_third;
+    std::vector<mapping_table_t> best_mappings_first;
+    std::vector<mapping_table_t> best_mappings_second;
+    std::vector<mapping_table_t> best_mappings_third;
 };
 
 #endif

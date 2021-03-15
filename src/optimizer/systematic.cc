@@ -1,13 +1,23 @@
 #include "optimizer.h"
 
+#define SEQ_MAX 3
+
 static handler_t handler;
 
 /* Systematic */
 systematic_t::systematic_t(const std::string& acc_cfg_path_, 
                            const std::string& net_cfg_path_, 
                            const bool is_fixed_) 
-    : optimizer_t(acc_cfg_path_, net_cfg_path_, is_fixed_) {
-
+    : optimizer_t(acc_cfg_path_, net_cfg_path_, is_fixed_),
+      used_levels(0), 
+      start_component(component_t::L2), 
+      end_component(component_t::DRAM),
+      num_permutations_first(0),
+      valid_cnt_first(0) {
+    // L2-DRAM (0), L1-L2 (1), and MAC-L1 (2)
+    static_top_k.push_back(3);
+    static_top_k.push_back(3);
+    static_top_k.push_back(1);
 }     
 
 systematic_t::~systematic_t() {
@@ -22,114 +32,105 @@ void systematic_t::run() {
 }
 
 void systematic_t::run(const unsigned idx_) {
-    std::cout << "# NETWORK    : " << network_name << std::endl;
-    // Initialization
-    unsigned used_levels = 0;
-    unsigned top_k_first = 3;
-    unsigned top_k_second = 4;
-    unsigned top_k_third = 1;
-    std::vector<mapping_table_t> best_mappings_first;
-    std::vector<mapping_table_t> best_mappings_second;
-    std::vector<mapping_table_t> best_mappings_third;
-    component_t start_component = component_t::L2;
-    component_t end_component = component_t::DRAM;
-    uint64_t total_cnt_first;
-    std::vector<uint64_t> total_cnt_second(top_k_first, 0);
-    std::vector<uint64_t> total_cnt_third(top_k_first * top_k_second, 0);
-    uint64_t valid_cnt_first;
-    std::vector<uint64_t> valid_cnt_second(top_k_first, 0);
-    std::vector<uint64_t> valid_cnt_third(top_k_first * top_k_second, 0);
-    // Start finding best mappings
-    for(unsigned seq = 0; seq < 3; seq++) {
-        used_levels = 0;
-        // L2 & S2
-        if(seq == 0) {
-            if(accelerator->s2_size() > 1) used_levels++;
-            if(accelerator->l2_type() != buffer_type_t::NONE) used_levels++;
-            if(used_levels == 0) { 
-                top_k_first = 1;
-                best_mappings_first.assign(top_k_first, mapping_tables.at(idx_ - 1));
-                start_component = component_t::L1; 
-                continue; 
-            }
-            // Mapping space generation
-            mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1).get_layer_values());
-            total_cnt_first = mapping_space.get_num_permutations();
-            // Run two_lv_worker()
-            worker(seq,
-                   top_k_first,
-                   mapping_space,
-                   start_component,
-                   end_component,
-                   mapping_tables.at(idx_ - 1),
-                   valid_cnt_first,
-                   best_mappings_first);
-            // Change start & end components
-            start_component = component_t::L1;
-            end_component = component_t::L2;
-        }
-        // L1 & S1
-        else if(seq == 1) {
-            if(accelerator->s1_size_x() > 1) used_levels++;
-            if(accelerator->s1_size_y() > 1) used_levels++;
-            if(accelerator->l1_type() != buffer_type_t::NONE) used_levels++;
-            if(used_levels == 0) { 
-                top_k_second = 1;
-                for(unsigned i = 0; i < top_k_first; i++)
-                    best_mappings_second.push_back(best_mappings_first.at(i));
-                start_component = component_t::S0; 
-                continue; 
-            }
-            total_cnt_second.assign(top_k_first, 0);
-            valid_cnt_second.assign(top_k_first, 0);
-            for(unsigned i = 0; i < top_k_first; i++) {
+    if(is_fixed) {
+        // Initialization
+        reset_variables();
+        // Start optimizing 
+        for(unsigned seq = 0; seq < SEQ_MAX; seq++) {
+            used_levels = 0;
+            // L2 & S2
+            if(seq == 0) {
+                if(accelerator->s2_size() > 1) used_levels++;
+                if(accelerator->l2_type() != buffer_type_t::NONE) used_levels++;
+                if(used_levels == 0) { 
+                    dynamic_top_k.at(0) = 1;
+                    best_mappings_first.assign(dynamic_top_k.at(0), mapping_tables.at(idx_ - 1));
+                    start_component = component_t::L1; 
+                    continue; 
+                }
                 // Mapping space generation
-                mapping_space_t mapping_space(used_levels + 1, best_mappings_first.at(i).get_row_degrees(end_component));
-                total_cnt_second.at(i) = mapping_space.get_num_permutations();
-                // Run two_lv_worker()
+                mapping_space_t mapping_space(used_levels + 1, mapping_tables.at(idx_ - 1).get_layer_values());
+                num_permutations_first = mapping_space.get_num_permutations();
+                // Run worker()
                 worker(seq,
-                       top_k_second,
+                       dynamic_top_k.at(0),
+                       mapping_tables.at(idx_ - 1),
                        mapping_space,
                        start_component,
                        end_component,
-                       best_mappings_first.at(i),
-                       valid_cnt_second.at(i),
-                       best_mappings_second);
+                       accelerator->l1_dataflow(),
+                       accelerator->l2_dataflow(),
+                       valid_cnt_first,
+                       best_mappings_first);
+                // Change start & end components
+                start_component = component_t::L1;
+                end_component = component_t::L2;
             }
-            // Change start & end components
-            start_component = component_t::S0;
-            end_component = component_t::L1;
+            // L1 & S1
+            else if(seq == 1) {
+                if(accelerator->s1_size_x() > 1) used_levels++;
+                if(accelerator->s1_size_y() > 1) used_levels++;
+                if(accelerator->l1_type() != buffer_type_t::NONE) used_levels++;
+                if(used_levels == 0) { 
+                    dynamic_top_k.at(1) = 1;
+                    for(unsigned i = 0; i < dynamic_top_k.at(0); i++)
+                        best_mappings_second.push_back(best_mappings_first.at(i));
+                    start_component = component_t::S0; 
+                    continue; 
+                }
+                num_permutations_second.assign(dynamic_top_k.at(0), 0);
+                valid_cnt_second.assign(dynamic_top_k.at(0), 0);
+                for(unsigned i = 0; i < dynamic_top_k.at(0); i++) {
+                    // Mapping space generation
+                    mapping_space_t mapping_space(used_levels + 1, best_mappings_first.at(i).get_row_degrees(end_component));
+                    num_permutations_second.at(i) = mapping_space.get_num_permutations();
+                    // Run worker()
+                    worker(seq,
+                           dynamic_top_k.at(1),
+                           best_mappings_first.at(i),
+                           mapping_space,
+                           start_component,
+                           end_component,
+                           accelerator->l1_dataflow(),
+                           accelerator->l2_dataflow(),
+                           valid_cnt_second.at(i),
+                           best_mappings_second);
+                }
+                // Change start & end components
+                start_component = component_t::S0;
+                end_component = component_t::L1;
+            }
+            // MAC & S0
+            else {
+                if(accelerator->macs_per_pe() * accelerator->mac_width() > 1) used_levels++;
+                if(used_levels == 0) {
+                    dynamic_top_k.at(2) = 1;
+                    for(unsigned i = 0; i < dynamic_top_k.at(0) * dynamic_top_k.at(1); i++)
+                        best_mappings_third.push_back(best_mappings_second.at(i));
+                    continue;
+                }
+                num_permutations_third.assign(dynamic_top_k.at(0) * dynamic_top_k.at(1), 0);
+                valid_cnt_third.assign(dynamic_top_k.at(0) * dynamic_top_k.at(1), 0);
+                for(unsigned i = 0; i < dynamic_top_k.at(0) * dynamic_top_k.at(1); i++) {
+                    // Mapping space generation
+                    mapping_space_t mapping_space(used_levels + 1, best_mappings_second.at(i).get_row_degrees(end_component));
+                    num_permutations_third.at(i) = mapping_space.get_num_permutations();
+                    // Run worker()
+                    worker(seq,
+                           dynamic_top_k.at(2),
+                           best_mappings_second.at(i),
+                           mapping_space,
+                           start_component,
+                           end_component,
+                           accelerator->l1_dataflow(),
+                           accelerator->l2_dataflow(),
+                           valid_cnt_third.at(i),
+                           best_mappings_third);
+                }
+            }
         }
-        // MAC & S0
-        else {
-            if(accelerator->macs_per_pe() * accelerator->mac_width() > 1) used_levels++;
-            if(used_levels == 0) {
-                top_k_third = 1;
-                for(unsigned i = 0; i < top_k_first * top_k_second; i++)
-                    best_mappings_third.push_back(best_mappings_second.at(i));
-                continue;
-            }
-            total_cnt_third.assign(top_k_first * top_k_second, 0);
-            valid_cnt_third.assign(top_k_first * top_k_second, 0);
-            for(unsigned i = 0; i < top_k_first * top_k_second; i++) {
-                // Mapping space generation
-                mapping_space_t mapping_space(used_levels + 1, best_mappings_second.at(i).get_row_degrees(end_component));
-                total_cnt_third.at(i) = mapping_space.get_num_permutations();
-                // Run two_lv_worker()
-                worker(seq,
-                       top_k_third,
-                       mapping_space,
-                       start_component,
-                       end_component,
-                       best_mappings_second.at(i),
-                       valid_cnt_third.at(i),
-                       best_mappings_third);
-            }
-        }
-    }
-    // Original mapping space generation
-    mapping_space_t original_mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     // Print stats
+    std::cout << "# NETWORK    : " << network_name << std::endl;
 //    handler.print_line(50, "*");
 #ifdef CSV
 //    std::cout << "#,ORIGINAL,L2-S2 TOTAL,L2-S2 VALID\n" 
@@ -162,31 +163,65 @@ void systematic_t::run(const unsigned idx_) {
 //    }
 #endif
     handler.print_line(50, "*");
-    for(unsigned i = 0; i < top_k_first; i++) {
-        for(unsigned j = 0; j < top_k_second; j++) {
-            for(unsigned k = 0; k < top_k_third; k++) {
+    for(unsigned i = 0; i < dynamic_top_k.at(0); i++) {
+        for(unsigned j = 0; j < dynamic_top_k.at(1); j++) {
+            for(unsigned k = 0; k < dynamic_top_k.at(2); k++) {
                 std::cout << "\n# TOP " << i + 1 << "-" << j + 1 << "-" << k + 1 << std::endl;
-                stats_t curr_stats(accelerator, best_mappings_third.at(k + j * top_k_third + i * top_k_second * top_k_third));
+                stats_t curr_stats(accelerator, best_mappings_third.at(k + j * dynamic_top_k.at(2) + i * dynamic_top_k.at(1) * dynamic_top_k.at(2)));
                 curr_stats.update_stats();
 #ifdef CSV
-                best_mappings_third.at(k + j * top_k_third + i * top_k_second * top_k_third).print_csv();
+                best_mappings_third.at(k + j * dynamic_top_k.at(2) + i * dynamic_top_k.at(1) * dynamic_top_k.at(2)).print_csv();
                 curr_stats.print_csv();
 #else
-                best_mappings_third.at(k + j * top_k_third + i * top_k_second * top_k_third).print_stats();
+                best_mappings_third.at(k + j * dynamic_top_k.at(2) + i * dynamic_top_k.at(1) * dynamic_top_k.at(2)).print_stats();
                 curr_stats.print_stats();
 #endif
             }
         }
     }
+    }
+    else {
+        // Start optimizing
+        std::string df_str("IWO");
+        for(unsigned l1_df = 0; l1_df < l1_dataflow.size(); l1_df++) {
+            for(unsigned l2_df = 0; l2_df < l2_dataflow.size(); l2_df++) {
+                // Initialization
+                reset_variables();
+            }
+        }
+    }
+}
+
+void systematic_t::reset_variables() {
+    dynamic_top_k.clear();
+    for(unsigned seq = 0; seq < SEQ_MAX; seq++) 
+        dynamic_top_k.push_back(static_top_k.at(seq));
+    start_component = component_t::L2;
+    end_component = component_t::DRAM;
+    num_permutations_first = 0;
+    num_permutations_second.clear();
+    num_permutations_third.clear();
+    valid_cnt_first = 0;
+    valid_cnt_second.clear();
+    valid_cnt_third.clear();
+    best_mappings_first.clear();
+    best_mappings_second.clear();
+    best_mappings_third.clear();
+}
+
+void systematic_t::print_stats() {
+
 }
 
 // Mapping worker
 void systematic_t::worker(const unsigned seq_,
                           const unsigned top_k_,
+                          const mapping_table_t& init_mapping_,
                           const mapping_space_t& mapping_space_,
                           const component_t start_,
                           const component_t end_,
-                          const mapping_table_t init_mapping_,
+                          const dataflow_t l1_dataflow_,
+                          const dataflow_t l2_dataflow_,
                           uint64_t& valid_cnt_,
                           std::vector<mapping_table_t>& best_mappings_) {
     // Validation required components 
@@ -209,7 +244,7 @@ void systematic_t::worker(const unsigned seq_,
         energy_check = component_t::L1;
     }
     else 
-        handler.print_err(err_type_t::INVAILD, "COMPONENT optimizer_t::two_lv_worker");
+        handler.print_err(err_type_t::INVAILD, "COMPONENT systematic_t::worker");
     // Best mappings
     std::map<size_t, mapping_table_t> local_best_mappings;
     local_best_mappings.insert(std::make_pair(-1, init_mapping_));
@@ -233,7 +268,7 @@ void systematic_t::worker(const unsigned seq_,
                                 // Validity check
                                 if(check_validity(check_1, curr_mapping_table) & check_validity(check_2, curr_mapping_table)) {
                                     // Update current stats
-                                    stats_t curr_stats(accelerator, curr_mapping_table);
+                                    stats_t curr_stats(accelerator, curr_mapping_table, l1_dataflow_, l2_dataflow_);
                                     curr_stats.update_stats();
                                     // 'local_best_mappings' includes the same energy key value with the curr mapping table's energy
                                     auto entry = local_best_mappings.find(curr_stats.get_energy(energy_check));
