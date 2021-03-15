@@ -258,6 +258,7 @@ void brute_force_t::run(const unsigned idx_) {
                     default: break;
                 }
                 // Sync
+                workers.clear();
                 final_min_stat = DBL_MAX;
                 double second_stat = DBL_MAX;
                 for(unsigned tid = 0; tid < num_threads; tid++) {
