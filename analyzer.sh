@@ -1,6 +1,8 @@
 #!/bin/bash
 
 # Configurations
+# acc_arg    : Accelerator specification (*.cfg)
+# map_arg    : DNN layer and mapping configuration (*.csv)
 acc_arg=configs/accelerators/eyeriss.cfg
 map_arg=configs/mappings/eyeriss_alexnet.csv
 

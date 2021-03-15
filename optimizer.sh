@@ -1,11 +1,16 @@
 #!/bin/bash
 
 # Configurations
+# acc_arg    : Accelerator specification (*.cfg)
+# net_arg    : DNN layer configuration (*.csv)
+# opt_type   : "b-f-energy", "b-f-cycle", "b-f-edp", or "systematic"
+# num_threads: Multi-threading for brute-force (b-f-xxx)
+# dataflows  : "fixed" or "flexible"
 acc_arg=configs/accelerators/eyeriss-like.cfg
 net_arg=configs/networks/alexnet_b8.csv
-# Dataflows: fixed or flexible
-dataflows="fixed"
+opt_type=b-f-energy
 num_threads=8
+dataflows=fixed
 
 # Usage
 print_help() {
