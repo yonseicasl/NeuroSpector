@@ -199,7 +199,6 @@ void brute_force_t::run(const unsigned idx_) {
         std::string df_str("IWO");
         for(unsigned l1_df = 0; l1_df < l1_dataflow.size(); l1_df++) {
             for(unsigned l2_df = 0; l2_df < l2_dataflow.size(); l2_df++) {
-                std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
                 // Global reset
                 global_reset(idx_);
                 // Threads initialization
@@ -333,7 +332,17 @@ void brute_force_t::run(const unsigned idx_) {
                     }
                 }
                 // Print stats
-                print_stats();
+                if(l1_df == 0 && l2_df == 0)
+                    print_stats();
+                handler.print_line(50, "*");
+                std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
+                handler.print_line(50, "*");
+#ifdef SIMPLE
+                mapping_table_t for_stats(final_best_mappings.at(0));
+                stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                stats.update_stats();
+                stats.print_csv();
+#else
                 for(size_t i = 0; i < final_best_mappings.size(); i++) {
                     std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
 #ifdef CSV
@@ -350,6 +359,7 @@ void brute_force_t::run(const unsigned idx_) {
                     stats.print_stats();
 #endif
                 }
+#endif
             }
         }
     }
@@ -375,7 +385,7 @@ void brute_force_t::print_stats() {
               << global_valid_cnt << "," 
               << num_permutations << "," 
               << final_best_mappings.size() << std::endl;
-    handler.print_line(60, "*");
+    handler.print_line(50, "*");
 #else
     std::cout << "# NUM OF VALID MAPPINGS  : " 
               << std::setw(15) << global_valid_cnt 
@@ -386,7 +396,7 @@ void brute_force_t::print_stats() {
               << " (100%)" << std::endl;
     std::cout << "# NUM OF SIMILAR MAPPINGS : " 
               << std::setw(15) << final_best_mappings.size() << std::endl;
-    handler.print_line(60, "*");
+    handler.print_line(50, "*");
 #endif
 }
 
