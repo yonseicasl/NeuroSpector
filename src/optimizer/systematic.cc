@@ -279,7 +279,10 @@ void systematic_t::run(const unsigned idx_) {
                     for(unsigned j = 0; j < dynamic_top_k.at(1); j++) {
                         for(unsigned k = 0; k < dynamic_top_k.at(2); k++) {
                             std::cout << "\n# TOP " << i + 1 << "-" << j + 1 << "-" << k + 1 << std::endl;
-                            stats_t curr_stats(accelerator, best_mappings_third.at(k + j * dynamic_top_k.at(2) + i * dynamic_top_k.at(1) * dynamic_top_k.at(2)));
+                            stats_t curr_stats(accelerator, 
+                                               best_mappings_third.at(k + j * dynamic_top_k.at(2) + i * dynamic_top_k.at(1) * dynamic_top_k.at(2)),
+                                               static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                                               static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             curr_stats.update_stats();
 #ifdef SIMPLE
                             curr_stats.print_csv();
@@ -369,29 +372,29 @@ void systematic_t::worker(const unsigned seq_,
                           uint64_t& valid_cnt_,
                           std::vector<mapping_table_t>& best_mappings_) {
     // Validation required components 
-    component_t check_1 = component_t::SIZE;
-    component_t check_2 = component_t::SIZE;
+    component_t temporal = component_t::SIZE;
+    component_t spatial = component_t::SIZE;
     component_t energy_check = component_t::SIZE;
     if(start_ == component_t::L2) {
-        check_1 = component_t::L2;
-        check_2 = component_t::S2;
+        temporal = component_t::L2;
+        spatial = component_t::S2;
         energy_check = component_t::DRAM;
     }
     else if(start_ == component_t::L1) {
-        check_1 = component_t::L1;
-        check_2 = component_t::S1_X;
+        temporal = component_t::L1;
+        spatial = component_t::S1_X;
         energy_check = component_t::L2;
     }
     else if(start_ == component_t::S0) {
-        check_1 = component_t::MAC;
-        check_2 = component_t::S0;
+        temporal = component_t::MAC;
+        spatial = component_t::S0;
         energy_check = component_t::L1;
     }
     else 
         handler.print_err(err_type_t::INVAILD, "COMPONENT systematic_t::worker");
     // Best mappings
-    std::map<size_t, mapping_table_t> local_best_mappings;
-    local_best_mappings.insert(std::make_pair(-1, init_mapping_));
+    std::map<double, mapping_table_t> local_best_mappings;
+    local_best_mappings.insert(std::make_pair(DBL_MAX, init_mapping_));
     // Current mapping table
     mapping_table_t curr_mapping_table(init_mapping_);
     // Start finding best mappings
@@ -410,7 +413,7 @@ void systematic_t::worker(const unsigned seq_,
                             for(size_t r = 0; r < mapping_space_.get_permutations(6).size(); r++) {
                                 curr_mapping_table.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_, end_);
                                 // Validity check
-                                if(check_validity(check_1, curr_mapping_table) & check_validity(check_2, curr_mapping_table)) {
+                                if(check_validity(temporal, curr_mapping_table) & check_validity(spatial, curr_mapping_table)) {
                                     // Update current stats
                                     stats_t curr_stats(accelerator, curr_mapping_table, l1_dataflow_, l2_dataflow_);
                                     curr_stats.update_stats();
