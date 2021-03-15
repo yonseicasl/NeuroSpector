@@ -77,6 +77,7 @@ void brute_force_t::run(const unsigned idx_) {
                     workers.at(tid).join();
                 break;
             case opt_type_t::B_F_EDP: 
+                std::cout << "# EDP OPTIMIZATION" << std::endl; 
                 // Multi-threading
                 for(unsigned tid = 0; tid < num_threads; tid++) {
                     workers.push_back(std::thread(&brute_force_t::edp_worker, this, 
@@ -90,7 +91,6 @@ void brute_force_t::run(const unsigned idx_) {
                 // Thread join
                 for(unsigned tid = 0; tid < num_threads; tid++) 
                     workers.at(tid).join();
-                std::cout << "# EDP OPTIMIZATION" << std::endl; 
                 break;
             default: break;
         }
@@ -207,7 +207,8 @@ void brute_force_t::run(const unsigned idx_) {
                 // Start optimizing
                 switch(opt_type) {
                     case opt_type_t::B_F_ENERGY: 
-                        std::cout << "# ENERGY-DELAY OPTIMIZATION" << std::endl; 
+                        if(l1_df == 0 && l2_df == 0)
+                            std::cout << "# ENERGY-DELAY OPTIMIZATION" << std::endl; 
                         // Multi-threading
                         for(unsigned tid = 0; tid < num_threads; tid++) {
                             workers.push_back(std::thread(&brute_force_t::energy_worker, this, 
@@ -223,7 +224,8 @@ void brute_force_t::run(const unsigned idx_) {
                             workers.at(tid).join();
                         break;
                     case opt_type_t::B_F_CYCLE: 
-                        std::cout << "# DELAY-ENERGY OPTIMIZATION" << std::endl; 
+                        if(l1_df == 0 && l2_df == 0)
+                            std::cout << "# DELAY-ENERGY OPTIMIZATION" << std::endl; 
                         // Multi-threading
                         for(unsigned tid = 0; tid < num_threads; tid++) {
                             workers.push_back(std::thread(&brute_force_t::cycle_worker, this, 
@@ -239,6 +241,8 @@ void brute_force_t::run(const unsigned idx_) {
                             workers.at(tid).join();
                         break;
                     case opt_type_t::B_F_EDP: 
+                        if(l1_df == 0 && l2_df == 0)
+                            std::cout << "# EDP OPTIMIZATION" << std::endl; 
                         // Multi-threading
                         for(unsigned tid = 0; tid < num_threads; tid++) {
                             workers.push_back(std::thread(&brute_force_t::edp_worker, this, 
@@ -252,7 +256,6 @@ void brute_force_t::run(const unsigned idx_) {
                         // Thread join
                         for(unsigned tid = 0; tid < num_threads; tid++) 
                             workers.at(tid).join();
-                        std::cout << "# EDP OPTIMIZATION" << std::endl; 
                         break;
                     default: break;
                 }
