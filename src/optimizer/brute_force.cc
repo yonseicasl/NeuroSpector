@@ -31,7 +31,7 @@ void brute_force_t::run(const unsigned idx_) {
     accelerator->print_stats();
     std::cout << "# NETWORK    : " << network_name << std::endl;
     std::cout << "# NUM THREADS: " << num_threads << std::endl;
-    handler.print_line(60, "*");
+    handler.print_line(50, "*");
     // Mapping space generation
     mapping_space_t mapping_space(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     num_permutations = mapping_space.get_num_permutations();
@@ -335,16 +335,21 @@ void brute_force_t::run(const unsigned idx_) {
                     }
                 }
                 // Print stats
-                if(l1_df == 0 && l2_df == 0)
+#ifdef SIMPLE
+                if(l1_df == 0 && l2_df == 0) {
                     print_stats();
+                    std::cout << "# " << mapping_tables.at(idx_).get_layer_name() << std::endl;
+                }
                 handler.print_line(50, "*");
                 std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
-#ifdef SIMPLE
                 mapping_table_t for_stats(final_best_mappings.at(0));
                 stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
                 stats.update_stats();
                 stats.print_csv();
 #else
+                print_stats();
+                handler.print_line(50, "*");
+                std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
                 for(size_t i = 0; i < final_best_mappings.size(); i++) {
                     std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
 #ifdef CSV
@@ -382,6 +387,12 @@ void brute_force_t::global_reset(const unsigned idx_) {
 }
 
 void brute_force_t::print_stats() {
+#ifdef SIMPLE
+    std::cout << "VALID MAPPINGS,TOTAL MAPPINGS\n"  
+              << global_valid_cnt << "," 
+              << num_permutations << std::endl;
+    handler.print_line(50, "*");
+#else
 #ifdef CSV
     std::cout << "VALID MAPPINGS,TOTAL MAPPINGS,SIMILAR MAPPINGS\n"  
               << global_valid_cnt << "," 
@@ -399,6 +410,7 @@ void brute_force_t::print_stats() {
     std::cout << "# NUM OF SIMILAR MAPPINGS : " 
               << std::setw(15) << final_best_mappings.size() << std::endl;
     handler.print_line(50, "*");
+#endif
 #endif
 }
 
