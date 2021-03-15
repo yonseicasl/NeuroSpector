@@ -116,7 +116,7 @@ public:
 
 private:
     void reset_variables();
-    void print_stats();
+    void print_stats(const unsigned idx_);
     // Mapping worker
     void worker(const unsigned seq_,
                 const unsigned top_k_,

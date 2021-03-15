@@ -8,9 +8,10 @@
 # dataflows  : "fixed" or "flexible"
 acc_arg=configs/accelerators/eyeriss-like.cfg
 net_arg=configs/networks/alexnet_b8.csv
-opt_type=b-f-energy
+#opt_type=b-f-energy
+opt_type=systematic
 num_threads=8
-dataflows=fixed
+dataflows=flexible
 
 # Usage
 print_help() {
