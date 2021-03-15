@@ -1,6 +1,9 @@
 #include "optimizer.h"
 
 #define SEQ_MAX 3
+#define TOP_FIRST 3
+#define TOP_SECOND 4
+#define TOP_THIRD 3
 
 static handler_t handler;
 
@@ -15,9 +18,9 @@ systematic_t::systematic_t(const std::string& acc_cfg_path_,
       num_permutations_first(0),
       valid_cnt_first(0) {
     // L2-DRAM (0), L1-L2 (1), and MAC-L1 (2)
-    static_top_k.push_back(3);
-    static_top_k.push_back(3);
-    static_top_k.push_back(1);
+    static_top_k.push_back(TOP_FIRST);
+    static_top_k.push_back(TOP_SECOND);
+    static_top_k.push_back(TOP_THIRD);
 }     
 
 systematic_t::~systematic_t() {
