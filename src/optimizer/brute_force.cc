@@ -215,8 +215,8 @@ void brute_force_t::run(const unsigned idx_) {
                                                           tid, 
                                                           std::ref(mapping_tables.at(idx_ - 1)),
                                                           std::ref(mapping_space), 
-                                                          static_cast<dataflow_t>(l1_df),
-                                                          static_cast<dataflow_t>(l2_df),
+                                                          static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                                                          static_cast<dataflow_t>(l2_dataflow.at(l2_df)),
                                                           std::ref(m)));
                         }
                         // Thread join
@@ -232,8 +232,8 @@ void brute_force_t::run(const unsigned idx_) {
                                                           tid, 
                                                           std::ref(mapping_tables.at(idx_ - 1)),
                                                           std::ref(mapping_space), 
-                                                          static_cast<dataflow_t>(l1_df),
-                                                          static_cast<dataflow_t>(l2_df),
+                                                          static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                                                          static_cast<dataflow_t>(l2_dataflow.at(l2_df)),
                                                           std::ref(m)));
                         }
                         // Thread join
@@ -249,8 +249,8 @@ void brute_force_t::run(const unsigned idx_) {
                                                           tid, 
                                                           std::ref(mapping_tables.at(idx_ - 1)),
                                                           std::ref(mapping_space), 
-                                                          static_cast<dataflow_t>(l1_df),
-                                                          static_cast<dataflow_t>(l2_df),
+                                                          static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                                                          static_cast<dataflow_t>(l2_dataflow.at(l2_df)),
                                                           std::ref(m)));
                         }
                         // Thread join
@@ -272,13 +272,13 @@ void brute_force_t::run(const unsigned idx_) {
                             final_best_mappings.push_back(*it);
                         if(opt_type == opt_type_t::B_F_ENERGY) {
                             // Cycle
-                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             stats.update_stats();
                             second_stat = stats.get_total_cycle();
                         }
                         else if(opt_type == opt_type_t::B_F_CYCLE) {
                             // Energy
-                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             stats.update_stats();
                             second_stat = stats.get_total_energy();
                         }
@@ -288,7 +288,7 @@ void brute_force_t::run(const unsigned idx_) {
                     }
                     else if(final_min_stat == global_min_stats.at(tid)) {
                         if(opt_type == opt_type_t::B_F_ENERGY) {
-                            stats_t stats(accelerator, global_best_mapping_tables.at(tid), static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             stats.update_stats();
                             if(second_stat > stats.get_total_cycle()) {
                                 final_best_mappings.clear();
@@ -306,7 +306,7 @@ void brute_force_t::run(const unsigned idx_) {
                             } 
                         }
                         else if(opt_type == opt_type_t::B_F_CYCLE) {
-                            stats_t stats(accelerator, global_best_mapping_tables.at(tid), static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             stats.update_stats();
                             if(second_stat > stats.get_total_energy()) {
                                 final_best_mappings.clear();
@@ -344,9 +344,9 @@ void brute_force_t::run(const unsigned idx_) {
                     print_stats();
                 }
                 handler.print_line(50, "*");
-                std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
+                std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflow.at(l1_df)) << "S-" << df_str.at(l2_dataflow.at(l2_df)) << "S" << std::endl; 
                 mapping_table_t for_stats(final_best_mappings.at(0));
-                stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                 stats.update_stats();
                 stats.print_csv();
 #else
@@ -355,19 +355,19 @@ void brute_force_t::run(const unsigned idx_) {
                 handler.print_line(50, "*");
                 print_stats();
                 handler.print_line(50, "*");
-                std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
+                std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflow.at(l1_df)) << "S-" << df_str.at(l2_dataflow.at(l2_df)) << "S" << std::endl; 
                 for(size_t i = 0; i < final_best_mappings.size(); i++) {
                     std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
 #ifdef CSV
                     final_best_mappings.at(i).print_csv();
                     mapping_table_t for_stats(final_best_mappings.at(i));
-                    stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                    stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                     stats.update_stats();
                     stats.print_csv();
 #else
                     final_best_mappings.at(i).print_stats();
                     mapping_table_t for_stats(final_best_mappings.at(i));
-                    stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));
+                    stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                     stats.update_stats();
                     stats.print_stats();
 #endif

@@ -189,8 +189,8 @@ void systematic_t::run(const unsigned idx_) {
                                mapping_space,
                                start_component,
                                end_component,
-                               static_cast<dataflow_t>(l1_df),
-                               static_cast<dataflow_t>(l2_df),
+                               static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                               static_cast<dataflow_t>(l2_dataflow.at(l2_df)),
                                valid_cnt_first,
                                best_mappings_first);
                         // Change start & end components
@@ -222,8 +222,8 @@ void systematic_t::run(const unsigned idx_) {
                                    mapping_space,
                                    start_component,
                                    end_component,
-                                   static_cast<dataflow_t>(l1_df),
-                                   static_cast<dataflow_t>(l2_df),
+                                   static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                                   static_cast<dataflow_t>(l2_dataflow.at(l2_df)),
                                    valid_cnt_second.at(i),
                                    best_mappings_second);
                         }
@@ -253,8 +253,8 @@ void systematic_t::run(const unsigned idx_) {
                                    mapping_space,
                                    start_component,
                                    end_component,
-                                   static_cast<dataflow_t>(l1_df),
-                                   static_cast<dataflow_t>(l2_df),
+                                   static_cast<dataflow_t>(l1_dataflow.at(l1_df)),
+                                   static_cast<dataflow_t>(l2_dataflow.at(l2_df)),
                                    valid_cnt_third.at(i),
                                    best_mappings_third);
                         }
@@ -274,7 +274,7 @@ void systematic_t::run(const unsigned idx_) {
 #endif
                 print_stats(idx_);
                 handler.print_line(50, "*");
-                std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl;
+                std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflow.at(l1_df)) << "S-" << df_str.at(l2_dataflow.at(l2_df)) << "S" << std::endl; 
                 for(unsigned i = 0; i < dynamic_top_k.at(0); i++) {
                     for(unsigned j = 0; j < dynamic_top_k.at(1); j++) {
                         for(unsigned k = 0; k < dynamic_top_k.at(2); k++) {
