@@ -338,7 +338,7 @@ void brute_force_t::run(const unsigned idx_) {
 #ifdef SIMPLE
                 if(l1_df == 0 && l2_df == 0) {
                     print_stats();
-                    std::cout << "# " << mapping_tables.at(idx_).get_layer_name() << std::endl;
+                    std::cout << "# " << mapping_tables.at(idx_ - 1).get_layer_name() << std::endl;
                 }
                 handler.print_line(50, "*");
                 std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
