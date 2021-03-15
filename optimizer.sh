@@ -28,22 +28,22 @@ fi
 
 # Num args = 0
 if [[ "$#" -eq 0  ]];  then
-    ./neurospector 'O' $acc_arg $net_arg $dataflows $num_threads
+    ./neurospector 'O' $acc_arg $net_arg $opt_type $num_threads $dataflows 
 fi
 
 # Num args = 1
 if [[ "$#" -eq 1  ]];  then
     if [[ $1 == gdb ]]; then
-        gdb --args neurospector 'O' $acc_arg $net_arg $dataflows $num_threads
+        gdb --args neurospector 'O' $acc_arg $net_arg $opt_type $num_threads $dataflows
     else
-        ./neurospector 'O' $acc_arg $net_arg $dataflows $1 $num_threads
+        ./neurospector 'O' $acc_arg $net_arg $opt_type $num_threads $dataflows $1 
     fi
 fi
 
 # Num args = 2
 if [[ "$#" -eq 2  ]];  then
     if [[ $1 == gdb ]]; then
-        gdb --args neurospector 'O' $acc_arg $net_arg $dataflows $2 $num_threads
+        gdb --args neurospector 'O' $acc_arg $net_arg $opt_type $num_threads $dataflows $2
     else
         print_help
     fi
