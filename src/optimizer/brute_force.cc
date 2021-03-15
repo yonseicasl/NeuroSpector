@@ -339,7 +339,6 @@ void brute_force_t::run(const unsigned idx_) {
                     print_stats();
                 handler.print_line(50, "*");
                 std::cout << "# DATAFLOWS: " << df_str.at(l1_df) << "S-" << df_str.at(l2_df) << "S" << std::endl; 
-                handler.print_line(50, "*");
 #ifdef SIMPLE
                 mapping_table_t for_stats(final_best_mappings.at(0));
                 stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_df), static_cast<dataflow_t>(l2_df));

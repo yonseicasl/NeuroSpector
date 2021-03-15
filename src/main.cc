@@ -95,8 +95,8 @@ int main(int argc, char **argv) {
         print_usage(argv);
     // Finish time
     finish = time(nullptr);
-    handler.print_line(30, "*");
-    cout << "\n# TIME: " 
+    handler.print_line(50, "*");
+    cout << "# TIME: " 
          << (finish - start) / 60 << " min "
          << (finish - start) % 60 << " sec ("
          << (finish - start) << ")" << endl;
