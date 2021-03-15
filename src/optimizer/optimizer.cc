@@ -73,13 +73,6 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
             }
         }
     }
-    std::string df_str("IWO");
-    for(unsigned l1_df = 0; l1_df < l1_dataflow.size(); l1_df++) {
-        for(unsigned l2_df = 0; l2_df < l2_dataflow.size(); l2_df++) {
-            std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflow.at(l1_df)) << "S-" << df_str.at(l2_dataflow.at(l2_df)) << "S" << std::endl; 
-        }
-    }
-    exit(1);
     accelerator->print_stats();
 }
 
