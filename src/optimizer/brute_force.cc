@@ -125,6 +125,7 @@ void brute_force_t::run(const unsigned idx_) {
                     stats_t stats(accelerator, global_best_mapping_tables.at(tid));
                     stats.update_stats();
                     if(second_stat > stats.get_total_cycle()) {
+                        second_stat = stats.get_total_cycle();
                         final_best_mappings.clear();
                         final_best_mappings.push_back(global_best_mapping_tables.at(tid));
                         for(auto it = global_similar_mapping_tables.at(tid).begin(); it != global_similar_mapping_tables.at(tid).end(); ++it) 
@@ -144,6 +145,7 @@ void brute_force_t::run(const unsigned idx_) {
                     stats_t stats(accelerator, global_best_mapping_tables.at(tid));
                     stats.update_stats();
                     if(second_stat > stats.get_total_energy()) {
+                        second_stat = stats.get_total_energy();
                         final_best_mappings.clear();
                         final_best_mappings.push_back(global_best_mapping_tables.at(tid));
                         for(auto it = global_similar_mapping_tables.at(tid).begin(); it != global_similar_mapping_tables.at(tid).end(); ++it) 
@@ -288,9 +290,10 @@ void brute_force_t::run(const unsigned idx_) {
                     }
                     else if(final_min_stat == global_min_stats.at(tid)) {
                         if(opt_type == opt_type_t::B_F_ENERGY) {
-                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
+                            stats_t stats(accelerator, global_best_mapping_tables.at(tid), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             stats.update_stats();
                             if(second_stat > stats.get_total_cycle()) {
+                                second_stat = stats.get_total_cycle();
                                 final_best_mappings.clear();
                                 final_best_mappings.push_back(global_best_mapping_tables.at(tid));
                                 for(auto it = global_similar_mapping_tables.at(tid).begin(); it != global_similar_mapping_tables.at(tid).end(); ++it) 
@@ -306,9 +309,10 @@ void brute_force_t::run(const unsigned idx_) {
                             } 
                         }
                         else if(opt_type == opt_type_t::B_F_CYCLE) {
-                            stats_t stats(accelerator, final_best_mappings.at(0), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
+                            stats_t stats(accelerator, global_best_mapping_tables.at(tid), static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
                             stats.update_stats();
                             if(second_stat > stats.get_total_energy()) {
+                                second_stat = stats.get_total_energy();
                                 final_best_mappings.clear();
                                 final_best_mappings.push_back(global_best_mapping_tables.at(tid));
                                 for(auto it = global_similar_mapping_tables.at(tid).begin(); it != global_similar_mapping_tables.at(tid).end(); ++it) 
