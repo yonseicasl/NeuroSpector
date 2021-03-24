@@ -30,6 +30,8 @@ public:
     virtual void run(const unsigned idx_);
 
 protected:
+    // Initialze dataflows
+    void init_dataflows();
     // Check each mapping table with the accelerator
     bool check_all_validity(const mapping_table_t& mapping_table_) const; 
     bool check_validity(const component_t U, const mapping_table_t& mapping_table_) const; 
@@ -41,7 +43,7 @@ protected:
     bool l2_validity(const mapping_table_t& mapping_table_) const;
     bool s2_validity(const mapping_table_t& mapping_table_) const;
     // Variables & containers
-    bool is_fixed;                                  // TODO: Dataflow: fixed (true) or flexible (false)
+    bool is_fixed;                                  // Dataflow: fixed (true) or flexible (false)
     unsigned D_size;                                // Mapping table column size
     unsigned U_size;                                // Mapping table row size
     unsigned num_levels;                            // # of existent levels
@@ -49,9 +51,8 @@ protected:
     std::string network_name;                       // DNN name
     std::vector<bool> exists;                       // Component exist bits from MAC to DRAM
     std::vector<mapping_table_t> mapping_tables;    // Mapping tables from the mapping configuration
-    // For flexible dataflows
-    std::vector<unsigned> l1_dataflow;
-    std::vector<unsigned> l2_dataflow;
+    std::vector<unsigned> l1_dataflows;             // L1 dataflow(s)
+    std::vector<unsigned> l2_dataflows;             // L2 dataflow(s)
 };
 
 /* Brute-force */
@@ -68,39 +69,39 @@ public:
     void run(const unsigned idx_);      // Run brute-force optimizing of the target layer
 
 private:
-    void reset_globals(const unsigned idx_);
-    void print_stats();
-    // Mapping workers
+    // Optimizer private functions
+    void reset(const unsigned idx_);                                // Reset for the next dataflow or layer
+    void engine(const unsigned idx_,
+                const dataflow_t l1_dataflow_, 
+                const dataflow_t l2_dataflow_);                     // Brute-force engine for multi-threading
+    void sync_and_update(const dataflow_t l1_dataflow_,
+                         const dataflow_t l2_dataflow_);            // Sync and update
+    void print_stats();                                             // Print stats
+    //void print_csv();                                               // Print csv
     void energy_worker(const unsigned tid_, 
                        const mapping_table_t& init_mapping_,
-                       const mapping_space_t& mapping_space_,
                        const dataflow_t l1_dataflow_,
                        const dataflow_t l2_dataflow_,
-                       std::mutex& m_);
+                       std::mutex& m_);                             // Energy worker
     void cycle_worker(const unsigned tid_, 
                       const mapping_table_t& init_mapping_,
-                      const mapping_space_t& mapping_space_,
                       const dataflow_t l1_dataflow_,
                       const dataflow_t l2_dataflow_,
-                      std::mutex& m_);
+                      std::mutex& m_);                              // Cycle worker
     void edp_worker(const unsigned tid_, 
                     const mapping_table_t& init_mapping_,
-                    const mapping_space_t& mapping_space_,
                     const dataflow_t l1_dataflow_,
                     const dataflow_t l2_dataflow_,
-                    std::mutex& m_);
-    // Variables
-    const opt_type_t opt_type;
-    uint64_t num_permutations;
-    // For multi-threading
-    const unsigned num_threads;
-    uint64_t global_valid_cnt;
-    std::vector<double> global_min_stats;
-    std::vector<mapping_table_t> global_best_mapping_tables;
-    std::vector<std::vector<mapping_table_t>> global_similar_mapping_tables;
-    // After sync
-    double final_min_stat;
-    std::vector<mapping_table_t> final_best_mappings;
+                    std::mutex& m_);                                // EDP worker
+    // Variables & containers
+    const opt_type_t opt_type;                                      // Opt type: b-f-energy / b-f-cycle / b-f-edp
+    const unsigned num_threads;                                     // # of threads
+    uint64_t total_cnt;                                             // Total # of mapping space
+    uint64_t valid_cnt;                                             // Total valid counts (global)
+    mapping_space_t mapping_space;                                  // Mapping space
+    std::vector<std::pair<double, mapping_table_t>> best_mappings;  // Best mapping (with stat) per thread (global)
+    std::vector<std::vector<mapping_table_t>> similar_mappings;     // Similar mappings per thread (global)
+    std::vector<mapping_table_t> final_best_mappings;               // Final best mappings 
 };
 
 /* Systematic */

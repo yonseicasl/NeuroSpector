@@ -1,5 +1,11 @@
 #include "mapping_space.h"
 
+mapping_space_t::mapping_space_t() 
+    : num_levels(0),
+      num_permutations(0) {
+
+} 
+
 mapping_space_t::mapping_space_t(const unsigned num_levels_, 
                                  const std::vector<unsigned> &layer_values_) 
     : num_levels(num_levels_), 

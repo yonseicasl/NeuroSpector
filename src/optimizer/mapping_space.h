@@ -11,6 +11,7 @@
 /* Mapping space */
 class mapping_space_t {
 public:
+    mapping_space_t();
     mapping_space_t(const unsigned num_levels_, 
                     const std::vector<unsigned> &layer_values_);
     ~mapping_space_t();

@@ -37,42 +37,7 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
         mapping_tables.push_back(mapping_table); 
     }
     delete net_cfg;
-    // For flexible dataflows
-    if(!is_fixed) {
-        // IS (0), WS (1), and OS (2)
-        for(unsigned i = 0; i < 3; i++) {
-            if(i == 0) {
-                if(accelerator->l2_filter_bypass() || accelerator->l2_output_bypass())
-                    l2_dataflow.push_back(i);
-                else if(accelerator->l2_input_bypass()) 
-                    l1_dataflow.push_back(i);
-                else {
-                    l1_dataflow.push_back(i);
-                    l2_dataflow.push_back(i);
-                }
-            }
-            else if(i == 1) {
-                if(accelerator->l2_input_bypass() || accelerator->l2_output_bypass())
-                    l2_dataflow.push_back(i);
-                else if(accelerator->l2_filter_bypass()) 
-                    l1_dataflow.push_back(i);
-                else {
-                    l1_dataflow.push_back(i);
-                    l2_dataflow.push_back(i);
-                }
-            }
-            else {
-                if(accelerator->l2_input_bypass() || accelerator->l2_filter_bypass())
-                    l2_dataflow.push_back(i);
-                else if(accelerator->l2_output_bypass()) 
-                    l1_dataflow.push_back(i);
-                else {
-                    l1_dataflow.push_back(i);
-                    l2_dataflow.push_back(i);
-                }
-            }
-        }
-    }
+    init_dataflows();
     accelerator->print_stats();
 }
 
@@ -87,6 +52,53 @@ void optimizer_t::run() {
 
 void optimizer_t::run(const unsigned idx_) {
     
+}
+
+
+// Initialze dataflows
+void optimizer_t::init_dataflows() {
+    // For flexible dataflows
+    if(!is_fixed) {
+        // IS (0), WS (1), and OS (2)
+        for(unsigned i = 0; i < 3; i++) {
+            if(i == 0) {
+                if(accelerator->l2_filter_bypass() || accelerator->l2_output_bypass())
+                    l2_dataflows.push_back(i);
+                else if(accelerator->l2_input_bypass()) 
+                    l1_dataflows.push_back(i);
+                else {
+                    l1_dataflows.push_back(i);
+                    l2_dataflows.push_back(i);
+                }
+            }
+            else if(i == 1) {
+                if(accelerator->l2_input_bypass() || accelerator->l2_output_bypass())
+                    l2_dataflows.push_back(i);
+                else if(accelerator->l2_filter_bypass()) 
+                    l1_dataflows.push_back(i);
+                else {
+                    l1_dataflows.push_back(i);
+                    l2_dataflows.push_back(i);
+                }
+            }
+            else {
+                if(accelerator->l2_input_bypass() || accelerator->l2_filter_bypass())
+                    l2_dataflows.push_back(i);
+                else if(accelerator->l2_output_bypass()) 
+                    l1_dataflows.push_back(i);
+                else {
+                    l1_dataflows.push_back(i);
+                    l2_dataflows.push_back(i);
+                }
+            }
+        }
+    }
+    // For fixed dataflows
+    else {
+        // IS (0), WS (1), and OS (2)
+        l1_dataflows.push_back(static_cast<unsigned>(accelerator->l1_dataflow()));
+        l2_dataflows.push_back(static_cast<unsigned>(accelerator->l2_dataflow()));
+    }
 }
 
 // Check each mapping table with the accelerator
