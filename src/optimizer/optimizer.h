@@ -77,7 +77,7 @@ private:
     void sync_and_update(const dataflow_t l1_dataflow_,
                          const dataflow_t l2_dataflow_);            // Sync and update
     void print_stats();                                             // Print stats
-    //void print_csv();                                               // Print csv
+    void print_csv();                                               // Print csv
     void energy_worker(const unsigned tid_, 
                        const mapping_table_t& init_mapping_,
                        const dataflow_t l1_dataflow_,
@@ -101,7 +101,9 @@ private:
     mapping_space_t mapping_space;                                  // Mapping space
     std::vector<std::pair<double, mapping_table_t>> best_mappings;  // Best mapping (with stat) per thread (global)
     std::vector<std::vector<mapping_table_t>> similar_mappings;     // Similar mappings per thread (global)
+    double final_best_stat;                                         // Final best stat (energy, cycle, or edp)
     std::vector<mapping_table_t> final_best_mappings;               // Final best mappings 
+    std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
 };
 
 /* Systematic */

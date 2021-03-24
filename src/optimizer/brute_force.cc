@@ -12,7 +12,8 @@ brute_force_t::brute_force_t(const std::string& acc_cfg_path_,
       opt_type(opt_type_), 
       num_threads(num_threads_),
       total_cnt(0), 
-      valid_cnt(0) {
+      valid_cnt(0), 
+      final_best_stat(DBL_MAX) {
 
 }             
 
@@ -31,6 +32,12 @@ void brute_force_t::run(const unsigned idx_) {
     // Mapping space generation
     mapping_space = mapping_space_t(num_levels - 1, mapping_tables.at(idx_ - 1).get_layer_values());
     total_cnt = mapping_space.get_num_permutations();
+    switch(opt_type) {
+        case opt_type_t::B_F_ENERGY: std::cout << "# ENERGY-DELAY OPTIMIZATION" << std::endl; break;
+        case opt_type_t::B_F_CYCLE: std::cout << "# DELAY-ENERGY OPTIMIZATION" << std::endl; break;
+        case opt_type_t::B_F_EDP: std::cout << "# EDP OPTIMIZATION" << std::endl; break;
+        default: break;
+    }
     // Start optimizing
     for(unsigned l1_df = 0; l1_df < l1_dataflows.size(); l1_df++) {
         for(unsigned l2_df = 0; l2_df < l2_dataflows.size(); l2_df++) {
@@ -43,22 +50,21 @@ void brute_force_t::run(const unsigned idx_) {
             // Sync and update
             sync_and_update(static_cast<dataflow_t>(l1_dataflows.at(l1_df)), 
                             static_cast<dataflow_t>(l1_dataflows.at(l2_df)));
-            // TODO
-            std::string df_str("IWO");
-            std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflows.at(l1_df)) << "S-" << df_str.at(l2_dataflows.at(l2_df)) << "S" << std::endl; 
-            for(size_t i = 0; i < final_best_mappings.size(); i++) {
-                std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
-                final_best_mappings.at(i).print_csv();
-                stats_t stats_tmp(accelerator, final_best_mappings.at(i), static_cast<dataflow_t>(l1_dataflows.at(l1_df)), static_cast<dataflow_t>(l2_dataflows.at(l2_df)));
-                stats_tmp.update_stats();
-                stats_tmp.print_csv();
-            }
+            // TODO: print stats per dataflow
         }
     }
+    // Print stats
+#ifdef CSV
+    print_csv();
+#else
+    print_stats();
+#endif
 }
 
 // Optimizer private functions
 void brute_force_t::reset(const unsigned idx_) {
+    // Reset valid count
+    valid_cnt = 0;
     // Reset best_mappings
     best_mappings.clear();
     best_mappings.assign(num_threads, std::make_pair(DBL_MAX, mapping_table_t(mapping_tables.at(idx_ - 1))));
@@ -79,7 +85,6 @@ void brute_force_t::engine(const unsigned idx_,
     for(unsigned tid = 0; tid < num_threads; tid++) {
         switch(opt_type) {
             case opt_type_t::B_F_ENERGY: 
-                std::cout << "# ENERGY-DELAY OPTIMIZATION" << std::endl; 
                 workers.push_back(std::thread(&brute_force_t::energy_worker, 
                                               this, 
                                               tid, 
@@ -89,7 +94,6 @@ void brute_force_t::engine(const unsigned idx_,
                                               std::ref(m)));
                 break;
             case opt_type_t::B_F_CYCLE: 
-                std::cout << "# DELAY-ENERGY OPTIMIZATION" << std::endl; 
                 workers.push_back(std::thread(&brute_force_t::cycle_worker, 
                                               this, 
                                               tid, 
@@ -99,7 +103,6 @@ void brute_force_t::engine(const unsigned idx_,
                                               std::ref(m)));
                 break;
             case opt_type_t::B_F_EDP: 
-                std::cout << "# EDP OPTIMIZATION" << std::endl; 
                 workers.push_back(std::thread(&brute_force_t::edp_worker, 
                                               this, 
                                               tid, 
@@ -119,36 +122,37 @@ void brute_force_t::engine(const unsigned idx_,
 
 void brute_force_t::sync_and_update(const dataflow_t l1_dataflow_,
                                     const dataflow_t l2_dataflow_) {
-    double min_energy = DBL_MAX;
-    double min_cycle = DBL_MAX;
-    double min_edp = DBL_MAX;
+    double local_min_energy = DBL_MAX;
+    double local_min_cycle = DBL_MAX;
+    double local_min_edp = DBL_MAX;
+    std::vector<mapping_table_t> local_final_best_mappings;
     switch(opt_type) {
         case opt_type_t::B_F_ENERGY: 
             for(unsigned tid = 0; tid < num_threads; tid++) {
-                if(min_energy > best_mappings.at(tid).first) {
-                    min_energy = best_mappings.at(tid).first;
+                if(local_min_energy > best_mappings.at(tid).first) {
+                    local_min_energy = best_mappings.at(tid).first;
                     stats_t stats_tmp(accelerator, best_mappings.at(tid).second, l1_dataflow_, l2_dataflow_);
                     stats_tmp.update_stats();
-                    min_cycle = stats_tmp.get_total_cycle();
-                    final_best_mappings.clear();
-                    final_best_mappings.push_back(best_mappings.at(tid).second);
+                    local_min_cycle = stats_tmp.get_total_cycle();
+                    local_final_best_mappings.clear();
+                    local_final_best_mappings.push_back(best_mappings.at(tid).second);
                     for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                        final_best_mappings.push_back(*it);
+                       local_final_best_mappings.push_back(*it);
                 }
-                else if(min_energy == best_mappings.at(tid).first) {
+                else if(local_min_energy == best_mappings.at(tid).first) {
                     stats_t stats_tmp(accelerator, best_mappings.at(tid).second, l1_dataflow_, l2_dataflow_);
                     stats_tmp.update_stats();
-                    if(min_cycle > stats_tmp.get_total_cycle()) {
-                        min_cycle = stats_tmp.get_total_cycle();
-                        final_best_mappings.clear();
-                        final_best_mappings.push_back(best_mappings.at(tid).second);
+                    if(local_min_cycle > stats_tmp.get_total_cycle()) {
+                        local_min_cycle = stats_tmp.get_total_cycle();
+                        local_final_best_mappings.clear();
+                        local_final_best_mappings.push_back(best_mappings.at(tid).second);
                         for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                            final_best_mappings.push_back(*it);
+                            local_final_best_mappings.push_back(*it);
                     }
-                    else if(min_cycle == stats_tmp.get_total_cycle()) {
-                        final_best_mappings.push_back(best_mappings.at(tid).second);
+                    else if(local_min_cycle == stats_tmp.get_total_cycle()) {
+                        local_final_best_mappings.push_back(best_mappings.at(tid).second);
                         for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                            final_best_mappings.push_back(*it);
+                            local_final_best_mappings.push_back(*it);
                     }
                     else {
                         // Nothing to do
@@ -156,35 +160,44 @@ void brute_force_t::sync_and_update(const dataflow_t l1_dataflow_,
                 }
                 else {
                     // Nothing to do
+                }
+                // Update
+                if(final_best_stat > local_min_energy) {
+                    final_best_stat = local_min_energy;
+                    final_best_mappings.clear();
+                    final_best_mappings.assign(local_final_best_mappings.begin(), local_final_best_mappings.end());
+                    final_best_dataflows.clear();
+                    final_best_dataflows.push_back(l1_dataflow_);
+                    final_best_dataflows.push_back(l2_dataflow_);
                 }
             }
             break;
         case opt_type_t::B_F_CYCLE: 
             for(unsigned tid = 0; tid < num_threads; tid++) {
-                if(min_cycle > best_mappings.at(tid).first) {
-                    min_cycle = best_mappings.at(tid).first;
+                if(local_min_cycle > best_mappings.at(tid).first) {
+                    local_min_cycle = best_mappings.at(tid).first;
                     stats_t stats_tmp(accelerator, best_mappings.at(tid).second, l1_dataflow_, l2_dataflow_);
                     stats_tmp.update_stats();
-                    min_energy = stats_tmp.get_total_energy();
-                    final_best_mappings.clear();
-                    final_best_mappings.push_back(best_mappings.at(tid).second);
+                    local_min_energy = stats_tmp.get_total_energy();
+                    local_final_best_mappings.clear();
+                    local_final_best_mappings.push_back(best_mappings.at(tid).second);
                     for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                        final_best_mappings.push_back(*it);
+                        local_final_best_mappings.push_back(*it);
                 }
-                else if(min_cycle == best_mappings.at(tid).first) {
+                else if(local_min_cycle == best_mappings.at(tid).first) {
                     stats_t stats_tmp(accelerator, best_mappings.at(tid).second, l1_dataflow_, l2_dataflow_);
                     stats_tmp.update_stats();
-                    if(min_energy > stats_tmp.get_total_energy()) {
-                        min_energy = stats_tmp.get_total_energy();
-                        final_best_mappings.clear();
-                        final_best_mappings.push_back(best_mappings.at(tid).second);
+                    if(local_min_energy > stats_tmp.get_total_energy()) {
+                        local_min_energy = stats_tmp.get_total_energy();
+                        local_final_best_mappings.clear();
+                        local_final_best_mappings.push_back(best_mappings.at(tid).second);
                         for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                            final_best_mappings.push_back(*it);
+                            local_final_best_mappings.push_back(*it);
                     }
-                    else if(min_energy == stats_tmp.get_total_energy()) {
-                        final_best_mappings.push_back(best_mappings.at(tid).second);
+                    else if(local_min_energy == stats_tmp.get_total_energy()) {
+                        local_final_best_mappings.push_back(best_mappings.at(tid).second);
                         for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                            final_best_mappings.push_back(*it);
+                            local_final_best_mappings.push_back(*it);
                     }
                     else {
                         // Nothing to do
@@ -193,26 +206,44 @@ void brute_force_t::sync_and_update(const dataflow_t l1_dataflow_,
                 else {
                     // Nothing to do
                 }
+                // Update
+                if(final_best_stat > local_min_cycle) {
+                    final_best_stat = local_min_cycle;
+                    final_best_mappings.clear();
+                    final_best_mappings.assign(local_final_best_mappings.begin(), local_final_best_mappings.end());
+                    final_best_dataflows.clear();
+                    final_best_dataflows.push_back(l1_dataflow_);
+                    final_best_dataflows.push_back(l2_dataflow_);
+                }
             }
             break;
         case opt_type_t::B_F_EDP: 
             for(unsigned tid = 0; tid < num_threads; tid++) {
-                if(min_edp > best_mappings.at(tid).first) {
-                    min_edp = best_mappings.at(tid).first;
+                if(local_min_edp > best_mappings.at(tid).first) {
+                    local_min_edp = best_mappings.at(tid).first;
                     stats_t stats_tmp(accelerator, best_mappings.at(tid).second, l1_dataflow_, l2_dataflow_);
                     stats_tmp.update_stats();
-                    final_best_mappings.clear();
-                    final_best_mappings.push_back(best_mappings.at(tid).second);
+                    local_final_best_mappings.clear();
+                    local_final_best_mappings.push_back(best_mappings.at(tid).second);
                     for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                        final_best_mappings.push_back(*it);
+                        local_final_best_mappings.push_back(*it);
                 }
-                else if(min_edp == best_mappings.at(tid).first) {
-                    final_best_mappings.push_back(best_mappings.at(tid).second);
+                else if(local_min_edp == best_mappings.at(tid).first) {
+                    local_final_best_mappings.push_back(best_mappings.at(tid).second);
                     for(auto it = similar_mappings.at(tid).begin(); it != similar_mappings.at(tid).end(); ++it) 
-                        final_best_mappings.push_back(*it);
+                        local_final_best_mappings.push_back(*it);
                 }
                 else {
                     // Nothing to do
+                }
+                // Update
+                if(final_best_stat > local_min_edp) {
+                    final_best_stat = local_min_cycle;
+                    final_best_mappings.clear();
+                    final_best_mappings.assign(local_final_best_mappings.begin(), local_final_best_mappings.end());
+                    final_best_dataflows.clear();
+                    final_best_dataflows.push_back(l1_dataflow_);
+                    final_best_dataflows.push_back(l2_dataflow_);
                 }
             }
             break;
@@ -221,72 +252,50 @@ void brute_force_t::sync_and_update(const dataflow_t l1_dataflow_,
 }
 
 void brute_force_t::print_stats() {
-//#ifdef SIMPLE
-//    std::cout << "VALID MAPPINGS,TOTAL MAPPINGS\n"  
-//              << global_valid_cnt << "," 
-//              << num_permutations << std::endl;
-//    handler.print_line(50, "*");
-//#else
-//#ifdef CSV
-//    std::cout << "VALID MAPPINGS,TOTAL MAPPINGS,SIMILAR MAPPINGS\n"  
-//              << global_valid_cnt << "," 
-//              << num_permutations << "," 
-//              << final_best_mappings.size() << std::endl;
-//    handler.print_line(50, "*");
-//#else
-//    std::cout << "# NUM OF VALID MAPPINGS  : " 
-//              << std::setw(15) << global_valid_cnt 
-//              << " (" << std::fixed << std::setprecision(2) 
-//              << float(global_valid_cnt) / num_permutations * 100 << "%)" << std::endl; 
-//    std::cout << "# TOTAL NUM OF MAPPINGS  : " 
-//              << std::setw(15) << num_permutations 
-//              << " (100%)" << std::endl;
-//    std::cout << "# NUM OF SIMILAR MAPPINGS : " 
-//              << std::setw(15) << final_best_mappings.size() << std::endl;
-//    handler.print_line(50, "*");
-//#endif
-//#endif
-        // Print stats
-//#ifdef SIMPLE
-//        if(l1_df == 0 && l2_df == 0) {
-//            std::cout << "# NETWORK    : " << network_name << std::endl;
-//            std::cout << "# " << mapping_tables.at(idx_ - 1).get_layer_name() << std::endl;
-//            std::cout << "# NUM THREADS: " << num_threads << std::endl;
-//            handler.print_line(50, "*");
-//            print_stats();
-//        }
-//        handler.print_line(50, "*");
-//        std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflow.at(l1_df)) << "S-" << df_str.at(l2_dataflow.at(l2_df)) << "S" << std::endl; 
-//        mapping_table_t for_stats(final_best_mappings.at(0));
-//        stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
-//        stats.update_stats();
-//        stats.print_csv();
-//#else
-//        std::cout << "# NETWORK    : " << network_name << std::endl;
-//        std::cout << "# NUM THREADS: " << num_threads << std::endl;
-//        handler.print_line(50, "*");
-//        print_stats();
-//        handler.print_line(50, "*");
-//        std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflow.at(l1_df)) << "S-" << df_str.at(l2_dataflow.at(l2_df)) << "S" << std::endl; 
-//        for(size_t i = 0; i < final_best_mappings.size(); i++) {
-//            std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
-//#ifdef CSV
-//            final_best_mappings.at(i).print_csv();
-//            mapping_table_t for_stats(final_best_mappings.at(i));
-//            stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
-//            stats.update_stats();
-//            stats.print_csv();
-//#else
-//            final_best_mappings.at(i).print_stats();
-//            mapping_table_t for_stats(final_best_mappings.at(i));
-//            stats_t stats(accelerator, for_stats, static_cast<dataflow_t>(l1_dataflow.at(l1_df)), static_cast<dataflow_t>(l2_dataflow.at(l2_df)));
-//            stats.update_stats();
-//            stats.print_stats();
-//#endif
-//        }
-//#endif
-//    }
-//}
+    std::string df_str("IWO");
+    std::cout << "# NUM OF VALID MAPPINGS  : " 
+              << std::setw(15) << valid_cnt
+              << " (" << std::fixed << std::setprecision(2) 
+              << float(valid_cnt) / total_cnt * 100 << "%)" << std::endl; 
+    std::cout << "# TOTAL NUM OF MAPPINGS  : " 
+              << std::setw(15) << total_cnt
+              << " (100%)" << std::endl;
+    std::cout << "# NUM OF SIMILAR MAPPINGS : " 
+              << std::setw(15) << final_best_mappings.size() << std::endl;
+    handler.print_line(50, "*");
+    for(unsigned i = 0; i < final_best_mappings.size(); i++) {
+        std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
+        std::cout << "# DATAFLOWS (L1-L2): " 
+                  << df_str.at(static_cast<unsigned>(final_best_dataflows.at(0))) 
+                  << "S-" 
+                  << df_str.at(static_cast<unsigned>(final_best_dataflows.at(1))) 
+                  << "S" << std::endl; 
+        final_best_mappings.at(i).print_stats();
+        stats_t stats_tmp(accelerator, final_best_mappings.at(i), final_best_dataflows.at(0), final_best_dataflows.at(1));
+        stats_tmp.update_stats();
+        stats_tmp.print_stats();
+    }
+}
+
+void brute_force_t::print_csv() {
+    std::string df_str("IWO");
+    std::cout << "VALID MAPPINGS,TOTAL MAPPINGS,SIMILAR MAPPINGS\n"  
+              << valid_cnt << "," 
+              << total_cnt << "," 
+              << final_best_mappings.size() << std::endl;
+    handler.print_line(50, "*");
+    for(unsigned i = 0; i < final_best_mappings.size(); i++) {
+        std::cout << "\n# BEST MAPPING TABLE " << i + 1 << std::endl;
+        std::cout << "# DATAFLOWS (L1-L2): " 
+                  << df_str.at(static_cast<unsigned>(final_best_dataflows.at(0))) 
+                  << "S-" 
+                  << df_str.at(static_cast<unsigned>(final_best_dataflows.at(1))) 
+                  << "S" << std::endl; 
+        final_best_mappings.at(i).print_csv();
+        stats_t stats_tmp(accelerator, final_best_mappings.at(i), final_best_dataflows.at(0), final_best_dataflows.at(1));
+        stats_tmp.update_stats();
+        stats_tmp.print_csv();
+    }
 }
 
 void brute_force_t::energy_worker(const unsigned tid_, 
