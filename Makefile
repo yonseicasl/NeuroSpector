@@ -6,7 +6,7 @@ SUBDIRS=$(dir $(wildcard $(SRCDIR)/*/.))
 # Flags
 CXX=g++
 SUBFLAGS=$(addprefix -I, $(patsubst %/, %, $(SUBDIRS)))
-CXXFLAGS=-g -Wall -O3 -std=c++11 -DCSV -DSIMPLE -I$(SRCDIR) $(SUBFLAGS) 
+CXXFLAGS=-g -Wall -O3 -std=c++11 -DCSV -I$(SRCDIR) $(SUBFLAGS) 
 #CXXFLAGS=-g -Wall -O3 -std=c++11 -I$(SRCDIR) $(SUBFLAGS) 
 LDFLAGS=
 LIBFLAGS=-lpthread

@@ -7,9 +7,8 @@
 # num_threads: Multi-threading for brute-force (b-f-xxx)
 # dataflows  : "fixed" or "flexible"
 acc_arg=configs/accelerators/eyeriss-like.cfg
-net_arg=configs/networks/alexnet_b8.csv
-#opt_type=b-f-energy
-opt_type=systematic
+net_arg=configs/networks/alexnet.csv
+opt_type=b-f-energy
 num_threads=8
 dataflows=flexible
 
