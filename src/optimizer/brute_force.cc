@@ -43,6 +43,7 @@ void brute_force_t::run(const unsigned idx_) {
             // Sync and update
             sync_and_update(static_cast<dataflow_t>(l1_dataflows.at(l1_df)), 
                             static_cast<dataflow_t>(l1_dataflows.at(l2_df)));
+            // TODO
             std::string df_str("IWO");
             std::cout << "# DATAFLOWS: " << df_str.at(l1_dataflows.at(l1_df)) << "S-" << df_str.at(l2_dataflows.at(l2_df)) << "S" << std::endl; 
             for(size_t i = 0; i < final_best_mappings.size(); i++) {
@@ -51,7 +52,6 @@ void brute_force_t::run(const unsigned idx_) {
                 stats_t stats_tmp(accelerator, final_best_mappings.at(i), static_cast<dataflow_t>(l1_dataflows.at(l1_df)), static_cast<dataflow_t>(l2_dataflows.at(l2_df)));
                 stats_tmp.update_stats();
                 stats_tmp.print_csv();
-            
             }
         }
     }
@@ -287,7 +287,6 @@ void brute_force_t::print_stats() {
 //#endif
 //    }
 //}
-
 }
 
 void brute_force_t::energy_worker(const unsigned tid_, 
@@ -299,7 +298,6 @@ void brute_force_t::energy_worker(const unsigned tid_,
     double local_min_energy = DBL_MAX;
     double local_min_cycle = DBL_MAX;
     uint64_t local_valid_cnt = 0;
-    unsigned local_similar_cnt = 0;
     mapping_table_t local_best_mapping(init_mapping_); 
     std::vector<mapping_table_t> local_similar_mappings;
     // Thread index adjustment
@@ -329,20 +327,17 @@ void brute_force_t::energy_worker(const unsigned tid_,
                                         local_min_energy = curr_stats.get_total_energy();
                                         local_min_cycle = curr_stats.get_total_cycle();
                                         local_best_mapping.swap_degrees(curr_mapping_table.get_degrees());
-                                        local_similar_cnt = 0;
+                                        local_similar_mappings.clear();
                                     }
                                     else if(local_min_energy == curr_stats.get_total_energy()) {
-                                        if(local_similar_cnt == 0)
-                                            local_similar_mappings.clear();
                                         if(local_min_cycle > curr_stats.get_total_cycle()) {
                                             local_min_cycle = curr_stats.get_total_cycle();
                                             local_best_mapping.swap_degrees(curr_mapping_table.get_degrees());
-                                            local_similar_cnt = 0;
+                                            local_similar_mappings.clear();
                                         }
                                         else if(local_min_cycle == curr_stats.get_total_cycle()) {
                                             mapping_table_t similar_mapping_tmp(curr_mapping_table);
                                             local_similar_mappings.push_back(similar_mapping_tmp);
-                                            local_similar_cnt++;
                                         }
                                         else {
                                             // Nothing to do
@@ -379,7 +374,6 @@ void brute_force_t::cycle_worker(const unsigned tid_,
     double local_min_cycle = DBL_MAX;
     double local_min_energy = DBL_MAX;
     uint64_t local_valid_cnt = 0;
-    unsigned local_similar_cnt = 0;
     mapping_table_t local_best_mapping(init_mapping_); 
     std::vector<mapping_table_t> local_similar_mappings;
     // Thread index adjustment
@@ -409,20 +403,17 @@ void brute_force_t::cycle_worker(const unsigned tid_,
                                         local_min_cycle = curr_stats.get_total_cycle();
                                         local_min_energy = curr_stats.get_total_energy();
                                         local_best_mapping.swap_degrees(curr_mapping_table.get_degrees());
-                                        local_similar_cnt = 0;
+                                        local_similar_mappings.clear();
                                     }
                                     else if(local_min_cycle == curr_stats.get_total_cycle()) {
-                                        if(local_similar_cnt == 0)
-                                            local_similar_mappings.clear();
                                         if(local_min_energy > curr_stats.get_total_energy()) {
                                             local_min_energy = curr_stats.get_total_energy();
                                             local_best_mapping.swap_degrees(curr_mapping_table.get_degrees());
-                                            local_similar_cnt = 0;
+                                            local_similar_mappings.clear();
                                         }
                                         else if(local_min_energy == curr_stats.get_total_energy()) {
                                             mapping_table_t similar_mapping_tmpt(curr_mapping_table);
                                             local_similar_mappings.push_back(similar_mapping_tmpt);
-                                            local_similar_cnt++;
                                         }
                                         else {
                                             // Nothing to do
@@ -458,7 +449,6 @@ void brute_force_t::edp_worker(const unsigned tid_,
     // Initialze local variables & containers
     double local_min_edp = DBL_MAX;
     uint64_t local_valid_cnt = 0;
-    unsigned local_similar_cnt = 0;
     mapping_table_t local_best_mapping(init_mapping_); 
     std::vector<mapping_table_t> local_similar_mappings;
     // Thread index adjustment
@@ -487,14 +477,11 @@ void brute_force_t::edp_worker(const unsigned tid_,
                                     if(local_min_edp > curr_stats.get_total_edp()) {
                                         local_min_edp = curr_stats.get_total_edp();
                                         local_best_mapping.swap_degrees(curr_mapping_table.get_degrees());
-                                        local_similar_cnt = 0;
+                                        local_similar_mappings.clear();
                                     }
                                     else if(local_min_edp == curr_stats.get_total_edp()) {
-                                        if(local_similar_cnt == 0)
-                                            local_similar_mappings.clear();
                                         mapping_table_t similar_mapping_tmp(curr_mapping_table);
                                         local_similar_mappings.push_back(similar_mapping_tmp);
-                                        local_similar_cnt++;
                                     }
                                     else {
                                         // Nothing to do
