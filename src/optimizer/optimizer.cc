@@ -47,13 +47,31 @@ optimizer_t::~optimizer_t() {
 
 // Optimizer APIs
 void optimizer_t::run() {
-
+    return;
 }
 
 void optimizer_t::run(const unsigned idx_) {
-    
+    return;
 }
 
+void optimizer_t::print_stats() {
+    return;
+}
+
+void optimizer_t::print_csv() {
+    return;
+}
+
+// Optimizer private functions
+void optimizer_t::reset(const unsigned idx_) {
+    return;
+}
+
+void optimizer_t::engine(const unsigned idx_,
+                         const dataflow_t l1_dataflow_, 
+                         const dataflow_t l2_dataflow_) {
+    return;
+}
 
 // Initialze dataflows
 void optimizer_t::init_dataflows() {
@@ -99,6 +117,7 @@ void optimizer_t::init_dataflows() {
         l1_dataflows.push_back(static_cast<unsigned>(accelerator->l1_dataflow()));
         l2_dataflows.push_back(static_cast<unsigned>(accelerator->l2_dataflow()));
     }
+    return;
 }
 
 // Check each mapping table with the accelerator

@@ -28,8 +28,15 @@ public:
     // Optimizer APIs
     virtual void run();
     virtual void run(const unsigned idx_);
+    virtual void print_stats();
+    virtual void print_csv();
 
 protected:
+    // Optimizer private functions
+    virtual void reset(const unsigned idx_);
+    virtual void engine(const unsigned idx_,
+                        const dataflow_t l1_dataflow_, 
+                        const dataflow_t l2_dataflow_); 
     // Initialze dataflows
     void init_dataflows();
     // Check each mapping table with the accelerator
@@ -43,16 +50,16 @@ protected:
     bool l2_validity(const mapping_table_t& mapping_table_) const;
     bool s2_validity(const mapping_table_t& mapping_table_) const;
     // Variables & containers
-    bool is_fixed;                                  // Dataflow: fixed (true) or flexible (false)
-    unsigned D_size;                                // Mapping table column size
-    unsigned U_size;                                // Mapping table row size
-    unsigned num_levels;                            // # of existent levels
-    accelerator_t *accelerator;                     // Target accelerator 
-    std::string network_name;                       // DNN name
-    std::vector<bool> exists;                       // Component exist bits from MAC to DRAM
-    std::vector<mapping_table_t> mapping_tables;    // Mapping tables from the mapping configuration
-    std::vector<unsigned> l1_dataflows;             // L1 dataflow(s)
-    std::vector<unsigned> l2_dataflows;             // L2 dataflow(s)
+    bool is_fixed;                                      // Dataflow: fixed (true) or flexible (false)
+    unsigned D_size;                                    // Mapping table column size
+    unsigned U_size;                                    // Mapping table row size
+    unsigned num_levels;                                // # of existent levels
+    accelerator_t *accelerator;                         // Target accelerator 
+    std::string network_name;                           // DNN name
+    std::vector<bool> exists;                           // Component exist bits from MAC to DRAM
+    std::vector<mapping_table_t> mapping_tables;        // Mapping tables from the mapping configuration
+    std::vector<unsigned> l1_dataflows;                 // L1 dataflow(s)
+    std::vector<unsigned> l2_dataflows;                 // L2 dataflow(s)
 };
 
 /* Brute-force */
@@ -67,6 +74,8 @@ public:
     // Optimizer APIs
     void run();                         // Run brute-force optimizing of all layers
     void run(const unsigned idx_);      // Run brute-force optimizing of the target layer
+    void print_stats();                 // Print stats
+    void print_csv();                   // Print csv
 
 private:
     // Optimizer private functions
@@ -76,20 +85,21 @@ private:
                 const dataflow_t l2_dataflow_);                     // Brute-force engine for multi-threading
     void sync_and_update(const dataflow_t l1_dataflow_,
                          const dataflow_t l2_dataflow_);            // Sync and update
-    void print_stats();                                             // Print stats
-    void print_csv();                                               // Print csv
     void energy_worker(const unsigned tid_, 
                        const mapping_table_t& init_mapping_,
+                       const mapping_space_t& mapping_space_,
                        const dataflow_t l1_dataflow_,
                        const dataflow_t l2_dataflow_,
                        std::mutex& m_);                             // Energy worker
     void cycle_worker(const unsigned tid_, 
                       const mapping_table_t& init_mapping_,
+                      const mapping_space_t& mapping_space_,
                       const dataflow_t l1_dataflow_,
                       const dataflow_t l2_dataflow_,
                       std::mutex& m_);                              // Cycle worker
     void edp_worker(const unsigned tid_, 
                     const mapping_table_t& init_mapping_,
+                    const mapping_space_t& mapping_space_,
                     const dataflow_t l1_dataflow_,
                     const dataflow_t l2_dataflow_,
                     std::mutex& m_);                                // EDP worker
@@ -98,54 +108,54 @@ private:
     const unsigned num_threads;                                     // # of threads
     uint64_t total_cnt;                                             // Total # of mapping space
     uint64_t valid_cnt;                                             // Total valid counts (global)
-    mapping_space_t mapping_space;                                  // Mapping space
     std::vector<std::pair<double, mapping_table_t>> best_mappings;  // Best mapping (with stat) per thread (global)
     std::vector<std::vector<mapping_table_t>> similar_mappings;     // Similar mappings per thread (global)
+    // Final
     double final_best_stat;                                         // Final best stat (energy, cycle, or edp)
     std::vector<mapping_table_t> final_best_mappings;               // Final best mappings 
     std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
 };
 
-/* Systematic */
-class systematic_t : public optimizer_t {
+/* Hierarchical */
+class hierarchical_t : public optimizer_t {
 public:
-    systematic_t(const std::string& acc_cfg_path_, 
-                 const std::string& net_cfg_path_, 
-                 const bool is_fixed_);                
-    ~systematic_t();
+    hierarchical_t(const std::string& acc_cfg_path_, 
+                   const std::string& net_cfg_path_, 
+                   const bool is_fixed_);                
+    ~hierarchical_t();
     // Optimizer APIs
-    void run();                         // Run systematic optimizing of all layers
-    void run(const unsigned idx_);      // Run systematic optimizing of the target layer
+    void run();                         // Run hierarchical optimizing of all layers
+    void run(const unsigned idx_);      // Run hierarchical optimizing of the target layer
+    void print_stats();                 // Print stats
+    void print_csv();                   // Print csv
 
 private:
-    void reset_variables();
-    void print_stats(const unsigned idx_);
-    // Mapping worker
+    // Optimizer private functions
+    void reset(const unsigned idx_);                                // Reset for the next dataflow or layer
+    void engine(const unsigned idx_,
+                const dataflow_t l1_dataflow_, 
+                const dataflow_t l2_dataflow_);                     // Hierarchical engine
+    void update(const dataflow_t l1_dataflow_,
+                const dataflow_t l2_dataflow_);                     // Update
     void worker(const unsigned seq_,
-                const unsigned top_k_,
                 const mapping_table_t& init_mapping_,
                 const mapping_space_t& mapping_space_,
-                const component_t start_,
-                const component_t end_,
                 const dataflow_t l1_dataflow_,
                 const dataflow_t l2_dataflow_,
-                uint64_t& valid_cnt_,
-                std::vector<mapping_table_t>& best_mappings_);
+                std::vector<mapping_table_t>& rtn_);                // Hierarchical worker (seq_: 0 (L2-DRAM) - 1 (L1-L2) - 2 (MAC-L1))
     // Variables & containers
-    unsigned used_levels;
-    std::vector<unsigned> static_top_k;
-    std::vector<unsigned> dynamic_top_k;
-    component_t start_component;
-    component_t end_component;
-    uint64_t num_permutations_first;
-    std::vector<uint64_t> num_permutations_second;
-    std::vector<uint64_t> num_permutations_third;
-    uint64_t valid_cnt_first;
-    std::vector<uint64_t> valid_cnt_second;
-    std::vector<uint64_t> valid_cnt_third;
-    std::vector<mapping_table_t> best_mappings_first;
-    std::vector<mapping_table_t> best_mappings_second;
-    std::vector<mapping_table_t> best_mappings_third;
+    component_t start_component;                                    // Current start component
+    component_t end_component;                                      // Current end component
+    std::vector<unsigned> used_levels;                              // # of the existent levels (not skipped levels)
+    std::vector<unsigned> top_k;                                    // Top k for each s-p level
+    std::vector<uint64_t> total_cnt;                                // Total # of mapping space: first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
+    std::vector<uint64_t> valid_cnt;                                // Total valid counts      : first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
+    std::vector<mapping_table_t> best_mappings;
+    // Final
+    unsigned final_best_idx;                                        // Final best mapping's index
+    double final_best_energy;                                       // Final best mapping's energy
+    std::vector<mapping_table_t> final_best_mappings;               // Final best mappings
+    std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
 };
 
 #endif

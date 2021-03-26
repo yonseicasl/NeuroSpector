@@ -45,13 +45,13 @@ int main(int argc, char **argv) {
     }
     // Optimizer
     else if(*argv[1] == 'O') {
-        // opt_type: "b-f-energy", "b-f-cycle", "b-f-edp", or "systematic"
+        // opt_type: "b-f-energy", "b-f-cycle", "b-f-edp", or "hierarchical"
         string opt_type_str(argv[4]);
         opt_type_t opt_type = opt_type_t::SIZE;
         if(opt_type_str.compare("b-f-energy") == 0) opt_type = opt_type_t::B_F_ENERGY;
         else if(opt_type_str.compare("b-f-cycle") == 0) opt_type = opt_type_t::B_F_CYCLE;
         else if(opt_type_str.compare("b-f-edp") == 0) opt_type = opt_type_t::B_F_EDP;
-        else if(opt_type_str.compare("systematic") == 0) opt_type = opt_type_t::SYSTEMATIC;
+        else if(opt_type_str.compare("hierarchical") == 0) opt_type = opt_type_t::HIERARCHICAL;
         else handler.print_err(err_type_t::INVAILD, "opt_type: b-f-energy, b-f-cycle, b-f-edp, or systematic");
         // num_threads: Multi-threading for brute-force (b-f-xxx)
         int num_threads = stoi(argv[5]);
@@ -64,8 +64,8 @@ int main(int argc, char **argv) {
         else if(is_fixed_str.compare("flexible") == 0) is_fixed = false;
         else handler.print_err(err_type_t::INVAILD, "dataflows: fixed or flexible");
         // Optimizer initialization
-        if(opt_type == opt_type_t::SYSTEMATIC) {
-            systematic_t * optimizer = new systematic_t(argv[2], argv[3], is_fixed);
+        if(opt_type == opt_type_t::HIERARCHICAL) {
+            hierarchical_t * optimizer = new hierarchical_t(argv[2], argv[3], is_fixed);
             // Start systematic optimizing
             if(argc == 8) {
                 unsigned layer_idx = stoi(argv[7]);
@@ -100,5 +100,6 @@ int main(int argc, char **argv) {
          << (finish - start) / 60 << " min "
          << (finish - start) % 60 << " sec ("
          << (finish - start) << ")" << endl;
+    handler.print_line(50, "*");
     return 0;
 }
