@@ -90,20 +90,30 @@ void hierarchical_t::run(const unsigned idx_) {
 void hierarchical_t::print_stats() {
     std::string df_str("IWO");
     handler.print_line(50, "*");
-//    std::cout << "# SEQ 0"<< std::endl;
-//    std::cout << "#       ORIGINAL PERMUTATIONS: " << original_space.get_num_permutations() << std::endl;
-//    std::cout << "#    L2-S2 TOTAL PERMUTATIONS: " << num_permutations_first << std::endl;
-//    std::cout << "#    L2-S2 VALID PERMUTATIONS: " << valid_cnt_first << std::endl;
-//    std::cout << "# SEQ 1" << std::endl;
-//    for(unsigned i = 0; i < num_permutations_second.size(); i++) {
-//        std::cout << "#    L1-S1 TOTAL PERMUTATIONS: " << num_permutations_second.at(i) << std::endl;
-//        std::cout << "#    L1-S1 VALID PERMUTATIONS: " << valid_cnt_second.at(i) << std::endl;
-//    }
-//    std::cout << "# SEQ 2" << std::endl;
-//    for(unsigned i = 0; i < num_permutations_third.size(); i++) {
-//        std::cout << "#   MAC-S0 TOTAL PERMUTATIONS: " << num_permutations_third.at(i) << std::endl;
-//        std::cout << "#   MAC-S0 VALID PERMUTATIONS: " << valid_cnt_third.at(i) << std::endl;
-//    }
+    std::cout << "# TOP K: " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+    handler.print_line(50, "*");
+    std::cout << "# SEQ 0 (L2-S2)"<< "\n"
+              << " - NUM OF TOTAL MAPPINGS  : " 
+              << std::setw(15) << total_cnt.at(0) << "\n"
+              << " - NUM OF VALID MAPPINGS  : " 
+              << std::setw(15) << valid_cnt.at(0) << std::endl;
+    std::cout << "# SEQ 1 (L1-S1)" << std::endl;
+    for(size_t i = 0; i < top_k.at(0); i++) {
+        std::cout << " - NUM OF TOTAL MAPPINGS  : " 
+                  << std::setw(15) << total_cnt.at(1 + i) << "\n"
+                  << " - NUM OF VALID MAPPINGS  : " 
+                  << std::setw(15) << valid_cnt.at(1 + i) << std::endl;
+    }
+    // TODO
+    if(used_levels.at(2) != 0) {
+        std::cout << "# SEQ 2 (MAC-S0)" << std::endl;
+        for(size_t i = 0; i < top_k.at(0) * top_k.at(1); i++) {
+            std::cout << " - NUM OF TOTAL MAPPINGS  : " 
+                      << std::setw(15) << total_cnt.at(1 + top_k.at(0) + i) << "\n"
+                      << " - NUM OF VALID MAPPINGS  : " 
+                      << std::setw(15) << valid_cnt.at(1 + top_k.at(0) + i) << std::endl;
+        }
+    }
     handler.print_line(50, "*");
     std::cout << "# BEST MAPPING TABLE "<< std::endl;
     std::cout << "# DATAFLOWS (L1-L2): " 
@@ -122,23 +132,32 @@ void hierarchical_t::print_stats() {
 void hierarchical_t::print_csv() {
     std::string df_str("IWO");
     handler.print_line(50, "*");
-//    std::cout << "# SEQ 0"<< std::endl;
-//    std::cout << "#,ORIGINAL,L2-S2 TOTAL,L2-S2 VALID\n" 
-//              << "," << original_space.get_num_permutations()
-//              << "," << num_permutations_first
-//              << "," << valid_cnt_first << std::endl;
-//    std::cout << "# SEQ 1" << std::endl;
-//    for(unsigned i = 0; i < num_permutations_second.size(); i++) {
-//        std::cout << "#,L1-S1 TOTAL,L1-S1 VALID\n"
-//                  << "," << num_permutations_second.at(i) 
-//                  << "," << valid_cnt_second.at(i) << std::endl;
-//    }
-//    std::cout << "# SEQ 2 " << std::endl;
-//    for(unsigned i = 0; i < num_permutations_third.size(); i++) {
-//        std::cout << "#,MAC-S0 TOTAL,MAC-S0 VALID\n"
-//                  << "," << num_permutations_third.at(i)
-//                  << "," << valid_cnt_third.at(i) << std::endl;
-//    }
+    std::cout << "# SEQ 0"<< std::endl;
+    handler.print_line(50, "*");
+    std::cout << "# TOP K: " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+    handler.print_line(50, "*");
+    std::cout << "# SEQ 0 (L2-S2)"<< "\n"
+              << " - NUM OF TOTAL MAPPINGS  : " 
+              << std::setw(15) << total_cnt.at(0) << "\n"
+              << " - NUM OF VALID MAPPINGS  : " 
+              << std::setw(15) << valid_cnt.at(0) << std::endl;
+    std::cout << "# SEQ 1 (L1-S1)" << std::endl;
+    for(size_t i = 0; i < top_k.at(0); i++) {
+        std::cout << " - NUM OF TOTAL MAPPINGS  : " 
+                  << std::setw(15) << total_cnt.at(1 + i) << "\n"
+                  << " - NUM OF VALID MAPPINGS  : " 
+                  << std::setw(15) << valid_cnt.at(1 + i) << std::endl;
+    }
+    // TODO
+    if(used_levels.at(2) != 0) {
+        std::cout << "# SEQ 2 (MAC-S0)" << std::endl;
+        for(size_t i = 0; i < top_k.at(0) * top_k.at(1); i++) {
+            std::cout << " - NUM OF TOTAL MAPPINGS  : " 
+                      << std::setw(15) << total_cnt.at(1 + top_k.at(0) + i) << "\n"
+                      << " - NUM OF VALID MAPPINGS  : " 
+                      << std::setw(15) << valid_cnt.at(1 + top_k.at(0) + i) << std::endl;
+        }
+    }
     handler.print_line(50, "*");
     std::cout << "# BEST MAPPING TABLE "<< std::endl;
     std::cout << "# DATAFLOWS (L1-L2): " 
