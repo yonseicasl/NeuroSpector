@@ -3,12 +3,12 @@
 # Configurations
 # acc_arg    : Accelerator specification (*.cfg)
 # net_arg    : DNN layer configuration (*.csv)
-# opt_type   : "b-f-energy", "b-f-cycle", "b-f-edp", or "systematic"
+# opt_type   : "b-f-energy", "b-f-cycle", "b-f-edp", "s-t", "t-s", or "hierarchical"
 # num_threads: Multi-threading for brute-force (b-f-xxx)
 # dataflows  : "fixed" or "flexible"
 acc_arg=configs/accelerators/eyeriss-like.cfg
 net_arg=configs/networks/alexnet.csv
-opt_type=b-f-energy
+opt_type=hierarchical
 num_threads=8
 dataflows=flexible
 

@@ -174,14 +174,14 @@ private:
     void engine(const unsigned idx_);                               // Pruning engine
     void update(const dataflow_t l1_dataflow_,
                 const dataflow_t l2_dataflow_);                     // Update final things
-    void spatial_worker(const unsigned tid_,
-                        const mapping_table_t& init_mapping_,
-                        const mapping_space_t& mapping_space_,
-                        std::mutex& m_);
-    void temporal_worker(const unsigned tid_,
-                         const mapping_table_t& init_mapping_,
-                         const mapping_space_t& mapping_space_,
-                         std::mutex& m_);
+    void spatial_first_worker(const unsigned tid_,
+                              const mapping_table_t& init_mapping_,
+                              const mapping_space_t& mapping_space_,
+                              std::mutex& m_);
+    void temporal_first_worker(const unsigned tid_,
+                               const mapping_table_t& init_mapping_,
+                               const mapping_space_t& mapping_space_,
+                               std::mutex& m_);
     // Variables & containers
     const opt_type_t opt_type;                                      // Opt type: s-t or t-s
     const unsigned num_threads;                                     // # of threads
@@ -189,8 +189,6 @@ private:
     unsigned num_temporal;
     std::vector<uint64_t> total_cnt;
     std::vector<uint64_t> valid_cnt;
-    std::vector<mapping_table_t> after_spatial;
-    std::vector<mapping_table_t> after_temporal;
     std::vector<mapping_table_t> best_mappings;
 };
 
