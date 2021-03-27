@@ -38,6 +38,10 @@ public:
                             const std::vector<unsigned>& container_, 
                             const component_t start_, 
                             const component_t end_);
+    void put_column_spatial_degrees(const parameter_t D, 
+                                    const std::vector<unsigned>& container_);
+    void put_column_temporal_degrees(const parameter_t D, 
+                                     const std::vector<unsigned>& container_);
     void swap_degrees(const std::vector<unsigned>& degrees_);
     std::vector<unsigned> get_degrees() const; 
     std::vector<unsigned> get_layer_values() const;

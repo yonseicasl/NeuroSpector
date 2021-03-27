@@ -385,12 +385,14 @@ void brute_force_t::energy_worker(const unsigned tid_,
         }
     }
     // Update global
-    m_.lock();
-    valid_cnt += local_valid_cnt;
-    m_.unlock();
-    best_mappings.at(tid_).first = local_min_energy;
-    best_mappings.at(tid_).second.swap_degrees(local_best_mapping.get_degrees());
-    similar_mappings.at(tid_).assign(local_similar_mappings.begin(), local_similar_mappings.end());
+    if(local_valid_cnt > 0) {
+        m_.lock();
+        valid_cnt += local_valid_cnt;
+        m_.unlock();
+        best_mappings.at(tid_).first = local_min_energy;
+        best_mappings.at(tid_).second.swap_degrees(local_best_mapping.get_degrees());
+        similar_mappings.at(tid_).assign(local_similar_mappings.begin(), local_similar_mappings.end());
+    }
     return;
 }
 
@@ -462,12 +464,14 @@ void brute_force_t::cycle_worker(const unsigned tid_,
         }
     }
     // Update global
-    m_.lock();
-    valid_cnt += local_valid_cnt;
-    m_.unlock();
-    best_mappings.at(tid_).first = local_min_cycle;
-    best_mappings.at(tid_).second.swap_degrees(local_best_mapping.get_degrees());
-    similar_mappings.at(tid_).assign(local_similar_mappings.begin(), local_similar_mappings.end());
+    if(local_valid_cnt > 0) {
+        m_.lock();
+        valid_cnt += local_valid_cnt;
+        m_.unlock();
+        best_mappings.at(tid_).first = local_min_cycle;
+        best_mappings.at(tid_).second.swap_degrees(local_best_mapping.get_degrees());
+        similar_mappings.at(tid_).assign(local_similar_mappings.begin(), local_similar_mappings.end());
+    }
     return;
 }
 
@@ -527,11 +531,13 @@ void brute_force_t::edp_worker(const unsigned tid_,
         }
     }
     // Update global
-    m_.lock();
-    valid_cnt += local_valid_cnt;
-    m_.unlock();
-    best_mappings.at(tid_).first = local_min_edp;
-    best_mappings.at(tid_).second.swap_degrees(local_best_mapping.get_degrees());
-    similar_mappings.at(tid_).assign(local_similar_mappings.begin(), local_similar_mappings.end());
+    if(local_valid_cnt > 0) {
+        m_.lock();
+        valid_cnt += local_valid_cnt;
+        m_.unlock();
+        best_mappings.at(tid_).first = local_min_edp;
+        best_mappings.at(tid_).second.swap_degrees(local_best_mapping.get_degrees());
+        similar_mappings.at(tid_).assign(local_similar_mappings.begin(), local_similar_mappings.end());
+    }
     return;
 }

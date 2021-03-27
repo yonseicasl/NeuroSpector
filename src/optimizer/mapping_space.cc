@@ -102,81 +102,87 @@ range_t::range_t(const unsigned tid_,
       start_r(0),
       end_r(layer_permutations_.at(6).size()) {
 
+    bool is_assigned = true;
     unsigned depth = 0;
-    unsigned num_works = 1;
+    unsigned max_num_works = 0;
+    unsigned local_num_threads = num_threads_;
 
     for(unsigned d = 0; d < layer_permutations_.size(); d++) {
         // KBPQCSR
-        num_works = layer_permutations_.at(d).size(); 
-        if(num_threads_ <= num_works) 
-            break;
-        depth++;
-    }
-
-    if(num_threads_ > num_works) {
-        std::cout << "# NUM OF THREADS MUST BE SMALLER THAN " << num_works << std::endl;
-        exit(1);
-    }
-
-    bool change = false;
-    unsigned div_first = floor((double(num_works) / num_threads_) + 0.5);
-    unsigned div_second = (double(num_works) / num_threads_) - (num_works / num_threads_) >= 0.5 ? div_first - 1 : div_first + 1;
-    unsigned start_idx = 0;
-    unsigned end_idx = 0;
-
-    for(unsigned tid = 0; tid < tid_ + 1; tid++) {
-        if(num_works % num_threads_ == 0) {
-            start_idx = tid * (num_works / num_threads_);
-            end_idx = (tid + 1) * (num_works / num_threads_);
+        if(max_num_works < layer_permutations_.at(d).size()) {
+            max_num_works = layer_permutations_.at(d).size(); 
+            depth = d;
         }
-        else {
-            if(!change 
-               && (num_works - tid * div_first) > (num_threads_ - tid) 
-               && (num_works - tid * div_first) % (num_threads_ - tid) != 0) {
-                start_idx = tid * div_first; 
-                end_idx = (tid + 1) * div_first;
+    }
+
+    if(num_threads_ > max_num_works) {
+        local_num_threads = max_num_works;
+        if(!(tid_ < max_num_works)) {
+            is_assigned = false;
+            end_k = 0; end_b = 0; end_p = 0; end_q = 0; end_c = 0; end_s = 0; end_r = 0;
+        }
+    }
+
+    if(is_assigned) {
+        bool change = false;
+        unsigned div_first = floor((double(max_num_works) / local_num_threads) + 0.5);
+        unsigned div_second = (double(max_num_works) / local_num_threads) - (max_num_works / local_num_threads) >= 0.5 ? div_first - 1 : div_first + 1;
+        unsigned start_idx = 0;
+        unsigned end_idx = 0;
+
+        for(unsigned tid = 0; tid < tid_ + 1; tid++) {
+            if(max_num_works % local_num_threads == 0) {
+                start_idx = tid * (max_num_works / local_num_threads);
+                end_idx = (tid + 1) * (max_num_works / local_num_threads);
             }
             else {
-                change = true;
-                start_idx = num_works - (num_threads_ - tid) * div_second; 
-                end_idx = num_works - (num_threads_ - tid - 1) * div_second; 
+                if(!change 
+                   && (max_num_works - tid * div_first) > (local_num_threads - tid) 
+                   && (max_num_works - tid * div_first) % (local_num_threads - tid) != 0) {
+                    start_idx = tid * div_first; 
+                    end_idx = (tid + 1) * div_first;
+                }
+                else {
+                    change = true;
+                    start_idx = max_num_works - (local_num_threads - tid) * div_second; 
+                    end_idx = max_num_works - (local_num_threads - tid - 1) * div_second; 
+                }
             }
         }
+        // Index adjustment
+        if(depth == 0) {
+            start_k = start_idx;
+            end_k = end_idx;
+        }
+        else if(depth == 1) {
+            start_b = start_idx;
+            end_b = end_idx;
+        }
+        else if(depth == 2) {
+            start_p = start_idx;
+            end_p = end_idx;
+        }
+        else if(depth == 3) {
+            start_q = start_idx;
+            end_q = end_idx;
+        }
+        else if(depth == 4) {
+            start_c = start_idx;
+            end_c = end_idx;
+        }
+        else if(depth == 5) {
+            start_s = start_idx;
+            end_s = end_idx;
+        }
+        else if(depth == 6) {
+            start_r = start_idx;
+            end_r = end_idx;
+        }
+        else {
+            std::cout << "# DEPTH ERROR" << std::endl;
+            exit(1);
+        }
     }
-    // Index adjustment
-    if(depth == 0) {
-        start_k = start_idx;
-        end_k = end_idx;
-    }
-    else if(depth == 1) {
-        start_b = start_idx;
-        end_b = end_idx;
-    }
-    else if(depth == 2) {
-        start_p = start_idx;
-        end_p = end_idx;
-    }
-    else if(depth == 3) {
-        start_q = start_idx;
-        end_q = end_idx;
-    }
-    else if(depth == 4) {
-        start_c = start_idx;
-        end_c = end_idx;
-    }
-    else if(depth == 5) {
-        start_s = start_idx;
-        end_s = end_idx;
-    }
-    else if(depth == 6) {
-        start_r = start_idx;
-        end_r = end_idx;
-    }
-    else {
-        std::cout << "# DEPTH ERROR" << std::endl;
-        exit(1);
-    }
-    std::string str = "KBPQCSR";
 }
 
 range_t::~range_t() {

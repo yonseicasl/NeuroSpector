@@ -18,13 +18,13 @@ hierarchical_t::hierarchical_t(const std::string& acc_cfg_path_,
     used_levels.assign(SEQ_MAX, 0);
     for(unsigned row = 1; row < U_size; row++) {
         // SEQ 2: MAC-L1
-        if(row == 1 && exists.at(row))
+        if(row == static_cast<unsigned>(component_t::S0) && exists.at(row))
             used_levels.at(2)++;
         // SEQ 1: L1-L2
-        if((row == 2 || row == 3 || row == 4) && exists.at(row))
+        if((row == static_cast<unsigned>(component_t::L1) || row == static_cast<unsigned>(component_t::S1_X) || row == static_cast<unsigned>(component_t::S1_Y)) && exists.at(row))
             used_levels.at(1)++;
         // SEQ 0: L2-DRAM
-        if((row == 5 || row == 6) && exists.at(row))
+        if((row == static_cast<unsigned>(component_t::L2) || row == static_cast<unsigned>(component_t::S2)) && exists.at(row))
             used_levels.at(0)++;
     }
     // Initialze top_k
@@ -269,6 +269,7 @@ void hierarchical_t::engine(const unsigned idx_,
                 best_mappings.assign(rtn_first.begin(), rtn_first.end());
         }
     }
+    return;
 }
 
 void hierarchical_t::update(const dataflow_t l1_dataflow_,

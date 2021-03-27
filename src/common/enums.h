@@ -40,7 +40,7 @@ enum class component_t {
 
 /* Optimizer types */
 enum class opt_type_t {
-    B_F_ENERGY, B_F_CYCLE, B_F_EDP, HIERARCHICAL, SIZE
+    B_F_ENERGY, B_F_CYCLE, B_F_EDP, S_T, T_S, HIERARCHICAL, SIZE
 };
 
 #endif

@@ -26,17 +26,12 @@ public:
                 const bool is_fixed_);                  
     virtual ~optimizer_t();
     // Optimizer APIs
-    virtual void run();
-    virtual void run(const unsigned idx_);
-    virtual void print_stats();
-    virtual void print_csv();
+    virtual void run();                         // Run optimizing of all layers
+    virtual void run(const unsigned idx_);      // Run optimizing of the target layer
+    virtual void print_stats();                 // Print stats
+    virtual void print_csv();                   // Print csv
 
 protected:
-    // Optimizer private functions
-    virtual void reset(const unsigned idx_);
-    virtual void engine(const unsigned idx_,
-                        const dataflow_t l1_dataflow_, 
-                        const dataflow_t l2_dataflow_); 
     // Initialze dataflows
     void init_dataflows();
     // Check each mapping table with the accelerator
@@ -72,10 +67,10 @@ public:
                   const bool is_fixed_);                
     ~brute_force_t();
     // Optimizer APIs
-    void run();                         // Run brute-force optimizing of all layers
-    void run(const unsigned idx_);      // Run brute-force optimizing of the target layer
-    void print_stats();                 // Print stats
-    void print_csv();                   // Print csv
+    void run();
+    void run(const unsigned idx_);
+    void print_stats();
+    void print_csv();                   
 
 private:
     // Optimizer private functions
@@ -124,10 +119,10 @@ public:
                    const bool is_fixed_);                
     ~hierarchical_t();
     // Optimizer APIs
-    void run();                         // Run hierarchical optimizing of all layers
-    void run(const unsigned idx_);      // Run hierarchical optimizing of the target layer
-    void print_stats();                 // Print stats
-    void print_csv();                   // Print csv
+    void run();
+    void run(const unsigned idx_);
+    void print_stats();
+    void print_csv();
 
 private:
     // Optimizer private functions
@@ -136,7 +131,7 @@ private:
                 const dataflow_t l1_dataflow_, 
                 const dataflow_t l2_dataflow_);                     // Hierarchical engine
     void update(const dataflow_t l1_dataflow_,
-                const dataflow_t l2_dataflow_);                     // Update
+                const dataflow_t l2_dataflow_);                     // Update final things
     void worker(const unsigned seq_,
                 const mapping_table_t& init_mapping_,
                 const mapping_space_t& mapping_space_,
@@ -156,6 +151,47 @@ private:
     double final_best_energy;                                       // Final best mapping's energy
     std::vector<mapping_table_t> final_best_mappings;               // Final best mappings
     std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
+};
+
+/* Pruning (s-t or t-s) */
+class pruning_t : public optimizer_t {
+public:
+    pruning_t(const std::string& acc_cfg_path_, 
+              const std::string& net_cfg_path_, 
+              const opt_type_t opt_type_, 
+              const unsigned num_threads_,
+              const bool is_fixed_);                
+    ~pruning_t();
+    // Optimizer APIs
+    void run();
+    void run(const unsigned idx_);
+    void print_stats();
+    void print_csv();
+
+private:
+    // Optimizer private functions
+    void reset(const unsigned idx_);                                // Reset for the next dataflow or layer
+    void engine(const unsigned idx_);                               // Pruning engine
+    void update(const dataflow_t l1_dataflow_,
+                const dataflow_t l2_dataflow_);                     // Update final things
+    void spatial_worker(const unsigned tid_,
+                        const mapping_table_t& init_mapping_,
+                        const mapping_space_t& mapping_space_,
+                        std::mutex& m_);
+    void temporal_worker(const unsigned tid_,
+                         const mapping_table_t& init_mapping_,
+                         const mapping_space_t& mapping_space_,
+                         std::mutex& m_);
+    // Variables & containers
+    const opt_type_t opt_type;                                      // Opt type: s-t or t-s
+    const unsigned num_threads;                                     // # of threads
+    unsigned num_spatial;
+    unsigned num_temporal;
+    std::vector<uint64_t> total_cnt;
+    std::vector<uint64_t> valid_cnt;
+    std::vector<mapping_table_t> after_spatial;
+    std::vector<mapping_table_t> after_temporal;
+    std::vector<mapping_table_t> best_mappings;
 };
 
 #endif

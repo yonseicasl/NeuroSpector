@@ -62,17 +62,6 @@ void optimizer_t::print_csv() {
     return;
 }
 
-// Optimizer private functions
-void optimizer_t::reset(const unsigned idx_) {
-    return;
-}
-
-void optimizer_t::engine(const unsigned idx_,
-                         const dataflow_t l1_dataflow_, 
-                         const dataflow_t l2_dataflow_) {
-    return;
-}
-
 // Initialze dataflows
 void optimizer_t::init_dataflows() {
     // For flexible dataflows
