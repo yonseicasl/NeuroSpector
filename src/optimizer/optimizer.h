@@ -18,6 +18,10 @@
 #include "mapping_table.h"
 #include "stats.h"
 
+#define L1_THRESHOLD 0.8
+#define S1_THRESHOLD 0.8
+#define L2_THRESHOLD 0.8
+
 /* Optimizer */
 class optimizer_t {
 public:

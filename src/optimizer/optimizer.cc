@@ -160,7 +160,9 @@ bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
     bool validity = true;
     unsigned shared_tile_size = 0; 
     switch(accelerator->l1_type()) {
-        case buffer_type_t::NONE: break;
+        case buffer_type_t::NONE: 
+            return validity; 
+            break;
         case buffer_type_t::SEPARATED: 
             if(!accelerator->l1_input_bypass() && mapping_table_.get_input_tile_size(component_t::L1) > accelerator->l1_input_size())
                 validity = false;
@@ -168,6 +170,7 @@ bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
                 validity = false;
             if(!accelerator->l1_output_bypass() && mapping_table_.get_output_tile_size(component_t::L1) > accelerator->l1_output_size())
                 validity = false;
+            return validity; 
             break;
         case buffer_type_t::SHARED: 
             shared_tile_size = mapping_table_.get_input_tile_size(component_t::L1) 
@@ -199,6 +202,10 @@ bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
             break;
         default: handler.print_err(err_type_t::INVAILD, "L1 TYPE"); break;
     } 
+    // Utilization threshold for shared buffers
+    float utilization = float(shared_tile_size) / accelerator->l1_shared_size();
+    if(utilization < L1_THRESHOLD)
+        validity = false;
     return validity;
 }     
 
@@ -208,6 +215,9 @@ bool optimizer_t::s1_x_validity(const mapping_table_t& mapping_table_) const {
     for(unsigned column = 0; column < D_size; column++)
         s1_size_x_val *= mapping_table_.get_degree(static_cast<parameter_t>(column), component_t::S1_X);
     if(s1_size_x_val > accelerator->s1_size_x()) 
+        validity = false;
+    float utilization = float(s1_size_x_val) / accelerator->s1_size_x();
+    if(utilization < S1_THRESHOLD)
         validity = false;
     return validity;
 }     
@@ -219,6 +229,9 @@ bool optimizer_t::s1_y_validity(const mapping_table_t& mapping_table_) const {
         s1_size_y_val *= mapping_table_.get_degree(static_cast<parameter_t>(column), component_t::S1_Y);
     if(s1_size_y_val > accelerator->s1_size_y()) 
         validity = false;
+    float utilization = float(s1_size_y_val) / accelerator->s1_size_y();
+    if(utilization < S1_THRESHOLD)
+        validity = false;
     return validity;
 }     
 
@@ -226,7 +239,9 @@ bool optimizer_t::l2_validity(const mapping_table_t& mapping_table_) const {
     bool validity = true;
     unsigned shared_tile_size = 0; 
     switch(accelerator->l2_type()) {
-        case buffer_type_t::NONE: break;
+        case buffer_type_t::NONE: 
+            return validity;
+            break;
         case buffer_type_t::SEPARATED: 
             if(!accelerator->l2_input_bypass() && mapping_table_.get_input_tile_size(component_t::L2) > accelerator->l2_input_size())
                 validity = false;
@@ -234,6 +249,7 @@ bool optimizer_t::l2_validity(const mapping_table_t& mapping_table_) const {
                 validity = false;
             if(!accelerator->l2_output_bypass() && mapping_table_.get_output_tile_size(component_t::L2) > accelerator->l2_output_size())
                 validity = false;
+            return validity;
             break;
         case buffer_type_t::SHARED: 
             shared_tile_size = mapping_table_.get_input_tile_size(component_t::L2) 
@@ -265,6 +281,10 @@ bool optimizer_t::l2_validity(const mapping_table_t& mapping_table_) const {
             break;
         default: handler.print_err(err_type_t::INVAILD, "L2 TYPE"); break;
     } 
+    // Utilization threshold for shared buffers
+    float utilization = float(shared_tile_size) / accelerator->l2_shared_size();
+    if(utilization < L2_THRESHOLD)
+        validity = false;
     return validity;
 }     
 
