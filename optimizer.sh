@@ -6,7 +6,7 @@
 # opt_type   : "b-f-energy", "b-f-cycle", "b-f-edp", "s-t", "t-s", or "hierarchical"
 # num_threads: Multi-threading for brute-force (b-f-xxx)
 # dataflows  : "fixed" or "flexible"
-acc_arg=configs/accelerators/eyeriss-like.cfg
+acc_arg=configs/accelerators/eyeriss.cfg
 net_arg=configs/networks/alexnet.csv
 opt_type=hierarchical
 num_threads=8
