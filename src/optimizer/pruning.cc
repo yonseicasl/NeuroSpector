@@ -186,48 +186,49 @@ void pruning_t::spatial_first_worker(const unsigned tid_,
     uint64_t local_temporal_valid_cnt = 0;
     uint64_t local_temporal_total_cnt = 0;
     //std::vector<mapping_table_t> local_best_mappings;
-    // Current mapping table
-    mapping_table_t curr_mapping(init_mapping_);
+    // Current spatial mapping table
+    mapping_table_t curr_spatial_mapping(init_mapping_);
     // Thread index adjustment
     range_t range(tid_, num_threads, mapping_space_.get_layer_permutations());
     // Start spatial mapping first
     for(size_t k = range.start_k; k < range.end_k; k++) {
-        curr_mapping.put_column_spatial_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k));
+        curr_spatial_mapping.put_column_spatial_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k));
         for(size_t b = range.start_b; b < range.end_b; b++) {
-            curr_mapping.put_column_spatial_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b));
+            curr_spatial_mapping.put_column_spatial_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b));
             for(size_t p = range.start_p; p < range.end_p; p++) {
-                curr_mapping.put_column_spatial_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p));
+                curr_spatial_mapping.put_column_spatial_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p));
                 for(size_t q = range.start_q; q < range.end_q; q++) {
-                    curr_mapping.put_column_spatial_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q));
+                    curr_spatial_mapping.put_column_spatial_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q));
                     for(size_t c = range.start_c; c < range.end_c; c++) {
-                        curr_mapping.put_column_spatial_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c));
+                        curr_spatial_mapping.put_column_spatial_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c));
                         for(size_t s = range.start_s; s < range.end_s; s++) {
-                            curr_mapping.put_column_spatial_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s));
+                            curr_spatial_mapping.put_column_spatial_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s));
                             for(size_t r = range.start_r; r < range.end_r; r++) {
-                                curr_mapping.put_column_spatial_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r));
+                                curr_spatial_mapping.put_column_spatial_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r));
                                 // Spatial validity check
-                                if(check_validity(component_t::S1_X, curr_mapping)) {
+                                if(check_validity(component_t::S1_X, curr_spatial_mapping)) {
                                     local_spatial_valid_cnt++;
                                     // Temporal mapping space generation
-                                    mapping_space_t temporal_mapping_space(num_temporal + 1, curr_mapping.get_row_degrees(component_t::DRAM));
+                                    mapping_space_t temporal_mapping_space(num_temporal + 1, curr_spatial_mapping.get_row_degrees(component_t::DRAM));
                                     local_temporal_total_cnt += temporal_mapping_space.get_num_permutations();
+                                    mapping_table_t curr_temporal_mapping(curr_spatial_mapping);
                                     // Start temporal mapping second
                                     for(size_t k = 0; k < temporal_mapping_space.get_permutations(0).size(); k++) {
-                                        curr_mapping.put_column_temporal_degrees(parameter_t::K, temporal_mapping_space.get_permutations(0).at(k));
+                                        curr_temporal_mapping.put_column_temporal_degrees(parameter_t::K, temporal_mapping_space.get_permutations(0).at(k));
                                         for(size_t b = 0; b < temporal_mapping_space.get_permutations(1).size(); b++) {
-                                            curr_mapping.put_column_temporal_degrees(parameter_t::B, temporal_mapping_space.get_permutations(1).at(b));
+                                            curr_temporal_mapping.put_column_temporal_degrees(parameter_t::B, temporal_mapping_space.get_permutations(1).at(b));
                                             for(size_t p = 0; p < temporal_mapping_space.get_permutations(2).size(); p++) {
-                                                curr_mapping.put_column_temporal_degrees(parameter_t::P, temporal_mapping_space.get_permutations(2).at(p));
+                                                curr_temporal_mapping.put_column_temporal_degrees(parameter_t::P, temporal_mapping_space.get_permutations(2).at(p));
                                                 for(size_t q = 0; q < temporal_mapping_space.get_permutations(3).size(); q++) {
-                                                    curr_mapping.put_column_temporal_degrees(parameter_t::Q, temporal_mapping_space.get_permutations(3).at(q));
+                                                    curr_temporal_mapping.put_column_temporal_degrees(parameter_t::Q, temporal_mapping_space.get_permutations(3).at(q));
                                                     for(size_t c = 0; c < temporal_mapping_space.get_permutations(4).size(); c++) {
-                                                        curr_mapping.put_column_temporal_degrees(parameter_t::C, temporal_mapping_space.get_permutations(4).at(c));
+                                                        curr_temporal_mapping.put_column_temporal_degrees(parameter_t::C, temporal_mapping_space.get_permutations(4).at(c));
                                                         for(size_t s = 0; s < temporal_mapping_space.get_permutations(5).size(); s++) {
-                                                            curr_mapping.put_column_temporal_degrees(parameter_t::S, temporal_mapping_space.get_permutations(5).at(s));
+                                                            curr_temporal_mapping.put_column_temporal_degrees(parameter_t::S, temporal_mapping_space.get_permutations(5).at(s));
                                                             for(size_t r = 0; r < temporal_mapping_space.get_permutations(6).size(); r++) {
-                                                                curr_mapping.put_column_temporal_degrees(parameter_t::R, temporal_mapping_space.get_permutations(6).at(r));
+                                                                curr_temporal_mapping.put_column_temporal_degrees(parameter_t::R, temporal_mapping_space.get_permutations(6).at(r));
                                                                 // Temporal validity check
-                                                                if(check_validity(component_t::L1, curr_mapping) && check_validity(component_t::L2, curr_mapping)) {
+                                                                if(check_validity(component_t::L1, curr_temporal_mapping) && check_validity(component_t::L2, curr_temporal_mapping)) {
                                                                     local_temporal_valid_cnt++;
                                                                 }
                                                             }
@@ -263,48 +264,49 @@ void pruning_t::temporal_first_worker(const unsigned tid_,
     uint64_t local_spatial_total_cnt = 0;
     uint64_t local_temporal_valid_cnt = 0;
     //std::vector<mapping_table_t> local_best_mappings;
-    // Current mapping table
-    mapping_table_t curr_mapping(init_mapping_);
+    // Current temporal mapping table
+    mapping_table_t curr_temporal_mapping(init_mapping_);
     // Thread index adjustment
     range_t range(tid_, num_threads, mapping_space_.get_layer_permutations());
     // Start temporal mapping first
     for(size_t k = range.start_k; k < range.end_k; k++) {
-        curr_mapping.put_column_temporal_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k));
+        curr_temporal_mapping.put_column_temporal_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k));
         for(size_t b = range.start_b; b < range.end_b; b++) {
-            curr_mapping.put_column_temporal_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b));
+            curr_temporal_mapping.put_column_temporal_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b));
             for(size_t p = range.start_p; p < range.end_p; p++) {
-                curr_mapping.put_column_temporal_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p));
+                curr_temporal_mapping.put_column_temporal_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p));
                 for(size_t q = range.start_q; q < range.end_q; q++) {
-                    curr_mapping.put_column_temporal_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q));
+                    curr_temporal_mapping.put_column_temporal_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q));
                     for(size_t c = range.start_c; c < range.end_c; c++) {
-                        curr_mapping.put_column_temporal_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c));
+                        curr_temporal_mapping.put_column_temporal_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c));
                         for(size_t s = range.start_s; s < range.end_s; s++) {
-                            curr_mapping.put_column_temporal_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s));
+                            curr_temporal_mapping.put_column_temporal_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s));
                             for(size_t r = range.start_r; r < range.end_r; r++) {
-                                curr_mapping.put_column_temporal_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r));
+                                curr_temporal_mapping.put_column_temporal_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r));
                                 // Tempor validity check
-                                if(check_validity(component_t::L1, curr_mapping) && check_validity(component_t::L2, curr_mapping)) {
+                                if(check_validity(component_t::L1, curr_temporal_mapping) && check_validity(component_t::L2, curr_temporal_mapping)) {
                                     local_temporal_valid_cnt++;
                                     // Spatial mapping space generation
-                                    mapping_space_t spatial_mapping_space(num_spatial + 1, curr_mapping.get_row_degrees(component_t::DRAM));
+                                    mapping_space_t spatial_mapping_space(num_spatial + 1, curr_temporal_mapping.get_row_degrees(component_t::DRAM));
                                     local_spatial_total_cnt += spatial_mapping_space.get_num_permutations();
+                                    mapping_table_t curr_spatial_mapping(curr_temporal_mapping);
                                     // Start spatial mapping second
                                     for(size_t k = 0; k < spatial_mapping_space.get_permutations(0).size(); k++) {
-                                        curr_mapping.put_column_spatial_degrees(parameter_t::K, spatial_mapping_space.get_permutations(0).at(k));
+                                        curr_spatial_mapping.put_column_spatial_degrees(parameter_t::K, spatial_mapping_space.get_permutations(0).at(k));
                                         for(size_t b = 0; b < spatial_mapping_space.get_permutations(1).size(); b++) {
-                                            curr_mapping.put_column_spatial_degrees(parameter_t::B, spatial_mapping_space.get_permutations(1).at(b));
+                                            curr_spatial_mapping.put_column_spatial_degrees(parameter_t::B, spatial_mapping_space.get_permutations(1).at(b));
                                             for(size_t p = 0; p < spatial_mapping_space.get_permutations(2).size(); p++) {
-                                                curr_mapping.put_column_spatial_degrees(parameter_t::P, spatial_mapping_space.get_permutations(2).at(p));
+                                                curr_spatial_mapping.put_column_spatial_degrees(parameter_t::P, spatial_mapping_space.get_permutations(2).at(p));
                                                 for(size_t q = 0; q < spatial_mapping_space.get_permutations(3).size(); q++) {
-                                                    curr_mapping.put_column_spatial_degrees(parameter_t::Q, spatial_mapping_space.get_permutations(3).at(q));
+                                                    curr_spatial_mapping.put_column_spatial_degrees(parameter_t::Q, spatial_mapping_space.get_permutations(3).at(q));
                                                     for(size_t c = 0; c < spatial_mapping_space.get_permutations(4).size(); c++) {
-                                                        curr_mapping.put_column_spatial_degrees(parameter_t::C, spatial_mapping_space.get_permutations(4).at(c));
+                                                        curr_spatial_mapping.put_column_spatial_degrees(parameter_t::C, spatial_mapping_space.get_permutations(4).at(c));
                                                         for(size_t s = 0; s < spatial_mapping_space.get_permutations(5).size(); s++) {
-                                                            curr_mapping.put_column_spatial_degrees(parameter_t::S, spatial_mapping_space.get_permutations(5).at(s));
+                                                            curr_spatial_mapping.put_column_spatial_degrees(parameter_t::S, spatial_mapping_space.get_permutations(5).at(s));
                                                             for(size_t r = 0; r < spatial_mapping_space.get_permutations(6).size(); r++) {
-                                                                curr_mapping.put_column_spatial_degrees(parameter_t::R, spatial_mapping_space.get_permutations(6).at(r));
+                                                                curr_spatial_mapping.put_column_spatial_degrees(parameter_t::R, spatial_mapping_space.get_permutations(6).at(r));
                                                                 // Spatial validity check
-                                                                if(check_validity(component_t::S1_X, curr_mapping)) {
+                                                                if(check_validity(component_t::S1_X, curr_spatial_mapping)) {
                                                                     local_spatial_valid_cnt++;
                                                                 }
                                                             }

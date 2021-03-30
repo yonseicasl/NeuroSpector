@@ -202,23 +202,32 @@ void mapping_table_t::put_column_degrees(const parameter_t D,
 void mapping_table_t::put_column_spatial_degrees(const parameter_t D, 
                                                  const std::vector<unsigned>& container_) {
     unsigned exists_cnt = 0;
-    for(unsigned row = 0; row < U_size; row++) {
-        if((row == static_cast<unsigned>(component_t::S1_X) || row == static_cast<unsigned>(component_t::S1_Y) || row == static_cast<unsigned>(component_t::DRAM)) && exists.at(row)) {
-            degrees.at(static_cast<unsigned>(D) + D_size * row) = container_.at(exists_cnt);
-            exists_cnt++;
-        }
+    if(exists.at(static_cast<unsigned>(component_t::S1_X))) {
+        degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::S1_X)) = container_.at(exists_cnt);
+        exists_cnt++;
     }
+    if(exists.at(static_cast<unsigned>(component_t::S1_Y))) {
+        degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::S1_Y)) = container_.at(exists_cnt);
+        exists_cnt++;
+    }
+    if(exists.at(static_cast<unsigned>(component_t::DRAM))) 
+        degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::DRAM)) = container_.at(exists_cnt);
     return;
 }
+
 void mapping_table_t::put_column_temporal_degrees(const parameter_t D, 
                                                   const std::vector<unsigned>& container_) {
     unsigned exists_cnt = 0;
-    for(unsigned row = 0; row < U_size; row++) {
-        if((row == static_cast<unsigned>(component_t::L1) || row == static_cast<unsigned>(component_t::L2) || row == static_cast<unsigned>(component_t::DRAM)) && exists.at(row)) {
-            degrees.at(static_cast<unsigned>(D) + D_size * row) = container_.at(exists_cnt);
-            exists_cnt++;
-        }
+    if(exists.at(static_cast<unsigned>(component_t::L1))) {
+        degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::L1)) = container_.at(exists_cnt);
+        exists_cnt++;
     }
+    if(exists.at(static_cast<unsigned>(component_t::L2))) {
+        degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::L2)) = container_.at(exists_cnt);
+        exists_cnt++;
+    }
+    if(exists.at(static_cast<unsigned>(component_t::DRAM))) 
+        degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::DRAM)) = container_.at(exists_cnt);
     return;
 }
 

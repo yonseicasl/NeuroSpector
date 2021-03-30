@@ -2,7 +2,7 @@
 
 #define SEQ_MAX 3
 #define TOP_K_FIRST 3
-#define TOP_K_SECOND 4
+#define TOP_K_SECOND 3
 #define TOP_K_THIRD 3
 
 static handler_t handler;
@@ -329,8 +329,8 @@ void hierarchical_t::worker(const unsigned seq_,
     std::map<double, mapping_table_t> local_best_mappings;
     local_best_mappings.insert(std::make_pair(DBL_MAX, init_mapping_));
     // Current mapping table
-    mapping_table_t curr_mapping(init_mapping_);
     // Start finding best mappings
+    mapping_table_t curr_mapping(init_mapping_);
     for(size_t k = 0; k < mapping_space_.get_permutations(0).size(); k++) {
         curr_mapping.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_component, end_component);
         for(size_t b = 0; b < mapping_space_.get_permutations(1).size(); b++) {
