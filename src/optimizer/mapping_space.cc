@@ -90,19 +90,19 @@ range_t::range_t(const unsigned tid_,
     : start_g(0),
       end_g(layer_permutations_.at(0).size()),
       start_k(0),
-      end_k(layer_permutations_.at(0).size()),
+      end_k(layer_permutations_.at(1).size()),
       start_b(0),
-      end_b(layer_permutations_.at(1).size()),
+      end_b(layer_permutations_.at(2).size()),
       start_p(0),
-      end_p(layer_permutations_.at(2).size()),
+      end_p(layer_permutations_.at(3).size()),
       start_q(0),
-      end_q(layer_permutations_.at(3).size()),
+      end_q(layer_permutations_.at(4).size()),
       start_c(0),
-      end_c(layer_permutations_.at(4).size()),
+      end_c(layer_permutations_.at(5).size()),
       start_s(0),
-      end_s(layer_permutations_.at(5).size()),
+      end_s(layer_permutations_.at(6).size()),
       start_r(0),
-      end_r(layer_permutations_.at(6).size()) {
+      end_r(layer_permutations_.at(7).size()) {
 
     bool is_assigned = true;
     unsigned depth = 0;
