@@ -25,7 +25,7 @@ mapping_space_t::~mapping_space_t() {
 
 void mapping_space_t::print_permutations() const {
     std::cout << "**** PERMUTATIONS ****" << std::endl;
-    std::string str = "KBPQCSR";
+    std::string str = "GKBPQCSR";
     for(unsigned i = 0; i < layer_permutations.size(); i++) {
         std::cout << str.at(i) << ": "<< layer_permutations.at(i).size() << " PERMUTATIONS\n"; 
         for(unsigned j = 0; j < layer_permutations.at(i).size(); j++) {
@@ -87,7 +87,9 @@ void mapping_space_t::get_permutations(const unsigned idx_, const unsigned val_,
 range_t::range_t(const unsigned tid_, 
                  const unsigned num_threads_,
                  const std::vector<std::vector<std::vector<unsigned>>>& layer_permutations_) 
-    : start_k(0),
+    : start_g(0),
+      end_g(layer_permutations_.at(0).size()),
+      start_k(0),
       end_k(layer_permutations_.at(0).size()),
       start_b(0),
       end_b(layer_permutations_.at(1).size()),
@@ -119,7 +121,7 @@ range_t::range_t(const unsigned tid_,
         local_num_threads = max_num_works;
         if(!(tid_ < max_num_works)) {
             is_assigned = false;
-            end_k = 0; end_b = 0; end_p = 0; end_q = 0; end_c = 0; end_s = 0; end_r = 0;
+            end_g = 0; end_k = 0; end_b = 0; end_p = 0; end_q = 0; end_c = 0; end_s = 0; end_r = 0;
         }
     }
 
@@ -151,30 +153,34 @@ range_t::range_t(const unsigned tid_,
         }
         // Index adjustment
         if(depth == 0) {
+            start_g = start_idx;
+            end_g = end_idx;
+        }
+        else if(depth == 1) {
             start_k = start_idx;
             end_k = end_idx;
         }
-        else if(depth == 1) {
+        else if(depth == 2) {
             start_b = start_idx;
             end_b = end_idx;
         }
-        else if(depth == 2) {
+        else if(depth == 3) {
             start_p = start_idx;
             end_p = end_idx;
         }
-        else if(depth == 3) {
+        else if(depth == 4) {
             start_q = start_idx;
             end_q = end_idx;
         }
-        else if(depth == 4) {
+        else if(depth == 5) {
             start_c = start_idx;
             end_c = end_idx;
         }
-        else if(depth == 5) {
+        else if(depth == 6) {
             start_s = start_idx;
             end_s = end_idx;
         }
-        else if(depth == 6) {
+        else if(depth == 7) {
             start_r = start_idx;
             end_r = end_idx;
         }

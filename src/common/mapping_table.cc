@@ -3,11 +3,13 @@
 static handler_t handler;
 
 /* Mapping table */
-mapping_table_t::mapping_table_t(const std::vector<bool>& exists_, 
+mapping_table_t::mapping_table_t(const bool is_grouped_,
+                                 const std::vector<bool>& exists_, 
                                  const std::string& layer_name_, 
                                  const std::vector<unsigned>& layer_values_, 
                                  const unsigned stride_)
-    : D_size(static_cast<unsigned>(parameter_t::SIZE)),
+    : is_grouped(is_grouped_), 
+      D_size(static_cast<unsigned>(parameter_t::SIZE)),
       U_size(static_cast<unsigned>(component_t::SIZE)), 
       stride(stride_), 
       exists(exists_),
@@ -16,24 +18,47 @@ mapping_table_t::mapping_table_t(const std::vector<bool>& exists_,
       layer_name(layer_name_) {
     if(layer_values.size() != D_size)
         handler.print_err(err_type_t::INVAILD, "# of layer values");
+    if(is_grouped) {
+        if(!(layer_values.at(static_cast<unsigned>(parameter_t::G)) > 1))
+            handler.print_err(err_type_t::INVAILD, "G must be larger than 1");
+        if(layer_values.at(static_cast<unsigned>(parameter_t::G)) > layer_values.at(static_cast<unsigned>(parameter_t::K)) || 
+           layer_values.at(static_cast<unsigned>(parameter_t::K)) % layer_values.at(static_cast<unsigned>(parameter_t::G)) != 0)
+            handler.print_err(err_type_t::INVAILD, "K must be divisible by G");
+        if(layer_values.at(static_cast<unsigned>(parameter_t::G)) > layer_values.at(static_cast<unsigned>(parameter_t::C)) || 
+           layer_values.at(static_cast<unsigned>(parameter_t::C)) % layer_values.at(static_cast<unsigned>(parameter_t::G)) != 0)
+            handler.print_err(err_type_t::INVAILD, "C must be divisible by G");
+        if(layer_name.find("DEPTH") != std::string::npos && 
+           layer_values.at(static_cast<unsigned>(parameter_t::C)) != layer_values.at(static_cast<unsigned>(parameter_t::G)))
+            handler.print_err(err_type_t::INVAILD, "Depth-wise layer must be C=G");
+        // Divide by G
+        layer_values.at(static_cast<unsigned>(parameter_t::K)) /= layer_values.at(static_cast<unsigned>(parameter_t::G));
+        layer_values.at(static_cast<unsigned>(parameter_t::C)) /= layer_values.at(static_cast<unsigned>(parameter_t::G));
+    }
+    else {
+        if(layer_values.at(static_cast<unsigned>(parameter_t::G)) == 1)
+            handler.print_err(err_type_t::INVAILD, "G must be 1");
+    }
 }
 
+mapping_table_t::~mapping_table_t() {
+
+}
+
+// Copy constructor
 mapping_table_t::mapping_table_t(const mapping_table_t& rhs_) 
-    : D_size(rhs_.D_size),
+    : is_grouped(rhs_.is_grouped), 
+      D_size(rhs_.D_size),
       U_size(rhs_.U_size), 
       stride(rhs_.stride), 
       exists(rhs_.exists),
       layer_values(rhs_.layer_values),
       degrees(rhs_.degrees), 
       layer_name(rhs_.layer_name) {
-}
 
-mapping_table_t::~mapping_table_t() {
 }
 
 // Initialization APIs
 void mapping_table_t::init_degrees(const std::vector<unsigned>& src_) {
-    // TODO: assign
     if(degrees.size() - D_size != src_.size())
         handler.print_err(err_type_t::INVAILD, "# of degrees");
     for(unsigned i = 0; i < src_.size(); i++) 
@@ -47,18 +72,18 @@ void mapping_table_t::print_stats() const {
     std::cout << "# LAYER: " << layer_name << std::endl;
     handler.print_line(20, "*");
     std::cout << "# MAPPING TABLE" << std::endl;
-    handler.print_line(63, "-");
+    handler.print_line(70, "-");
     std::cout << "   U \\ D   |  ";
     for(unsigned column = 0; column < D_size; column++) {
         std::cout << D_str.at(column) << "("
                   << std::setw(3) << layer_values.at(column) << ") ";
     }
     std::cout << std::endl;
-    handler.print_line(63, "-");
+    handler.print_line(70, "-");
     for(unsigned row = 0; row < U_size; row++) {
         if(exists.at(row)) {
             if(row == U_size - 1)
-                handler.print_line(63, "-");
+                handler.print_line(70, "-");
             std::cout << std::setw(9) << U_str.substr(row * 7, 7) << "  |"; 
             for(unsigned column = 0; column < D_size; column++) {
                 std::cout << std::setw(7) 
@@ -67,7 +92,7 @@ void mapping_table_t::print_stats() const {
             std::cout << std::endl;
         }
     }
-    handler.print_line(63, "-");
+    handler.print_line(70, "-");
     return;
 }
 
@@ -143,7 +168,8 @@ size_t mapping_table_t::get_num_macs() const {
 
 size_t mapping_table_t::get_input_tile_size(const component_t U) const {
     size_t tile_size = 1;
-    tile_size *= get_product(parameter_t::B, U)
+    tile_size *= get_product(parameter_t::G, U)
+               * get_product(parameter_t::B, U)
                * get_product(parameter_t::C, U)
                * ((get_product(parameter_t::P, U) - 1) * stride + get_product(parameter_t::S, U))
                * ((get_product(parameter_t::Q, U) - 1) * stride + get_product(parameter_t::R, U));
@@ -152,7 +178,8 @@ size_t mapping_table_t::get_input_tile_size(const component_t U) const {
 
 size_t mapping_table_t::get_filter_tile_size(const component_t U) const {
     size_t tile_size = 1;
-    tile_size *= get_product(parameter_t::K, U)
+    tile_size *= get_product(parameter_t::G, U)
+               * get_product(parameter_t::K, U)
                * get_product(parameter_t::C, U)
                * get_product(parameter_t::S, U)
                * get_product(parameter_t::R, U);
@@ -161,7 +188,8 @@ size_t mapping_table_t::get_filter_tile_size(const component_t U) const {
 
 size_t mapping_table_t::get_output_tile_size(const component_t U) const {
     size_t tile_size = 1;
-    tile_size *= get_product(parameter_t::B, U)
+    tile_size *= get_product(parameter_t::G, U)
+               * get_product(parameter_t::B, U)
                * get_product(parameter_t::K, U)
                * get_product(parameter_t::P, U)
                * get_product(parameter_t::Q, U);
@@ -173,7 +201,7 @@ std::string mapping_table_t::get_layer_name() {
 }
 
 void mapping_table_t::update_dram_row() {
-    // TODO: padding
+    // TODO: overflow assertion & padding
     for(unsigned column = 0; column < D_size; column++) {
        unsigned val = layer_values.at(column) / get_product(static_cast<parameter_t>(column), component_t::L2);
        unsigned remainder = layer_values.at(column) % get_product(static_cast<parameter_t>(column), component_t::L2);
@@ -200,7 +228,7 @@ void mapping_table_t::put_column_degrees(const parameter_t D,
 }
 
 void mapping_table_t::put_column_spatial_first_degrees(const parameter_t D, 
-                                                 const std::vector<unsigned>& container_) {
+                                                       const std::vector<unsigned>& container_) {
     unsigned exists_cnt = 0;
     if(exists.at(static_cast<unsigned>(component_t::S1_X))) {
         degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::S1_X)) = container_.at(exists_cnt);
@@ -216,7 +244,7 @@ void mapping_table_t::put_column_spatial_first_degrees(const parameter_t D,
 }
 
 void mapping_table_t::put_column_spatial_later_degrees(const parameter_t D, 
-                                                 const std::vector<unsigned>& container_) {
+                                                       const std::vector<unsigned>& container_) {
     unsigned exists_cnt = 0;
     if(exists.at(static_cast<unsigned>(component_t::S1_X))) {
         degrees.at(static_cast<unsigned>(D) + D_size * static_cast<unsigned>(component_t::S1_X)) = container_.at(exists_cnt);

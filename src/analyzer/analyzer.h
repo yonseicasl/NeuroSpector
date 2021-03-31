@@ -34,11 +34,10 @@ private:
     void update_stats(unsigned idx_);        
     // Variables & containers
     unsigned D_size;                                // Mapping table column size
-    //unsigned U_size;                              // Mapping table row size
     accelerator_t *accelerator;                     // Target accelerator   
     std::string network_name;                       // DNN name
     std::vector<bool> exists;                       // Component exist bits from MAC to DRAM
-    std::vector<mapping_table_t> mapping_tables;    // Mapping tables from the mapping configuration
+    std::vector<mapping_table_t> mappings;          // Mapping tables from the mapping configuration
     std::vector<stats_t*> all_stats;                // All stats of the mapping tables
 };
 

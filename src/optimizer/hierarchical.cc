@@ -51,7 +51,7 @@ hierarchical_t::~hierarchical_t() {
 
 // Optimizer APIs
 void hierarchical_t::run() {
-    for(unsigned idx = 0; idx < mapping_tables.size(); idx++) 
+    for(unsigned idx = 0; idx < mappings.size(); idx++) 
         run(idx + 1);
     return;
 }
@@ -60,7 +60,7 @@ void hierarchical_t::run(const unsigned idx_) {
     handler.print_line(50, "*");
     std::cout << "# HIERARCHICAL OPTIMIZATION" << std::endl;
     std::cout << "# NETWORK    : " << network_name << std::endl;
-    std::cout << "# LAYER      : " << mapping_tables.at(idx_ - 1).get_layer_name() << std::endl;
+    std::cout << "# LAYER      : " << mappings.at(idx_ - 1).get_layer_name() << std::endl;
     handler.print_line(50, "*");
     // Start optimizing
     for(unsigned l1_df = 0; l1_df < l1_dataflows.size(); l1_df++) {
@@ -201,11 +201,11 @@ void hierarchical_t::engine(const unsigned idx_,
             }
             else {
                 // Mapping space generation
-                mapping_space_t mapping_space(used_levels.at(seq) + 1, mapping_tables.at(idx_ - 1).get_layer_values());
+                mapping_space_t mapping_space(used_levels.at(seq) + 1, mappings.at(idx_ - 1).get_layer_values());
                 total_cnt.push_back(mapping_space.get_num_permutations());
                 // Run worker()
                 worker(seq,
-                       mapping_tables.at(idx_ - 1),
+                       mappings.at(idx_ - 1),
                        mapping_space,
                        l1_dataflow_,
                        l2_dataflow_,
@@ -331,40 +331,43 @@ void hierarchical_t::worker(const unsigned seq_,
     // Current mapping table
     // Start finding best mappings
     mapping_table_t curr_mapping(init_mapping_);
-    for(size_t k = 0; k < mapping_space_.get_permutations(0).size(); k++) {
-        curr_mapping.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(0).at(k), start_component, end_component);
-        for(size_t b = 0; b < mapping_space_.get_permutations(1).size(); b++) {
-            curr_mapping.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(1).at(b), start_component, end_component);
-            for(size_t p = 0; p < mapping_space_.get_permutations(2).size(); p++) {
-                curr_mapping.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(2).at(p), start_component, end_component);
-                for(size_t q = 0; q < mapping_space_.get_permutations(3).size(); q++) {
-                    curr_mapping.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(3).at(q), start_component, end_component);
-                    for(size_t c = 0; c < mapping_space_.get_permutations(4).size(); c++) {
-                        curr_mapping.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(4).at(c), start_component, end_component);
-                        for(size_t s = 0; s < mapping_space_.get_permutations(5).size(); s++) {
-                            curr_mapping.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(5).at(s), start_component, end_component);
-                            for(size_t r = 0; r < mapping_space_.get_permutations(6).size(); r++) {
-                                curr_mapping.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(6).at(r), start_component, end_component);
-                                // Validity check
-                                if(check_validity(temporal, curr_mapping) & check_validity(spatial, curr_mapping)) {
-                                    // Update current stats
-                                    stats_t curr_stats(accelerator, curr_mapping, l1_dataflow_, l2_dataflow_);
-                                    curr_stats.update_stats();
-                                    // 'local_best_mappings' includes the same energy key value with the curr mapping table's energy
-                                    auto entry = local_best_mappings.find(curr_stats.get_energy(check));
-                                    if(entry != local_best_mappings.end()) {
-                                        // Iteration comparison 
-                                        if(entry->second.get_iteration(end_component) > curr_mapping.get_iteration(end_component)) 
-                                            entry->second.swap_degrees(curr_mapping.get_degrees());
+    for(size_t g = 0; g < mapping_space_.get_permutations(0).size(); g++) {
+        curr_mapping.put_column_degrees(parameter_t::G, mapping_space_.get_permutations(0).at(g), start_component, end_component);
+        for(size_t k = 0; k < mapping_space_.get_permutations(1).size(); k++) {
+            curr_mapping.put_column_degrees(parameter_t::K, mapping_space_.get_permutations(1).at(k), start_component, end_component);
+            for(size_t b = 0; b < mapping_space_.get_permutations(2).size(); b++) {
+                curr_mapping.put_column_degrees(parameter_t::B, mapping_space_.get_permutations(2).at(b), start_component, end_component);
+                for(size_t p = 0; p < mapping_space_.get_permutations(3).size(); p++) {
+                    curr_mapping.put_column_degrees(parameter_t::P, mapping_space_.get_permutations(3).at(p), start_component, end_component);
+                    for(size_t q = 0; q < mapping_space_.get_permutations(4).size(); q++) {
+                        curr_mapping.put_column_degrees(parameter_t::Q, mapping_space_.get_permutations(4).at(q), start_component, end_component);
+                        for(size_t c = 0; c < mapping_space_.get_permutations(5).size(); c++) {
+                            curr_mapping.put_column_degrees(parameter_t::C, mapping_space_.get_permutations(5).at(c), start_component, end_component);
+                            for(size_t s = 0; s < mapping_space_.get_permutations(6).size(); s++) {
+                                curr_mapping.put_column_degrees(parameter_t::S, mapping_space_.get_permutations(6).at(s), start_component, end_component);
+                                for(size_t r = 0; r < mapping_space_.get_permutations(7).size(); r++) {
+                                    curr_mapping.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(7).at(r), start_component, end_component);
+                                    // Validity check
+                                    if(check_validity(temporal, curr_mapping) & check_validity(spatial, curr_mapping)) {
+                                        // Update current stats
+                                        stats_t curr_stats(accelerator, curr_mapping, l1_dataflow_, l2_dataflow_);
+                                        curr_stats.update_stats();
+                                        // 'local_best_mappings' includes the same energy key value with the curr mapping table's energy
+                                        auto entry = local_best_mappings.find(curr_stats.get_energy(check));
+                                        if(entry != local_best_mappings.end()) {
+                                            // Iteration comparison 
+                                            if(entry->second.get_iteration(end_component) > curr_mapping.get_iteration(end_component)) 
+                                                entry->second.swap_degrees(curr_mapping.get_degrees());
+                                        }
+                                        else {
+                                            // Comparison between the last candidate (highest energy) and the current mapping table's energy
+                                            if(std::prev(local_best_mappings.end())->first > curr_stats.get_energy(check)) 
+                                                local_best_mappings.insert(std::make_pair(curr_stats.get_energy(check), curr_mapping));
+                                        }
+                                        if(local_best_mappings.size() > top_k.at(seq_)) 
+                                           local_best_mappings.erase(std::prev(local_best_mappings.end())); 
+                                        valid_cnt.at(valid_cnt.size() - 1)++;
                                     }
-                                    else {
-                                        // Comparison between the last candidate (highest energy) and the current mapping table's energy
-                                        if(std::prev(local_best_mappings.end())->first > curr_stats.get_energy(check)) 
-                                            local_best_mappings.insert(std::make_pair(curr_stats.get_energy(check), curr_mapping));
-                                    }
-                                    if(local_best_mappings.size() > top_k.at(seq_)) 
-                                       local_best_mappings.erase(std::prev(local_best_mappings.end())); 
-                                    valid_cnt.at(valid_cnt.size() - 1)++;
                                 }
                             }
                         }

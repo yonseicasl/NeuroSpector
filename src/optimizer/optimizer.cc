@@ -30,11 +30,12 @@ optimizer_t::optimizer_t(const std::string& acc_cfg_path_,
     net_cfg_t *net_cfg = new net_cfg_t(net_cfg_path_);
     network_name = net_cfg->network_name;
     for(size_t idx = 0; idx < net_cfg->layers.size(); idx++) {
-        mapping_table_t mapping_table(exists, 
-                                      net_cfg->layers.at(idx).name, 
-                                      net_cfg->layers.at(idx).values,
-                                      net_cfg->layers.at(idx).stride);
-        mapping_tables.push_back(mapping_table); 
+        mapping_table_t mapping_tmp(net_cfg->layers.at(idx).is_grouped,
+                                    exists, 
+                                    net_cfg->layers.at(idx).name, 
+                                    net_cfg->layers.at(idx).values,
+                                    net_cfg->layers.at(idx).stride);
+        mappings.push_back(mapping_tmp); 
     }
     delete net_cfg;
     init_dataflows();

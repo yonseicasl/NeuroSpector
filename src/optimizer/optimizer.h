@@ -59,7 +59,7 @@ protected:
     accelerator_t *accelerator;                         // Target accelerator 
     std::string network_name;                           // DNN name
     std::vector<bool> exists;                           // Component exist bits from MAC to DRAM
-    std::vector<mapping_table_t> mapping_tables;        // Mapping tables from the mapping configuration
+    std::vector<mapping_table_t> mappings;              // Mapping tables from the mapping configuration
     std::vector<unsigned> l1_dataflows;                 // L1 dataflow(s)
     std::vector<unsigned> l2_dataflows;                 // L2 dataflow(s)
 };

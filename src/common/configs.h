@@ -14,7 +14,7 @@
 /* Configuration */
 class configs_t {
 public:
-    configs_t(std::string cfg_path_);
+    configs_t(const std::string& cfg_path_);
     virtual ~configs_t() {}
     virtual void parse() = 0;
     // Get an item in the line
@@ -30,7 +30,7 @@ protected:
 /* Accelerator configuration */
 class acc_cfg_t : public configs_t {
 public:
-    acc_cfg_t(std::string cfg_path_);
+    acc_cfg_t(const std::string& cfg_path_);
     ~acc_cfg_t();
     void parse();
     std::string name;
@@ -71,29 +71,31 @@ public:
 /* Mapping table configuration (for analyzer) */
 class map_cfg_t : public configs_t {
 public:
-    map_cfg_t(std::string cfg_path_);
+    map_cfg_t(const std::string& cfg_path_);
     ~map_cfg_t();
     void parse();
     struct mapping_table_t {
-        std::string name;                   // Layer name
+        bool is_grouped;                    // For group conv
         unsigned stride;                    // Layer stride
-        std::vector<unsigned> values;       // Layer parameter values (KBPQCSR)
+        std::string name;                   // Layer name
+        std::vector<unsigned> values;       // Layer parameter values (GKBPQCSR)
         std::vector<unsigned> degrees;      // Mapping degrees
     };
     std::string network_name;
-    std::vector<mapping_table_t> mapping_tables;
+    std::vector<mapping_table_t> mappings;
 };
 
 /* Network configuration (for optimizer) */
 class net_cfg_t : public configs_t {
 public:
-    net_cfg_t(std::string cfg_path_);
+    net_cfg_t(const std::string& cfg_path_);
     ~net_cfg_t();
     void parse();
     struct layer_t {
-        std::string name;                   // Layer name
+        bool is_grouped;                    // For group conv
         unsigned stride;                    // Layer stride
-        std::vector<unsigned> values;       // Layer parameter values (KBPQCSR)
+        std::string name;                   // Layer name
+        std::vector<unsigned> values;       // Layer parameter values (GKBPQCSR)
     };
     std::string network_name;
     std::vector<layer_t> layers;

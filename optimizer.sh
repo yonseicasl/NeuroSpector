@@ -7,10 +7,10 @@
 # num_threads: Multi-threading for brute-force (b-f-xxx)
 # dataflows  : "fixed" or "flexible"
 acc_arg=configs/accelerators/eyeriss.cfg
-net_arg=configs/networks/alexnet.csv
+net_arg=configs/networks/resnet50.csv
 opt_type=hierarchical
-num_threads=8
-dataflows=flexible
+num_threads=4
+dataflows=fixed
 
 # Usage
 print_help() {

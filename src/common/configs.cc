@@ -6,7 +6,7 @@ static unsigned D_SIZE = static_cast<unsigned>(parameter_t::SIZE);
 static unsigned U_SIZE = static_cast<unsigned>(component_t::SIZE);
 
 /* Configuration */
-configs_t::configs_t(std::string cfg_path_) {
+configs_t::configs_t(const std::string& cfg_path_) {
     config_file.open(cfg_path_.c_str());
     if(!config_file.is_open()) 
         handler.print_err(err_type_t::OPENFAIL, cfg_path_);
@@ -65,20 +65,40 @@ void configs_t::get_line_vals(const std::string &line_, const unsigned bias_, co
 }
 
 /* Accelerator configuration */
-acc_cfg_t::acc_cfg_t(std::string cfg_path_) 
-    : configs_t(cfg_path_), name("NO NAME"), precision(precision_t::FP32), 
-      mac_dataflow(dataflow_t::SIZE), macs_per_pe(1), mac_width(1), 
-      l1_input_bypass(false), l1_filter_bypass(false), l1_output_bypass(false),
-      l1_input_size(0), l1_filter_size(0), l1_output_size(0), l1_shared_size(0), 
-      l1_type(buffer_type_t::SIZE), l1_dataflow(dataflow_t::SIZE), 
-      s1_noc_exists(false), s1_size_x(1), s1_size_y(1), 
-      l2_input_bypass(false), l2_filter_bypass(false), l2_output_bypass(false),
-      l2_input_size(0), l2_filter_size(0), l2_output_size(0), l2_shared_size(0), 
-      l2_type(buffer_type_t::SIZE), l2_dataflow(dataflow_t::SIZE), s2_size(1) { 
+acc_cfg_t::acc_cfg_t(const std::string& cfg_path_) 
+    : configs_t(cfg_path_), 
+      name("NO NAME"), 
+      precision(precision_t::FP32), 
+      mac_dataflow(dataflow_t::SIZE), 
+      macs_per_pe(1), 
+      mac_width(1), 
+      l1_input_bypass(false), 
+      l1_filter_bypass(false), 
+      l1_output_bypass(false),
+      l1_input_size(0), 
+      l1_filter_size(0), 
+      l1_output_size(0), 
+      l1_shared_size(0), 
+      l1_type(buffer_type_t::SIZE), 
+      l1_dataflow(dataflow_t::SIZE), 
+      s1_noc_exists(false), 
+      s1_size_x(1), 
+      s1_size_y(1), 
+      l2_input_bypass(false), 
+      l2_filter_bypass(false), 
+      l2_output_bypass(false),
+      l2_input_size(0), 
+      l2_filter_size(0), 
+      l2_output_size(0), 
+      l2_shared_size(0), 
+      l2_type(buffer_type_t::SIZE), 
+      l2_dataflow(dataflow_t::SIZE), 
+      s2_size(1) { 
     parse();
 }
 
 acc_cfg_t::~acc_cfg_t() {
+
 }
 
 void acc_cfg_t::parse() {
@@ -295,12 +315,13 @@ void acc_cfg_t::parse() {
 }
 
 /* Mapping table configuration */
-map_cfg_t::map_cfg_t(std::string cfg_path_) 
+map_cfg_t::map_cfg_t(const std::string& cfg_path_) 
     : configs_t(cfg_path_), network_name("NO NAME") { 
     parse();
 }
 
 map_cfg_t::~map_cfg_t() {
+
 }
 
 void map_cfg_t::parse() {
@@ -330,18 +351,21 @@ void map_cfg_t::parse() {
                     else {
                         bool is_layer = line.find("CONV") != std::string::npos 
                                         || line.find("FC") != std::string::npos 
-                                        || line.find("PW") != std::string::npos;
-                        if(is_layer) {
-                            layer_cnts++;
-                            mapping_table_t mapping_table;
-                            mapping_table.name = get_line_string(line, 0);
-                            mapping_table.stride = get_line_uint(line, D_SIZE + 1);
-                            get_line_vals(line, 1, D_SIZE, mapping_table.values);
-                            mapping_tables.push_back(mapping_table);
-                            std::getline(config_file, line);
-                        }
-                        else 
+                                        || line.find("PW") != std::string::npos
+                                        || line.find("GROUP") != std::string::npos
+                                        || line.find("DEPTH") != std::string::npos;
+                        if(!is_layer)
                             handler.print_err(err_type_t::INVAILD, "NET parsing");
+                        // Parse layer values
+                        mapping_table_t mapping;
+                        mapping.is_grouped = line.find("GROUP") != std::string::npos
+                                          || line.find("DEPTH") != std::string::npos;
+                        mapping.stride = get_line_uint(line, D_SIZE + 1);
+                        mapping.name = get_line_string(line, 0);
+                        get_line_vals(line, 1, D_SIZE, mapping.values);
+                        mappings.push_back(mapping);
+                        layer_cnts++;
+                        std::getline(config_file, line);
                     }
                 }
                 break;
@@ -362,7 +386,7 @@ void map_cfg_t::parse() {
             endpos = line.find(']'); 
             std::string layer_name = line.substr(strpos, endpos - strpos);
             // Check LAYER-MAP pair
-            if(mapping_tables.at(idx).name.compare(layer_name)) 
+            if(mappings.at(idx).name.compare(layer_name)) 
                 handler.print_err(err_type_t::INVAILD, "LAYER-MAP are not matched");
             std::getline(config_file, line);
             // Start parsing
@@ -377,37 +401,37 @@ void map_cfg_t::parse() {
                 else {
                     // row == 0: MAC level degrees are all 1
                     if(row == 1 && line.find("S0") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
+                        get_line_vals(line, 1, D_SIZE, mappings.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
                     else if(row == 2 && line.find("L1") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
+                        get_line_vals(line, 1, D_SIZE, mappings.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
                     else if(row == 3 && line.find("S1_X") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
+                        get_line_vals(line, 1, D_SIZE, mappings.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
                     else if(row == 4 && line.find("S1_Y") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
+                        get_line_vals(line, 1, D_SIZE, mappings.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
                     else if(row == 5 && line.find("L2") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
+                        get_line_vals(line, 1, D_SIZE, mappings.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
                     else if(row == 6 && line.find("S2") != std::string::npos) {
-                        get_line_vals(line, 1, D_SIZE, mapping_tables.at(idx).degrees);
+                        get_line_vals(line, 1, D_SIZE, mappings.at(idx).degrees);
                         if(!std::getline(config_file, line)) is_eof = true;
                     }
                     else {
                         for(unsigned column = 0; column < D_SIZE; column++)
-                            mapping_tables.at(idx).degrees.push_back(1);
+                            mappings.at(idx).degrees.push_back(1);
                     }
                     if(is_eof) {
                         for(unsigned r = row + 1; r < U_SIZE - 1; r++) {
                             for(unsigned column = 0; column < D_SIZE; column++)
-                                mapping_tables.at(idx).degrees.push_back(1);
+                                mappings.at(idx).degrees.push_back(1);
                         }
                         break;
                     } 
@@ -431,12 +455,14 @@ void map_cfg_t::parse() {
 }
 
 /* Network configuration */
-net_cfg_t::net_cfg_t(std::string cfg_path_) 
-    : configs_t(cfg_path_), network_name("NO NAME") { 
+net_cfg_t::net_cfg_t(const std::string& cfg_path_) 
+    : configs_t(cfg_path_),
+    network_name("NO NAME") { 
     parse();
 }
 
 net_cfg_t::~net_cfg_t() {
+
 }
 
 void net_cfg_t::parse() {
@@ -460,17 +486,19 @@ void net_cfg_t::parse() {
         else {
             bool is_layer = line.find("CONV") != std::string::npos 
                             || line.find("FC") != std::string::npos 
-                            || line.find("PW") != std::string::npos;
-            if(is_layer) {
-                layer_t layer;
-                layer.name = get_line_string(line, 0);
-                layer.stride = get_line_uint(line, D_SIZE + 1);
-                get_line_vals(line, 1, D_SIZE, layer.values);
-                layers.push_back(layer);
-                continue;
-            }
-            else
+                            || line.find("PW") != std::string::npos
+                            || line.find("GROUP") != std::string::npos
+                            || line.find("DEPTH") != std::string::npos;
+            if(!is_layer)
                 handler.print_err(err_type_t::INVAILD, "NET parsing");
+            // Parse layer values
+            layer_t layer;
+            layer.is_grouped = line.find("GROUP") != std::string::npos
+                            || line.find("DEPTH") != std::string::npos;
+            layer.stride = get_line_uint(line, D_SIZE + 1);
+            layer.name = get_line_string(line, 0);
+            get_line_vals(line, 1, D_SIZE, layer.values);
+            layers.push_back(layer);
         }
     }
     return;

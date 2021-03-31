@@ -38,6 +38,8 @@ public:
             const std::vector<std::vector<std::vector<unsigned>>>& layer_permutations_);
     ~range_t();
     
+    size_t start_g;
+    size_t end_g;
     size_t start_k;
     size_t end_k;
     size_t start_b;

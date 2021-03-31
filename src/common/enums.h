@@ -30,7 +30,7 @@ enum class buffer_type_t {
 /* Mapping table */
 // Layer parameters: D (mapping table columns)
 enum class parameter_t {  
-    K, B, P, Q, C, S, R, SIZE
+    G, K, B, P, Q, C, S, R, SIZE
 };
 
 // Components: U (mapping table rows) 
