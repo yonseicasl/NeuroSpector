@@ -55,17 +55,17 @@ public:
     std::vector<unsigned> get_row_degrees(const component_t U) const;
 
 private:
-    const bool is_grouped;                          // For group conv
-    const unsigned D_size;                          // Mapping table column size
-    const unsigned U_size;                          // Mapping table row size
-    const unsigned stride;                          // Layer stride
-    const std::vector<bool> exists;                 // Component exist bits from MAC to DRAM
-    std::vector<unsigned> layer_values;             // Layer parameter values (GKBPQCSR)
-    std::vector<unsigned> degrees;                  // Mapping degrees
-    const std::string layer_name;                 
-    const std::string D_str = "GKBPQCSR";
-    const std::string U_str = "MAC [T]S0  [S]L1  [T]S1_X[S]S1_Y[S]L2  [T]S2  [S]DRAM   ";
-    const std::string csv_str = " MAC,  S0,  L1,S1_X,S1_Y,  L2,  S2,DRAM,";
+    bool is_grouped;                          // For group conv
+    unsigned D_size;                          // Mapping table column size
+    unsigned U_size;                          // Mapping table row size
+    unsigned stride;                          // Layer stride
+    std::vector<bool> exists;                 // Component exist bits from MAC to DRAM
+    std::vector<unsigned> layer_values;       // Layer parameter values (GKBPQCSR)
+    std::vector<unsigned> degrees;            // Mapping degrees
+    std::string layer_name;                 
+    std::string D_str = "GKBPQCSR";
+    std::string U_str = "MAC [T]S0  [S]L1  [T]S1_X[S]S1_Y[S]L2  [T]S2  [S]DRAM   ";
+    std::string csv_str = " MAC,  S0,  L1,S1_X,S1_Y,  L2,  S2,DRAM,";
 };
 
 #endif 
