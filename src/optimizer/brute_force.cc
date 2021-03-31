@@ -50,7 +50,7 @@ void brute_force_t::run(const unsigned idx_) {
                    static_cast<dataflow_t>(l2_dataflows.at(l2_df)));
             // Sync and update
             sync_and_update(static_cast<dataflow_t>(l1_dataflows.at(l1_df)), 
-                            static_cast<dataflow_t>(l1_dataflows.at(l2_df)));
+                            static_cast<dataflow_t>(l2_dataflows.at(l2_df)));
             // TODO: print stats per dataflow
         }
     }

@@ -53,7 +53,7 @@ void pruning_t::run(const unsigned idx_) {
 //        for(unsigned l2_df = 0; l2_df < l2_dataflows.size(); l2_df++) {
 //            // Update
 //            update(static_cast<dataflow_t>(l1_dataflows.at(l1_df)), 
-//                   static_cast<dataflow_t>(l1_dataflows.at(l2_df)));
+//                   static_cast<dataflow_t>(l2_dataflows.at(l2_df)));
 //            // TODO: print stats per dataflow
 //        }
 //    }
