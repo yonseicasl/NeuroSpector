@@ -35,7 +35,7 @@ mapping_table_t::mapping_table_t(const bool is_grouped_,
         layer_values.at(static_cast<unsigned>(parameter_t::C)) /= layer_values.at(static_cast<unsigned>(parameter_t::G));
     }
     else {
-        if(layer_values.at(static_cast<unsigned>(parameter_t::G)) == 1)
+        if(layer_values.at(static_cast<unsigned>(parameter_t::G)) != 1)
             handler.print_err(err_type_t::INVAILD, "G must be 1");
     }
 }

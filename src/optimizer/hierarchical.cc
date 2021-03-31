@@ -65,8 +65,6 @@ void hierarchical_t::run(const unsigned idx_) {
     // Start optimizing
     for(unsigned l1_df = 0; l1_df < l1_dataflows.size(); l1_df++) {
         for(unsigned l2_df = 0; l2_df < l2_dataflows.size(); l2_df++) {
-            std::cout << "# DEBUG: "<< l1_dataflows.at(l1_df) << std::endl;
-            std::cout << "# DEBUG: "<< l2_dataflows.at(l2_df) << std::endl;
             // Reset variables & containers
             reset(idx_);
             // Run the engine
