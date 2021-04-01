@@ -293,8 +293,12 @@ bool optimizer_t::s2_validity(const mapping_table_t& mapping_table_) const {
     bool validity = true;
     unsigned s2_size_val = 1;
     for(unsigned column = 0; column < D_size; column++) {
-        // Only K, B, P, and Q
-        if(column == 0 || column == 1 || column == 2 || column == 3)
+        // Only G, K, B, P, and Q
+        if(column == static_cast<unsigned>(parameter_t::G) || 
+           column == static_cast<unsigned>(parameter_t::K) || 
+           column == static_cast<unsigned>(parameter_t::B) || 
+           column == static_cast<unsigned>(parameter_t::P) || 
+           column == static_cast<unsigned>(parameter_t::Q))
             s2_size_val *= mapping_table_.get_degree(static_cast<parameter_t>(column), component_t::S2);
         else {
             if(mapping_table_.get_degree(static_cast<parameter_t>(column), component_t::S2) > 1) {

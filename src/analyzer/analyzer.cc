@@ -224,9 +224,13 @@ bool analyzer_t::l2_validity(const unsigned idx_) const {
 bool analyzer_t::s2_validity(const unsigned idx_) const {
     bool validity = true;
     unsigned s2_size_val = 1;
-    // Only K, B, P, and Q
+    // Only G, K, B, P, and Q
     for(unsigned column = 0; column < D_size; column++) {
-        if(column == 0 || column == 1 || column == 2 || column == 3)
+        if(column == static_cast<unsigned>(parameter_t::G) || 
+           column == static_cast<unsigned>(parameter_t::K) || 
+           column == static_cast<unsigned>(parameter_t::B) || 
+           column == static_cast<unsigned>(parameter_t::P) || 
+           column == static_cast<unsigned>(parameter_t::Q))
             s2_size_val *= mappings.at(idx_).get_degree(static_cast<parameter_t>(column), component_t::S2);
         else {
             if(mappings.at(idx_).get_degree(static_cast<parameter_t>(column), component_t::S2) > 1) {
