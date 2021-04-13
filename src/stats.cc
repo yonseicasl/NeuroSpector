@@ -249,22 +249,31 @@ void stats_t::update_iteration() {
             break;
         case dataflow_t::WS: 
             l2_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L2) 
-                                          * mapping_table.get_degree(parameter_t::P, component_t::L2) 
-                                          * mapping_table.get_degree(parameter_t::Q, component_t::L2));
+                                        * mapping_table.get_degree(parameter_t::P, component_t::L2) 
+                                        * mapping_table.get_degree(parameter_t::Q, component_t::L2));
             break;
         case dataflow_t::OS: 
             l2_iteration.output_rd_it = 0;
             l2_iteration.output_wt_it /= (mapping_table.get_degree(parameter_t::C, component_t::L2) 
-                                          * mapping_table.get_degree(parameter_t::S, component_t::L2) 
-                                          * mapping_table.get_degree(parameter_t::R, component_t::L2));
+                                        * mapping_table.get_degree(parameter_t::S, component_t::L2) 
+                                        * mapping_table.get_degree(parameter_t::R, component_t::L2));
             break;
         default: handler.print_err(err_type_t::INVAILD, "L1 DATAFLOW"); break;
     }
     // DRAM iteration with L2 dataflow 
     dram_iteration.input_rd_it = dram_iteration_tmp;
     dram_iteration.filter_rd_it = dram_iteration_tmp;
-    dram_iteration.output_rd_it = dram_iteration_tmp;
     dram_iteration.output_wt_it = dram_iteration_tmp;
+    // For conditional read
+    size_t gamma_dram_iteration = mapping_table.get_degree(parameter_t::C, component_t::DRAM)
+                                * mapping_table.get_degree(parameter_t::S, component_t::DRAM)
+                                * mapping_table.get_degree(parameter_t::R, component_t::DRAM);
+    dram_iteration.output_rd_it = (gamma_dram_iteration - 1) 
+                                * mapping_table.get_degree(parameter_t::G, component_t::DRAM)
+                                * mapping_table.get_degree(parameter_t::K, component_t::DRAM)
+                                * mapping_table.get_degree(parameter_t::B, component_t::DRAM)
+                                * mapping_table.get_degree(parameter_t::P, component_t::DRAM)
+                                * mapping_table.get_degree(parameter_t::Q, component_t::DRAM);
     switch(l2_dataflow) {
         case dataflow_t::IS: 
             h_upper = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
@@ -278,14 +287,16 @@ void stats_t::update_iteration() {
             break;
         case dataflow_t::WS: 
             dram_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::DRAM) 
-                                            * mapping_table.get_degree(parameter_t::P, component_t::DRAM) 
-                                            * mapping_table.get_degree(parameter_t::Q, component_t::DRAM));
+                                          * mapping_table.get_degree(parameter_t::P, component_t::DRAM) 
+                                          * mapping_table.get_degree(parameter_t::Q, component_t::DRAM));
             break;
         case dataflow_t::OS: 
-            dram_iteration.output_rd_it = 0;
+            // Output conditional read
+            dram_iteration.output_rd_it = gamma_dram_iteration - 1;
+            // Output write
             dram_iteration.output_wt_it /= (mapping_table.get_degree(parameter_t::C, component_t::DRAM) 
-                                            * mapping_table.get_degree(parameter_t::S, component_t::DRAM) 
-                                            * mapping_table.get_degree(parameter_t::R, component_t::DRAM));
+                                          * mapping_table.get_degree(parameter_t::S, component_t::DRAM) 
+                                          * mapping_table.get_degree(parameter_t::R, component_t::DRAM));
             break;
         default: handler.print_err(err_type_t::INVAILD, "L2 DATAFLOW"); break;
     }
