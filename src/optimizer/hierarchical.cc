@@ -352,12 +352,7 @@ void hierarchical_t::worker(const unsigned seq_,
                                         curr_stats.update_stats();
                                         // 'local_best_mappings' includes the same energy key value with the curr mapping table's energy
                                         auto entry = local_best_mappings.find(curr_stats.get_energy(check));
-                                        if(entry != local_best_mappings.end()) {
-                                            // Iteration comparison 
-                                            if(entry->second.get_iteration(end_component) > curr_mapping.get_iteration(end_component)) 
-                                                entry->second.swap_degrees(curr_mapping.get_degrees());
-                                        }
-                                        else {
+                                        if(entry == local_best_mappings.end()) {
                                             // Comparison between the last candidate (highest energy) and the current mapping table's energy
                                             if(std::prev(local_best_mappings.end())->first > curr_stats.get_energy(check)) 
                                                 local_best_mappings.insert(std::make_pair(curr_stats.get_energy(check), curr_mapping));
