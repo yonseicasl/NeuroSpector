@@ -12,7 +12,13 @@ configs_t::configs_t(const std::string& cfg_path_) {
         handler.print_err(err_type_t::OPENFAIL, cfg_path_);
 }
 
-unsigned configs_t::get_line_uint(const std::string &line_, const unsigned bias_) {
+configs_t::~configs_t() {
+    config_file.close();
+}
+
+// Get a integer value in the line
+unsigned configs_t::get_line_uint(const std::string &line_, 
+                                  const unsigned bias_) {
     size_t strpos = 0;
     size_t endpos = line_.find(',');
     unsigned rtn;
@@ -29,7 +35,9 @@ unsigned configs_t::get_line_uint(const std::string &line_, const unsigned bias_
     return rtn;
 }
 
-std::string configs_t::get_line_string(const std::string &line_, const unsigned bias_) {
+// Get a string value in the line
+std::string configs_t::get_line_string(const std::string &line_, 
+                                       const unsigned bias_) {
     size_t strpos = 0;
     size_t endpos = line_.find(',');
     for(size_t b = 0; b < bias_; b++) {
@@ -42,7 +50,11 @@ std::string configs_t::get_line_string(const std::string &line_, const unsigned 
         return line_.substr(strpos, endpos - strpos);
 }
 
-void configs_t::get_line_vals(const std::string &line_, const unsigned bias_, const unsigned num_, std::vector<unsigned>& dst_) {
+// Get multiple integer values in the line
+void configs_t::get_line_vals(const std::string &line_, 
+                              const unsigned bias_, 
+                              const unsigned num_, 
+                              std::vector<unsigned>& dst_) {
     size_t strpos = 0;
     size_t endpos = line_.find(',');
     for(size_t b = 0; b < bias_; b++) {

@@ -46,23 +46,6 @@ optimizer_t::~optimizer_t() {
     delete accelerator;
 }
 
-// Optimizer APIs
-void optimizer_t::run() {
-    return;
-}
-
-void optimizer_t::run(const unsigned idx_) {
-    return;
-}
-
-void optimizer_t::print_stats() {
-    return;
-}
-
-void optimizer_t::print_csv() {
-    return;
-}
-
 // Initialze dataflows
 void optimizer_t::init_dataflows() {
     // For flexible dataflows

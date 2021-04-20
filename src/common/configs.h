@@ -15,14 +15,19 @@
 class configs_t {
 public:
     configs_t(const std::string& cfg_path_);
-    virtual ~configs_t() {}
+    virtual ~configs_t();
     virtual void parse() = 0;
-    // Get an item in the line
-    unsigned get_line_uint(const std::string &line_, const unsigned bias_);
-    std::string get_line_string(const std::string &line_, const unsigned bias_);
-    // Get values in the line
-    void get_line_vals(const std::string &line_, const unsigned bias_, 
-                       const unsigned num_, std::vector<unsigned>& dst_);
+    // Get a integer value in the line
+    unsigned get_line_uint(const std::string &line_, 
+                           const unsigned bias_);
+    // Get a string value in the line
+    std::string get_line_string(const std::string &line_, 
+                                const unsigned bias_);
+    // Get multiple integer values in the line
+    void get_line_vals(const std::string &line_, 
+                       const unsigned bias_, 
+                       const unsigned num_, 
+                       std::vector<unsigned>& dst_);
 protected:
     std::ifstream config_file;
 };

@@ -18,9 +18,6 @@
 #include "mapping_table.h"
 #include "stats.h"
 
-//#define L1_THRESHOLD 0.8
-//#define S1_THRESHOLD 0.8
-//#define L2_THRESHOLD 0.8
 #define L1_THRESHOLD 0
 #define S1_THRESHOLD 0
 #define L2_THRESHOLD 0
@@ -33,10 +30,10 @@ public:
                 const bool is_fixed_);                  
     virtual ~optimizer_t();
     // Optimizer APIs
-    virtual void run();                         // Run optimizing of all layers
-    virtual void run(const unsigned idx_);      // Run optimizing of the target layer
-    virtual void print_stats();                 // Print stats
-    virtual void print_csv();                   // Print csv
+    virtual void run() = 0;                     // Run optimizing of all layers
+    virtual void run(const unsigned idx_) = 0;  // Run optimizing of the target layer
+    virtual void print_stats() = 0;             // Print stats
+    virtual void print_csv() = 0;               // Print csv
 
 protected:
     // Initialze dataflows
