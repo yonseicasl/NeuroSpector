@@ -23,8 +23,12 @@ brute_force_t::~brute_force_t() {
 
 // Optimizer APIs
 void brute_force_t::run() {
-    for(unsigned idx = 0; idx < mappings.size(); idx++) 
+    for(unsigned idx = 0; idx < mappings.size(); idx++) {
+        final_best_stat = DBL_MAX; 
+        final_best_mappings.clear();
+        final_best_dataflows.clear();
         run(idx + 1);
+    }
     return;
 }
 

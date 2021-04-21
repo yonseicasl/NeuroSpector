@@ -6,7 +6,6 @@ static handler_t handler;
 analyzer_t::analyzer_t(const std::string& acc_cfg_path_,
                        const std::string& map_cfg_path_) 
     : D_size(static_cast<unsigned>(parameter_t::SIZE)),
-      //U_size(static_cast<unsigned>(component_t::SIZE)), 
       accelerator(new accelerator_t(acc_cfg_path_)), 
       network_name("") {
     // Component exist bits from MAC to DRAM
