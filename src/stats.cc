@@ -202,10 +202,6 @@ void stats_t::update_iteration() {
     size_t l1_iteration_tmp = mapping_table.get_iteration(component_t::L1);
     size_t l2_iteration_tmp = mapping_table.get_iteration(component_t::L2);
     size_t dram_iteration_tmp = mapping_table.get_iteration(component_t::DRAM);
-    size_t h_upper = 0;
-    size_t h_lower = 0;
-    size_t w_upper = 0;
-    size_t w_lower = 0;
     size_t gamma_dram_iteration = mapping_table.get_degree(parameter_t::C, component_t::DRAM)
                                 * mapping_table.get_degree(parameter_t::S, component_t::DRAM)
                                 * mapping_table.get_degree(parameter_t::R, component_t::DRAM);
@@ -238,15 +234,7 @@ void stats_t::update_iteration() {
                               * mapping_table.get_degree(parameter_t::Q, component_t::DRAM);
     switch(accelerator->mac_dataflow()) {
         case dataflow_t::IS: 
-            h_upper = (mapping_table.get_product(parameter_t::P, component_t::MAC) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::MAC);
-            h_lower = (mapping_table.get_product(parameter_t::P, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L1);
-            w_upper = (mapping_table.get_product(parameter_t::Q, component_t::MAC) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::MAC);
-            w_lower = (mapping_table.get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L1);
-            l1_iteration.input_rd_it = mapping_table.get_degree(parameter_t::G, component_t::L1)
-                                     * mapping_table.get_degree(parameter_t::B, component_t::L1)
-                                     * mapping_table.get_degree(parameter_t::C, component_t::L1)
-                                     * ((h_lower - h_upper) / mapping_table.get_stride() + 1)
-                                     * ((w_lower - w_upper) / mapping_table.get_stride() + 1);
+            l1_iteration.input_rd_it /= mapping_table.get_degree(parameter_t::K, component_t::L1);
             break;
         case dataflow_t::WS: 
             l1_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L1) 
@@ -275,15 +263,7 @@ void stats_t::update_iteration() {
                               * mapping_table.get_degree(parameter_t::Q, component_t::DRAM);
     switch(l1_dataflow) {
         case dataflow_t::IS: 
-            h_upper = (mapping_table.get_product(parameter_t::P, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L1);
-            h_lower = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
-            w_upper = (mapping_table.get_product(parameter_t::Q, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L1);
-            w_lower = (mapping_table.get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L2);
-            l2_iteration.input_rd_it = mapping_table.get_degree(parameter_t::G, component_t::L2)
-                                     * mapping_table.get_degree(parameter_t::B, component_t::L2)
-                                     * mapping_table.get_degree(parameter_t::C, component_t::L2)
-                                     * ((h_lower - h_upper) / mapping_table.get_stride() + 1)
-                                     * ((w_lower - w_upper) / mapping_table.get_stride() + 1);
+            l1_iteration.input_rd_it /= mapping_table.get_degree(parameter_t::K, component_t::L2);
             break;
         case dataflow_t::WS: 
             l2_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L2) 
@@ -325,15 +305,7 @@ void stats_t::update_iteration() {
                                 * mapping_table.get_degree(parameter_t::Q, component_t::DRAM);
     switch(l2_dataflow) {
         case dataflow_t::IS: 
-            h_upper = (mapping_table.get_product(parameter_t::P, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::L2);
-            h_lower = (mapping_table.get_product(parameter_t::P, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::DRAM);
-            w_upper = (mapping_table.get_product(parameter_t::Q, component_t::L2) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::L2);
-            w_lower = (mapping_table.get_product(parameter_t::Q, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::DRAM);
-            dram_iteration.input_rd_it = mapping_table.get_degree(parameter_t::G, component_t::DRAM) 
-                                       * mapping_table.get_degree(parameter_t::B, component_t::DRAM)
-                                       * mapping_table.get_degree(parameter_t::C, component_t::DRAM)
-                                       * ((h_lower - h_upper) / mapping_table.get_stride() + 1)
-                                       * ((w_lower - w_upper) / mapping_table.get_stride() + 1);
+            l1_iteration.input_rd_it /= mapping_table.get_degree(parameter_t::K, component_t::DRAM);
             break;
         case dataflow_t::WS: 
             dram_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::DRAM) 
