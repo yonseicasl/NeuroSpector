@@ -29,10 +29,14 @@ public:
     unsigned get_degree(const parameter_t D, const component_t U) const;
     unsigned get_stride() const;
     size_t get_product(const parameter_t D, const component_t U) const;
+    size_t get_temporal_product(const parameter_t D, const component_t U) const;
     size_t get_iteration(const component_t U) const;
+    size_t get_iteration(const parameter_t D, const component_t U) const;
     size_t get_num_macs() const;
     // TODO: REDUCTION
     size_t get_input_tile_size(const component_t U) const;
+    size_t get_input_height_tile_size(const component_t U) const;
+    size_t get_input_width_tile_size(const component_t U) const;
     size_t get_filter_tile_size(const component_t U) const;
     size_t get_output_tile_size(const component_t U) const;
     std::string get_layer_name();

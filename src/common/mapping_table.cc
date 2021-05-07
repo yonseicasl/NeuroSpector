@@ -133,6 +133,28 @@ size_t mapping_table_t::get_product(const parameter_t D, const component_t U) co
     return product;
 }
 
+size_t mapping_table_t::get_temporal_product(const parameter_t D, const component_t U) const {
+  unsigned column =static_cast<unsigned>(D);
+  size_t product = 1;
+  switch(U) {
+    case component_t::L1:
+        product *= get_degree(static_cast<parameter_t>(column), component_t::L1);
+        break;
+    case component_t::L2:
+        product *= get_degree(static_cast<parameter_t>(column), component_t::L1);
+        product *= get_degree(static_cast<parameter_t>(column), component_t::L2);
+        break;
+    case component_t::DRAM:
+        product *= get_degree(static_cast<parameter_t>(column), component_t::L1);
+        product *= get_degree(static_cast<parameter_t>(column), component_t::L2);
+        product *= get_degree(static_cast<parameter_t>(column), component_t::DRAM);
+        break;
+    default: handler.print_err(err_type_t::INVAILD, "COMPONENT");
+        break;
+  }
+  return product;
+}
+
 size_t mapping_table_t::get_iteration(const component_t U) const {
     size_t product = 1;
     switch(U) {
@@ -159,6 +181,27 @@ size_t mapping_table_t::get_iteration(const component_t U) const {
     return product;
 }
 
+size_t mapping_table_t::get_iteration(const parameter_t D, const component_t U) const {
+    size_t product = 1;
+    switch(U) {
+        case component_t::L1: 
+                product *= get_degree(static_cast<parameter_t>(D), component_t::L1);
+                product *= get_degree(static_cast<parameter_t>(D), component_t::L2);
+                product *= get_degree(static_cast<parameter_t>(D), component_t::DRAM);
+            break;
+        case component_t::L2: 
+                product *= get_degree(static_cast<parameter_t>(D), component_t::L2);
+                product *= get_degree(static_cast<parameter_t>(D), component_t::DRAM);
+            break;
+        case component_t::DRAM: 
+                product *= get_degree(static_cast<parameter_t>(D), component_t::DRAM);
+            break;
+        default: handler.print_err(err_type_t::INVAILD, "COMPONENT");
+            break;
+    }
+    return product;
+}
+
 size_t mapping_table_t::get_num_macs() const {
     size_t product = 1;
     for(unsigned i = 0; i < degrees.size(); i++)
@@ -174,6 +217,20 @@ size_t mapping_table_t::get_input_tile_size(const component_t U) const {
                * ((get_product(parameter_t::P, U) - 1) * stride + get_product(parameter_t::S, U))
                * ((get_product(parameter_t::Q, U) - 1) * stride + get_product(parameter_t::R, U));
     return tile_size;
+}
+
+size_t mapping_table_t::get_input_height_tile_size(const component_t U) const {
+    size_t tile_size = 1;
+    tile_size *= (get_product(parameter_t::P, U) - 1) * stride + get_product(parameter_t::S, U);
+    return tile_size;
+ 
+}
+
+size_t mapping_table_t::get_input_width_tile_size(const component_t U) const {
+    size_t tile_size = 1;
+    tile_size *= (get_product(parameter_t::Q, U) - 1) * stride + get_product(parameter_t::R, U);
+    return tile_size;
+ 
 }
 
 size_t mapping_table_t::get_filter_tile_size(const component_t U) const {
