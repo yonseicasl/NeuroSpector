@@ -1,5 +1,4 @@
 #include "stats.h"
-#include <cassert>
 
 static handler_t handler;
 static energy_ref_t energy_ref;
