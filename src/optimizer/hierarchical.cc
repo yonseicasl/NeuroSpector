@@ -327,8 +327,8 @@ void hierarchical_t::worker(const unsigned seq_,
     std::map<double, mapping_table_t> local_best_mappings;
     local_best_mappings.insert(std::make_pair(DBL_MAX, init_mapping_));
     // Current mapping table
-    // Start finding best mappings
     mapping_table_t curr_mapping(init_mapping_);
+    // Start finding best mappings
     for(size_t g = 0; g < mapping_space_.get_permutations(0).size(); g++) {
         curr_mapping.put_column_degrees(parameter_t::G, mapping_space_.get_permutations(0).at(g), start_component, end_component);
         for(size_t k = 0; k < mapping_space_.get_permutations(1).size(); k++) {
@@ -368,8 +368,12 @@ void hierarchical_t::worker(const unsigned seq_,
                 }
             }
         }
-    }
+    } 
     for(auto it = local_best_mappings.begin(); it != local_best_mappings.end(); ++it) 
         rtn_.push_back(it->second);
+    if(local_best_mappings.size() != top_k.at(seq_)) {
+        for(unsigned i = 0; i < top_k.at(seq_) - local_best_mappings.size(); i++) 
+            rtn_.push_back(init_mapping_);
+    }
     return;
 }

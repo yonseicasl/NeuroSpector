@@ -103,42 +103,6 @@ void stats_t::print_stats() const {
 }
 
 void stats_t::print_csv() const {
-//    std::cout << "L1 TILE SIZE,I,F,O\n" 
-//              << "," << l1_input_tile_size 
-//              << "," << l1_filter_tile_size 
-//              << ","  << l1_output_tile_size << "\n"
-//              << "L2 TILE SIZE,I,F,O\n" 
-//              << "," << l2_input_tile_size 
-//              << "," << l2_filter_tile_size 
-//              << "," << l2_output_tile_size << "\n"
-//              << "L1 ITERATION,I,F,O\n"
-//              << "," << l1_iteration.input_rd_it 
-//              << "," << l1_iteration.filter_rd_it 
-//              << "," << l1_iteration.output_rd_it + l1_iteration.output_wt_it << "\n"
-//              << "L2 ITERATION,I,F,O\n"
-//              << "," << l2_iteration.input_rd_it 
-//              << "," << l2_iteration.filter_rd_it 
-//              << "," << l2_iteration.output_rd_it + l2_iteration.output_wt_it << "\n"
-//              << "DRAM ITERATION,I,F,O\n"
-//              << "," << dram_iteration.input_rd_it 
-//              << "," << dram_iteration.filter_rd_it 
-//              << "," << dram_iteration.output_rd_it + dram_iteration.output_wt_it << "\n"
-//              << "# OF S0 HOSTS,I,F,O\n" 
-//              << "," << num_s0_input_hosts 
-//              << "," << num_s0_filter_hosts 
-//              << "," << num_s0_output_hosts << "\n"
-//              << "# OF S1 HOSTS,I,F,O\n" 
-//              << "," << num_s1_input_hosts 
-//              << "," << num_s1_filter_hosts 
-//              << "," << num_s1_output_hosts << "\n"
-//              << "# OF S2 HOSTS,I,F,O\n" 
-//              << "," << num_s2_input_hosts 
-//              << "," << num_s2_filter_hosts 
-//              << "," << num_s2_output_hosts << "\n"
-//              << "# OF S2 ACTIVE,MACs,PEs,ACCs\n" 
-//              << "," << num_active_macs
-//              << "," << num_active_pes 
-//              << "," << num_active_accs << std::endl;
     std::cout << "STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION\n" 
               << "," << std::fixed << std::setprecision(1) << mac_energy 
               << "," << std::fixed << std::setprecision(1) << l1_energy 
@@ -668,7 +632,7 @@ void stats_t::update_noc() {
 }
 
 void stats_t::update_energy() {
-    //Bypass Adjustment
+    // Bypass Adjustment
     if(accelerator->l1_input_bypass())
         l2_iteration.input_rd_it = l1_iteration.input_rd_it;
     if(accelerator->l1_filter_bypass())
