@@ -151,6 +151,9 @@ private:
     std::vector<uint64_t> valid_cnt;                                // Total valid counts      : first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
     std::vector<mapping_table_t> best_mappings;
     // Final
+    unsigned seq_0_top_k;
+    unsigned seq_1_top_k;
+    unsigned seq_2_top_k;
     unsigned final_best_idx;                                        // Final best mapping's index
     double final_best_energy;                                       // Final best mapping's energy
     std::vector<mapping_table_t> final_best_mappings;               // Final best mappings

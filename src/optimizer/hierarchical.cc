@@ -1,9 +1,9 @@
 #include "optimizer.h"
 
 #define SEQ_MAX 3
-#define TOP_K_FIRST 3
-#define TOP_K_SECOND 3
-#define TOP_K_THIRD 3
+#define TOP_K_FIRST 1
+#define TOP_K_SECOND 1
+#define TOP_K_THIRD 1
 
 static handler_t handler;
 
@@ -90,7 +90,8 @@ void hierarchical_t::run(const unsigned idx_) {
 void hierarchical_t::print_stats() {
     std::string df_str("IWO");
     handler.print_line(50, "*");
-    std::cout << "# TOP K: " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+    std::cout << "# TOP K : " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+    std::cout << "# WINNER: " << seq_0_top_k << "-" << seq_1_top_k << "-" << seq_2_top_k << std::endl;
     handler.print_line(50, "*");
     std::cout << "# SEQ 0 (L2-S2)"<< "\n"
               << " - NUM OF TOTAL MAPPINGS  : " 
@@ -132,9 +133,8 @@ void hierarchical_t::print_stats() {
 void hierarchical_t::print_csv() {
     std::string df_str("IWO");
     handler.print_line(50, "*");
-    std::cout << "# SEQ 0"<< std::endl;
-    handler.print_line(50, "*");
-    std::cout << "# TOP K: " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+    std::cout << "# TOP K : " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+    std::cout << "# WINNER: " << seq_0_top_k << "-" << seq_1_top_k << "-" << seq_2_top_k << std::endl;
     handler.print_line(50, "*");
     std::cout << "# SEQ 0 (L2-S2)"<< "\n"
               << " - NUM OF TOTAL MAPPINGS  : " 
@@ -292,6 +292,9 @@ void hierarchical_t::update(const dataflow_t l1_dataflow_,
         final_best_dataflows.clear();
         final_best_dataflows.push_back(l1_dataflow_);
         final_best_dataflows.push_back(l2_dataflow_);
+        seq_0_top_k = final_best_idx / (top_k.at(1) * top_k.at(2)) + 1;
+        seq_1_top_k = (final_best_idx - ((seq_0_top_k - 1) * top_k.at(1) * top_k.at(2))) / top_k.at(2) + 1;
+        seq_2_top_k = final_best_idx % top_k.at(2) + 1;
     }
     return;
 }
