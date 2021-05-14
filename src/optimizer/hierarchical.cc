@@ -1,8 +1,8 @@
 #include "optimizer.h"
 
 #define SEQ_MAX 3
-#define TOP_K_FIRST 1
-#define TOP_K_SECOND 1
+#define TOP_K_FIRST 3
+#define TOP_K_SECOND 3
 #define TOP_K_THIRD 1
 
 static handler_t handler;
@@ -220,7 +220,7 @@ void hierarchical_t::engine(const unsigned idx_,
                 continue; 
             }
             else {
-                for(unsigned i = 0; i < top_k.at(0); i++) {
+                for(unsigned i = 0; i < rtn_first.size(); i++) {
                     // Mapping space generation
                     mapping_space_t mapping_space(used_levels.at(seq) + 1, rtn_first.at(i).get_row_degrees(end_component));
                     total_cnt.push_back(mapping_space.get_num_permutations());
@@ -243,7 +243,7 @@ void hierarchical_t::engine(const unsigned idx_,
                 continue;
             }
             else {
-                for(unsigned i = 0; i < top_k.at(0) * top_k.at(1); i++) {
+                for(unsigned i = 0; i < rtn_second.size(); i++) {
                     // Mapping space generation
                     mapping_space_t mapping_space(used_levels.at(seq) + 1, rtn_second.at(i).get_row_degrees(end_component));
                     total_cnt.push_back(mapping_space.get_num_permutations());
@@ -309,27 +309,28 @@ void hierarchical_t::worker(const unsigned seq_,
     // Validation required components 
     component_t temporal = component_t::SIZE;
     component_t spatial = component_t::SIZE;
-    component_t check = component_t::SIZE;
+    component_t bottom = component_t::SIZE;
     // TODO: if skipped
     if(seq_ == 0) {
         temporal = component_t::L2;
         spatial = component_t::S2;
-        check = component_t::DRAM;
+        bottom = component_t::DRAM;
     }
     if(seq_ == 1) {
         temporal = component_t::L1;
         spatial = component_t::S1_X;
-        check = component_t::L2;
+        bottom = component_t::L2;
     }
     if(seq_ == 2) {
         temporal = component_t::MAC;
         spatial = component_t::S0;
-        check = component_t::L1;
+        bottom = component_t::L1;
     }
     // Local best mappings
     std::map<double, mapping_table_t> local_best_mappings;
     local_best_mappings.insert(std::make_pair(DBL_MAX, init_mapping_));
-    // Current mapping table
+    // Current energy & mapping
+    double curr_energy = DBL_MAX;
     mapping_table_t curr_mapping(init_mapping_);
     // Start finding best mappings
     for(size_t g = 0; g < mapping_space_.get_permutations(0).size(); g++) {
@@ -350,15 +351,21 @@ void hierarchical_t::worker(const unsigned seq_,
                                     curr_mapping.put_column_degrees(parameter_t::R, mapping_space_.get_permutations(7).at(r), start_component, end_component);
                                     // Validity check
                                     if(check_validity(temporal, curr_mapping) & check_validity(spatial, curr_mapping)) {
-                                        // Update current stats
+                                        // Get current energy
                                         stats_t curr_stats(accelerator, curr_mapping, l1_dataflow_, l2_dataflow_);
                                         curr_stats.update_stats();
-                                        // 'local_best_mappings' includes the same energy key value with the curr mapping table's energy
-                                        auto entry = local_best_mappings.find(curr_stats.get_energy(check));
+                                        curr_energy = curr_stats.get_energy(bottom);
+                                        // 'local_best_mappings' includes the same energy key value with the current energy
+                                        auto entry = local_best_mappings.find(curr_energy);
                                         if(entry == local_best_mappings.end()) {
-                                            // Comparison between the last candidate (highest energy) and the current mapping table's energy
-                                            if(std::prev(local_best_mappings.end())->first > curr_stats.get_energy(check)) 
-                                                local_best_mappings.insert(std::make_pair(curr_stats.get_energy(check), curr_mapping));
+                                            // Comparison between the last candidate (highest energy) and the current energy
+                                            if(std::prev(local_best_mappings.end())->first > curr_energy) 
+                                                local_best_mappings.insert(std::make_pair(curr_energy, curr_mapping));
+                                        }
+                                        else {
+                                            // Same cost then, compare bottom iterations
+                                            if(entry->second.get_iteration(bottom) > curr_mapping.get_iteration(bottom))
+                                                entry->second.swap_degrees(curr_mapping.get_degrees());
                                         }
                                         if(local_best_mappings.size() > top_k.at(seq_)) 
                                            local_best_mappings.erase(std::prev(local_best_mappings.end())); 
