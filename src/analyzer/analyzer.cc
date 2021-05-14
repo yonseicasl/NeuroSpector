@@ -51,13 +51,8 @@ void analyzer_t::print_stats() const {
     std::cout << "\n# NETWORK: " << network_name << std::endl;
     for(size_t idx = 0; idx < mappings.size(); idx++) {
         check_validity(idx);
-#ifdef CSV
-        mappings.at(idx).print_csv();
-        all_stats.at(idx)->print_csv();
-#else
         mappings.at(idx).print_stats();
         all_stats.at(idx)->print_stats();
-#endif
     }
     return;
 }
@@ -66,13 +61,8 @@ void analyzer_t::print_stats(const unsigned idx_) const {
     accelerator->print_stats();
     std::cout << "\n# NETWORK: " << network_name << std::endl;
     check_validity(idx_ - 1);
-#ifdef CSV
-    mappings.at(idx_ - 1).print_csv();
-    all_stats.at(idx_ - 1)->print_csv();
-#else
     mappings.at(idx_ - 1).print_stats();
     all_stats.at(idx_ - 1)->print_stats();
-#endif
     return;
 }
 
