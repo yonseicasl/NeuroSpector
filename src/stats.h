@@ -84,7 +84,11 @@ private:
     // Energy
     double mac_energy;
     double l1_energy;
+    double l1_energy_upper;
+    double l1_energy_lower;
     double l2_energy;
+    double l2_energy_upper;
+    double l2_energy_lower;
     double dram_energy;
     double total_energy;
     // Utilization
