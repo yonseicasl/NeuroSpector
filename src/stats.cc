@@ -169,7 +169,6 @@ void stats_t::update_iteration() {
     size_t l1_iteration_tmp = mapping_table.get_iteration(component_t::L1);
     size_t l2_iteration_tmp = mapping_table.get_iteration(component_t::L2);
     size_t dram_iteration_tmp = mapping_table.get_iteration(component_t::DRAM);
-
     // TODO : Move this variables to header file
     size_t h_upper = 0;
     size_t h_lower = 0;
@@ -183,10 +182,9 @@ void stats_t::update_iteration() {
     int w_overlap_size = 0;
     size_t h_iteration = 0;
     size_t w_iteration = 0;
-
-    size_t h_stride= mapping_table.get_stride();
-    size_t w_stride= mapping_table.get_stride();
-    //
+    size_t h_stride = mapping_table.get_stride();
+    size_t w_stride = mapping_table.get_stride();
+    // Gamma(C/R/S) iterations
     size_t gamma_dram_iteration = mapping_table.get_degree(parameter_t::C, component_t::DRAM)
                                 * mapping_table.get_degree(parameter_t::S, component_t::DRAM)
                                 * mapping_table.get_degree(parameter_t::R, component_t::DRAM);
@@ -226,30 +224,24 @@ void stats_t::update_iteration() {
             q_upper =  mapping_table.get_temporal_product(parameter_t::Q, component_t::S0);
             s_upper =  mapping_table.get_temporal_product(parameter_t::S, component_t::S0);
             r_upper =  mapping_table.get_temporal_product(parameter_t::R, component_t::S0); 
-
             h_lower = (mapping_table.get_temporal_product(parameter_t::P, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_temporal_product(parameter_t::S, component_t::L1);
             w_lower = (mapping_table.get_temporal_product(parameter_t::Q, component_t::L1) - 1) * mapping_table.get_stride() + mapping_table.get_temporal_product(parameter_t::R, component_t::L1);
-
             // Suppose height/width filter size & height/width stride are same
             h_overlap_size = int(mapping_table.get_temporal_product(parameter_t::S, component_t::L1)) - int(mapping_table.get_stride());
             w_overlap_size = int(mapping_table.get_temporal_product(parameter_t::R, component_t::L1)) - int(mapping_table.get_stride());
-
             h_stride = mapping_table.get_temporal_product(parameter_t::S, component_t::S0);
             w_stride = mapping_table.get_temporal_product(parameter_t::R, component_t::S0); 
-
             // Step 1. 
             if(int(h_upper) < h_overlap_size && ((p_upper * mapping_table.get_stride()) % s_upper) == 0) {
-              h_iteration = (h_lower- h_upper)/h_stride + 1;
-              h_iteration *= mapping_table.get_iteration(parameter_t::P, component_t::L2);
-              h_iteration *= mapping_table.get_iteration(parameter_t::S, component_t::L2);
-
+                h_iteration = (h_lower- h_upper)/h_stride + 1;
+                h_iteration *= mapping_table.get_iteration(parameter_t::P, component_t::L2);
+                h_iteration *= mapping_table.get_iteration(parameter_t::S, component_t::L2);
             }
             // Step 2. 
             else {
-              h_iteration = mapping_table.get_iteration(parameter_t::P, component_t::L1) 
-                          * mapping_table.get_iteration(parameter_t::S, component_t::L1);
+                h_iteration = mapping_table.get_iteration(parameter_t::P, component_t::L1) 
+                            * mapping_table.get_iteration(parameter_t::S, component_t::L1);
             }
-
             // Step 1. 
             if(int(w_upper) < w_overlap_size && ((q_upper * mapping_table.get_stride()) % r_upper) == 0) {
               w_iteration = (w_lower- w_upper)/w_stride + 1;
@@ -267,15 +259,12 @@ void stats_t::update_iteration() {
                                      * h_iteration * w_iteration
                                      * mapping_table.get_iteration(parameter_t::K, component_t::L1); 
             l1_iteration.input_rd_it /= (mapping_table.get_degree(parameter_t::K, component_t::L1));
-
-
             break;
         case dataflow_t::WS: 
             l1_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L1) 
                                           * mapping_table.get_degree(parameter_t::P, component_t::L1) 
                                           * mapping_table.get_degree(parameter_t::Q, component_t::L1));
             break;
-
         case dataflow_t::NONE: // Nothing to do
             break;
         default: handler.print_err(err_type_t::INVAILD, "MAC DATAFLOW"); break;
@@ -360,8 +349,6 @@ void stats_t::update_iteration() {
                                      * mapping_table.get_iteration(parameter_t::C, component_t::L2)
                                      * h_iteration * w_iteration
                                      * mapping_table.get_iteration(parameter_t::K, component_t::DRAM);
-
-
             break;
         case dataflow_t::WS: 
             l2_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::L2) 
@@ -410,40 +397,36 @@ void stats_t::update_iteration() {
             q_upper =  mapping_table.get_product(parameter_t::Q, component_t::L2);
             s_upper =  mapping_table.get_product(parameter_t::S, component_t::L2);
             r_upper =  mapping_table.get_product(parameter_t::R, component_t::L2); 
-
             h_lower = (mapping_table.get_product(parameter_t::P, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::S, component_t::DRAM);
             w_lower = (mapping_table.get_product(parameter_t::Q, component_t::DRAM) - 1) * mapping_table.get_stride() + mapping_table.get_product(parameter_t::R, component_t::DRAM);
-
             // Suppose height/width filter size & height/width stride are same
             h_overlap_size = int(mapping_table.get_product(parameter_t::S, component_t::DRAM)) - int(mapping_table.get_stride());
             w_overlap_size = int(mapping_table.get_product(parameter_t::R, component_t::DRAM)) - int(mapping_table.get_stride());
-
             h_stride = mapping_table.get_product(parameter_t::S, component_t::L2);
             w_stride = mapping_table.get_product(parameter_t::R, component_t::L2); 
-
             // Step 1. 
             if(int(h_upper) < h_overlap_size && ((p_upper * mapping_table.get_stride()) % s_upper) == 0) {
-              h_iteration = (h_lower - h_upper)/h_stride + 1;
+                h_iteration = (h_lower - h_upper) / h_stride + 1;
             }
             // Step 2. 
             else {
-              h_iteration = mapping_table.get_iteration(parameter_t::P, component_t::DRAM) 
-                          * mapping_table.get_iteration(parameter_t::S, component_t::DRAM);
+                h_iteration = mapping_table.get_iteration(parameter_t::P, component_t::DRAM) 
+                            * mapping_table.get_iteration(parameter_t::S, component_t::DRAM);
             }
-
             // Step 1. 
             if(int(w_upper) < w_overlap_size && ((q_upper * mapping_table.get_stride()) % r_upper) == 0) {
-              w_iteration = (w_lower- w_upper)/w_stride + 1;
+                w_iteration = (w_lower- w_upper) / w_stride + 1;
             }
             // Step 2. 
             else {
                w_iteration = mapping_table.get_iteration(parameter_t::Q, component_t::DRAM) 
-                          * mapping_table.get_iteration(parameter_t::R, component_t::DRAM);             
+                           * mapping_table.get_iteration(parameter_t::R, component_t::DRAM);             
             }
             dram_iteration.input_rd_it = mapping_table.get_iteration(parameter_t::G, component_t::DRAM)
-                                     * mapping_table.get_iteration(parameter_t::B, component_t::DRAM)
-                                     * mapping_table.get_iteration(parameter_t::C, component_t::DRAM)
-                                     * h_iteration * w_iteration;
+                                       * mapping_table.get_iteration(parameter_t::B, component_t::DRAM)
+                                       * mapping_table.get_iteration(parameter_t::C, component_t::DRAM)
+                                       * h_iteration 
+                                       * w_iteration;
             break;
         case dataflow_t::WS: 
             dram_iteration.filter_rd_it /= (mapping_table.get_degree(parameter_t::B, component_t::DRAM) 
@@ -464,17 +447,14 @@ void stats_t::update_iteration() {
     2. if(l1 tile size_spatial == l2 tile size)
        -> l2 iteration = dram iteration
     */
-    if(l1_input_tile_size_spatial == l2_input_tile_size) {
+    if(l1_input_tile_size_spatial == l2_input_tile_size) 
       l2_iteration.input_rd_it = dram_iteration.input_rd_it; 
-    }
-    if(l1_filter_tile_size_spatial == l2_filter_tile_size) {
+    if(l1_filter_tile_size_spatial == l2_filter_tile_size) 
       l2_iteration.filter_rd_it = dram_iteration.filter_rd_it;
-    }
     if(l1_output_tile_size_spatial == l2_output_tile_size) {
       l2_iteration.output_wt_it = dram_iteration.output_wt_it;
       l2_iteration.output_rd_it = dram_iteration.output_rd_it;
     }
-
     // Bypass adjustment
     if(accelerator->l1_input_bypass())
         l2_iteration.input_rd_it = l1_iteration.input_rd_it;
@@ -658,33 +638,33 @@ void stats_t::update_energy() {
     // Between MAC and L1 with 'l1 iteration' and S0 NoC
     mac_energy = mapping_table.get_num_macs() * energy_ref.mac_operation;
     l1_energy_upper = mac_input_tile_size * l1_iteration.input_rd_it * num_s0_input_hosts * energy_ref.l1_input_egress
-              + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * energy_ref.l1_filter_egress
-              + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * energy_ref.l1_output_egress
-              + mac_output_tile_size * l1_iteration.output_wt_it * num_s0_output_hosts * energy_ref.l1_output_ingress;
+                    + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * energy_ref.l1_filter_egress
+                    + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * energy_ref.l1_output_egress
+                    + mac_output_tile_size * l1_iteration.output_wt_it * num_s0_output_hosts * energy_ref.l1_output_ingress;
+    l1_energy_upper *= num_active_pes * num_active_accs;
     // Between L1 and L2 with 'l2_iteration' and S1 NoC
     l1_energy_lower = l1_input_tile_size * l2_iteration.input_rd_it * energy_ref.l1_input_ingress 
-              + l1_filter_tile_size * l2_iteration.filter_rd_it * energy_ref.l1_filter_ingress
-              + l1_output_tile_size * l2_iteration.output_rd_it * energy_ref.l1_output_ingress
-              + l1_output_tile_size * l2_iteration.output_wt_it * energy_ref.l1_output_egress;
-    l1_energy_upper *= num_active_pes * num_active_accs;
+                    + l1_filter_tile_size * l2_iteration.filter_rd_it * energy_ref.l1_filter_ingress
+                    + l1_output_tile_size * l2_iteration.output_rd_it * energy_ref.l1_output_ingress
+                    + l1_output_tile_size * l2_iteration.output_wt_it * energy_ref.l1_output_egress;
     l1_energy_lower *= num_active_pes * num_active_accs;
     l1_energy = l1_energy_upper + l1_energy_lower;
     l2_energy_upper = l1_input_tile_size_spatial * l2_iteration.input_rd_it * energy_ref.l2_input_egress 
-              + l1_filter_tile_size * l2_iteration.filter_rd_it * num_s1_filter_hosts * energy_ref.l2_filter_egress
-              + l1_output_tile_size * l2_iteration.output_rd_it * num_s1_output_hosts * energy_ref.l2_output_egress
-              + l1_output_tile_size * l2_iteration.output_wt_it * num_s1_output_hosts * energy_ref.l2_output_ingress; 
+                    + l1_filter_tile_size * l2_iteration.filter_rd_it * num_s1_filter_hosts * energy_ref.l2_filter_egress
+                    + l1_output_tile_size * l2_iteration.output_rd_it * num_s1_output_hosts * energy_ref.l2_output_egress
+                    + l1_output_tile_size * l2_iteration.output_wt_it * num_s1_output_hosts * energy_ref.l2_output_ingress; 
+    l2_energy_upper *= num_active_accs;
     // Between L2 and DRAM with 'dram_iteration' and S2 NoC
     l2_energy_lower = l2_input_tile_size * dram_iteration.input_rd_it * energy_ref.l2_input_ingress
-               + l2_filter_tile_size * dram_iteration.filter_rd_it * energy_ref.l2_filter_ingress
-               + l2_output_tile_size * dram_iteration.output_rd_it * energy_ref.l2_output_ingress
-               + l2_output_tile_size * dram_iteration.output_wt_it * energy_ref.l2_output_egress;
-    l2_energy_upper *= num_active_accs;
+                    + l2_filter_tile_size * dram_iteration.filter_rd_it * energy_ref.l2_filter_ingress
+                    + l2_output_tile_size * dram_iteration.output_rd_it * energy_ref.l2_output_ingress
+                    + l2_output_tile_size * dram_iteration.output_wt_it * energy_ref.l2_output_egress;
     l2_energy_lower *= num_active_accs;
     l2_energy = l2_energy_upper + l2_energy_lower;
-    dram_energy = l2_input_tile_size * dram_iteration.input_rd_it * energy_ref.dram_egress
-                + l2_filter_tile_size * dram_iteration.filter_rd_it * energy_ref.dram_egress
-                + l2_output_tile_size * dram_iteration.output_rd_it * energy_ref.dram_egress
-                + l2_output_tile_size * dram_iteration.output_wt_it * energy_ref.dram_ingress;
+    dram_energy = l2_input_tile_size * dram_iteration.input_rd_it * num_s2_input_hosts * energy_ref.dram_egress
+                + l2_filter_tile_size * dram_iteration.filter_rd_it * num_s2_filter_hosts * energy_ref.dram_egress
+                + l2_output_tile_size * dram_iteration.output_rd_it * num_s2_output_hosts * energy_ref.dram_egress
+                + l2_output_tile_size * dram_iteration.output_wt_it * num_s2_output_hosts * energy_ref.dram_ingress;
     total_energy = mac_energy + l1_energy + l2_energy + dram_energy;
     return;
 }
