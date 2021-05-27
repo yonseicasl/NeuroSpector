@@ -11,6 +11,7 @@
 #include "utils.h"
 
 //#define L1_SHARED
+//#define SIMBA
 
 /* Stats */
 class stats_t {
@@ -52,6 +53,7 @@ private:
     void update_edp();
     // Tile size
     size_t mac_input_tile_size; 
+    size_t mac_input_tile_size_spatial;
     size_t mac_filter_tile_size;
     size_t mac_output_tile_size; 
     size_t l1_input_tile_size; 
@@ -61,6 +63,7 @@ private:
     size_t l1_output_tile_size; 
     size_t l1_output_tile_size_spatial; 
     size_t l2_input_tile_size; 
+    size_t l2_input_tile_size_spatial;
     size_t l2_filter_tile_size;
     size_t l2_output_tile_size;
     // Iteration 
@@ -117,6 +120,29 @@ class energy_ref_t {
 public:
     energy_ref_t();
     ~energy_ref_t();
+#ifdef SIMBA
+    // MAC operation
+    float mac_operation = 0.075;
+    // L1 Separate (8192/ 32768/ 3072)
+    float l1_input_ingress = 4.495;
+    float l1_input_egress = 4.495;
+    float l1_filter_ingress = 6;
+    float l1_filter_egress = 6;
+    float l1_output_ingress = 4.255;
+    float l1_output_egress = 4.255;
+
+    // L2 64KB
+    float l2_input_ingress  = 9;
+    float l2_input_egress   = 9;
+    float l2_filter_ingress = 9;
+    float l2_filter_egress  = 9;
+    float l2_output_ingress = 9;
+    float l2_output_egress  = 9;
+
+    // DRAM 
+    float dram_ingress = 200;
+    float dram_egress = 200;
+#else
     // MAC operation 
     float mac_operation = 0.075;
 #ifdef L1_SHARED
@@ -146,6 +172,7 @@ public:
     // DRAM 
     float dram_ingress = 200;
     float dram_egress = 200;
+#endif
 };
 
 /* Cycle reference */
