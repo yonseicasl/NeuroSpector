@@ -140,7 +140,9 @@ void stats_t::update_tile_size() {
     mac_input_tile_size = mapping_table.get_input_tile_size(component_t::MAC);     // Size: 1
     mac_input_tile_size_spatial =  mapping_table.get_input_tile_size(component_t::S0); 
     mac_filter_tile_size = mapping_table.get_filter_tile_size(component_t::MAC);   // Size: 1
+    mac_filter_tile_size_spatial =  mapping_table.get_filter_tile_size(component_t::S0); 
     mac_output_tile_size = mapping_table.get_filter_tile_size(component_t::MAC);   // Size: 1
+    mac_output_tile_size_spatial =  mapping_table.get_output_tile_size(component_t::S0); 
     l1_input_tile_size = mapping_table.get_input_tile_size(component_t::L1);
     l1_input_tile_size_spatial = mapping_table.get_input_tile_size(component_t::S1_Y);
     l1_filter_tile_size = mapping_table.get_filter_tile_size(component_t::L1);

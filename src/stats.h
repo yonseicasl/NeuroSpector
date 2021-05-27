@@ -55,7 +55,9 @@ private:
     size_t mac_input_tile_size; 
     size_t mac_input_tile_size_spatial;
     size_t mac_filter_tile_size;
+    size_t mac_filter_tile_size_spatial;
     size_t mac_output_tile_size; 
+    size_t mac_output_tile_size_spatial;
     size_t l1_input_tile_size; 
     size_t l1_input_tile_size_spatial; 
     size_t l1_filter_tile_size;
