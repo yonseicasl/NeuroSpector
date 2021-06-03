@@ -730,7 +730,20 @@ void stats_t::update_edp() {
 
 /* Energy reference */
 energy_ref_t::energy_ref_t() {
-
+    handler.print_line(50, "*");
+    std::cout << "# ENERGY REFERENCE VALUES" << "\n"
+              << " - MAC OPERATION           : " << mac_operation << "\n"
+              << "-------------------------------------------" << "\n"
+              << " - L1 INPUT  INGRESS/EGRESS: " << l1_input_ingress << "/" << l1_input_egress << "\n"
+              << " - L1 FILTER INGRESS/EGRESS: " << l1_filter_ingress << "/" << l1_filter_egress << "\n"
+              << " - L1 OUTPUT INGRESS/EGRESS: " << l1_output_ingress << "/" << l1_output_egress << "\n"
+              << "-------------------------------------------" << "\n"
+              << " - L2 INPUT  INGRESS/EGRESS: " << l2_input_ingress << "/" << l2_input_egress << "\n"
+              << " - L2 FILTER INGRESS/EGRESS: " << l2_filter_ingress << "/" << l2_filter_egress << "\n"
+              << " - L2 OUTPUT INGRESS/EGRESS: " << l2_output_ingress << "/" << l2_output_egress << "\n"
+              << "-------------------------------------------" << "\n"
+              << " - DRAM INGRESS/EGRESS     : " << dram_ingress << "/" << dram_egress << std::endl;
+    handler.print_line(50, "*");
 }
 
 energy_ref_t::~energy_ref_t() {
