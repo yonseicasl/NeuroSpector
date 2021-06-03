@@ -1,8 +1,8 @@
 #include "optimizer.h"
 
 #define SEQ_MAX 3
-#define TOP_K_FIRST 3
-#define TOP_K_SECOND 3
+#define TOP_K_FIRST 1
+#define TOP_K_SECOND 1
 #define TOP_K_THIRD 1
 
 static handler_t handler;
@@ -191,7 +191,7 @@ void hierarchical_t::engine(const unsigned idx_,
     std::vector<mapping_table_t> rtn_third;
     // Start optimizing from SEQ 0 to SEQ 2
     for(unsigned seq = 0; seq < SEQ_MAX; seq++) {
-        // SEQ 0: L2-DRAM
+        // SEQ 0: L2-S2
         if(seq == 0) {
             if(used_levels.at(seq) == 0) {
                 start_component = component_t::L1; 
@@ -213,7 +213,7 @@ void hierarchical_t::engine(const unsigned idx_,
                 end_component = component_t::L2;
             }
         }
-        // SEQ 1: L1-L2
+        // SEQ 1: L1-S1
         else if(seq == 1) {
             if(used_levels.at(seq) == 0) { 
                 start_component = component_t::S0; 
@@ -237,7 +237,7 @@ void hierarchical_t::engine(const unsigned idx_,
                 end_component = component_t::L1;
             }
         }
-        // SEQ 2: MAC-L1
+        // SEQ 2: MAC-S0
         else {
             if(used_levels.at(seq) == 0) {
                 continue;
