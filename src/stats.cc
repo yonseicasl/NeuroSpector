@@ -649,29 +649,41 @@ void stats_t::update_energy() {
     }
     // Between MAC and L1 with 'l1 iteration' and S0 NoC
     mac_energy = mapping_table.get_num_macs() * energy_ref.mac_operation;
-    l1_energy_upper = mac_input_tile_size_spatial * l1_iteration.input_rd_it * energy_ref.l1_input_egress
-                    + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * energy_ref.l1_filter_egress
-                    + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * energy_ref.l1_output_egress
-                    + mac_output_tile_size * l1_iteration.output_wt_it * num_s0_output_hosts * energy_ref.l1_output_ingress;
-    l1_energy_upper *= num_active_pes * num_active_accs;
-    // Between L1 and L2 with 'l2_iteration' and S1 NoC
-    l1_energy_lower = l1_input_tile_size * l2_iteration.input_rd_it * energy_ref.l1_input_ingress 
-                    + l1_filter_tile_size * l2_iteration.filter_rd_it * energy_ref.l1_filter_ingress
-                    + l1_output_tile_size * l2_iteration.output_rd_it * energy_ref.l1_output_ingress
-                    + l1_output_tile_size * l2_iteration.output_wt_it * energy_ref.l1_output_egress;
-    l1_energy_lower *= num_active_pes * num_active_accs;
+    if(accelerator->l1_type() == buffer_type_t::NONE) {
+        l1_energy_upper = 0;
+        l1_energy_lower = 0;
+    }
+    else {
+        l1_energy_upper = mac_input_tile_size_spatial * l1_iteration.input_rd_it * energy_ref.l1_input_egress
+                        + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * energy_ref.l1_filter_egress
+                        + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * energy_ref.l1_output_egress
+                        + mac_output_tile_size * l1_iteration.output_wt_it * num_s0_output_hosts * energy_ref.l1_output_ingress;
+        l1_energy_upper *= num_active_pes * num_active_accs;
+        // Between L1 and L2 with 'l2_iteration' and S1 NoC
+        l1_energy_lower = l1_input_tile_size * l2_iteration.input_rd_it * energy_ref.l1_input_ingress 
+                        + l1_filter_tile_size * l2_iteration.filter_rd_it * energy_ref.l1_filter_ingress
+                        + l1_output_tile_size * l2_iteration.output_rd_it * energy_ref.l1_output_ingress
+                        + l1_output_tile_size * l2_iteration.output_wt_it * energy_ref.l1_output_egress;
+        l1_energy_lower *= num_active_pes * num_active_accs;
+    }
     l1_energy = l1_energy_upper + l1_energy_lower;
-    l2_energy_upper = l1_input_tile_size_spatial * l2_iteration.input_rd_it * energy_ref.l2_input_egress 
-                    + l1_filter_tile_size * l2_iteration.filter_rd_it * num_s1_filter_hosts * energy_ref.l2_filter_egress
-                    + l1_output_tile_size * l2_iteration.output_rd_it * num_s1_output_hosts * energy_ref.l2_output_egress
-                    + l1_output_tile_size * l2_iteration.output_wt_it * num_s1_output_hosts * energy_ref.l2_output_ingress; 
-    l2_energy_upper *= num_active_accs;
-    // Between L2 and DRAM with 'dram_iteration' and S2 NoC
-    l2_energy_lower = l2_input_tile_size * dram_iteration.input_rd_it * energy_ref.l2_input_ingress
-                    + l2_filter_tile_size * dram_iteration.filter_rd_it * energy_ref.l2_filter_ingress
-                    + l2_output_tile_size * dram_iteration.output_rd_it * energy_ref.l2_output_ingress
-                    + l2_output_tile_size * dram_iteration.output_wt_it * energy_ref.l2_output_egress;
-    l2_energy_lower *= num_active_accs;
+    if(accelerator->l2_type() == buffer_type_t::NONE) {
+        l2_energy_upper = 0;
+        l2_energy_lower = 0;
+    }
+    else {
+        l2_energy_upper = l1_input_tile_size_spatial * l2_iteration.input_rd_it * energy_ref.l2_input_egress 
+                        + l1_filter_tile_size * l2_iteration.filter_rd_it * num_s1_filter_hosts * energy_ref.l2_filter_egress
+                        + l1_output_tile_size * l2_iteration.output_rd_it * num_s1_output_hosts * energy_ref.l2_output_egress
+                        + l1_output_tile_size * l2_iteration.output_wt_it * num_s1_output_hosts * energy_ref.l2_output_ingress; 
+        l2_energy_upper *= num_active_accs;
+        // Between L2 and DRAM with 'dram_iteration' and S2 NoC
+        l2_energy_lower = l2_input_tile_size * dram_iteration.input_rd_it * energy_ref.l2_input_ingress
+                        + l2_filter_tile_size * dram_iteration.filter_rd_it * energy_ref.l2_filter_ingress
+                        + l2_output_tile_size * dram_iteration.output_rd_it * energy_ref.l2_output_ingress
+                        + l2_output_tile_size * dram_iteration.output_wt_it * energy_ref.l2_output_egress;
+        l2_energy_lower *= num_active_accs;
+    }
     l2_energy = l2_energy_upper + l2_energy_lower;
     dram_energy = l2_input_tile_size_spatial * dram_iteration.input_rd_it * energy_ref.dram_egress
                 + l2_filter_tile_size * dram_iteration.filter_rd_it * num_s2_filter_hosts * energy_ref.dram_egress
