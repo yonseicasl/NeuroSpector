@@ -57,6 +57,10 @@ void hierarchical_t::run() {
 }
 
 void hierarchical_t::run(const unsigned idx_) {
+    final_best_idx = 0;
+    final_best_energy = DBL_MAX;
+    final_best_mappings.clear();
+    final_best_dataflows.clear();
     handler.print_line(50, "*");
     std::cout << "# HIERARCHICAL OPTIMIZATION" << std::endl;
     std::cout << "# NETWORK    : " << network_name << std::endl;
