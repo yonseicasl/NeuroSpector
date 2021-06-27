@@ -10,9 +10,6 @@
 #include "mapping_table.h"
 #include "utils.h"
 
-//#define L1_SHARED
-//#define SIMBA
-
 /* Stats */
 class stats_t {
 public:
@@ -115,78 +112,6 @@ private:
     const dataflow_t l2_dataflow;
     const accelerator_t *accelerator;
     const mapping_table_t mapping_table;
-};
-
-/* Energy reference */
-class energy_ref_t {
-public:
-    energy_ref_t();
-    ~energy_ref_t();
-#ifdef SIMBA
-    // MAC operation
-    float mac_operation = 0.075;
-    // L1 Separate (8192/ 32768/ 3072)
-    float l1_input_ingress = 4.495;
-    float l1_input_egress = 4.495;
-    float l1_filter_ingress = 6;
-    float l1_filter_egress = 6;
-    float l1_output_ingress = 4.255;
-    float l1_output_egress = 4.255;
-
-    // L2 64KB
-    float l2_input_ingress  = 9;
-    float l2_input_egress   = 9;
-    float l2_filter_ingress = 9;
-    float l2_filter_egress  = 9;
-    float l2_output_ingress = 9;
-    float l2_output_egress  = 9;
-
-    // DRAM 
-    float dram_ingress = 200;
-    float dram_egress = 200;
-#else
-    // MAC operation 
-    float mac_operation = 0.075;
-#ifdef L1_SHARED
-    // L1 Shared (520B)
-    float l1_input_ingress = 0.96;
-    float l1_input_egress = 0.96;
-    float l1_filter_ingress = 0.96;
-    float l1_filter_egress = 0.96;
-    float l1_output_ingress = 0.96;
-    float l1_output_egress = 0.96;
-#else
-    // L1 Separated (24/448/48)
-    float l1_input_ingress = 0.05;
-    float l1_input_egress = 0.05;
-    float l1_filter_ingress = 0.94;
-    float l1_filter_egress = 0.94;
-    float l1_output_ingress = 0.10;
-    float l1_output_egress = 0.10;
-#endif
-    // L2 128 KB
-    float l2_input_ingress = 13.5;
-    float l2_input_egress = 13.5;
-    float l2_filter_ingress = 13.5;
-    float l2_filter_egress = 13.5;
-    float l2_output_ingress = 13.5;
-    float l2_output_egress = 13.5;
-    // DRAM 
-    float dram_ingress = 200;
-    float dram_egress = 200;
-#endif
-};
-
-/* Cycle reference */
-class cycle_ref_t {
-public: 
-    cycle_ref_t(); 
-    ~cycle_ref_t();
-    // Normalized cycles
-    float mac_operation = 1;
-    float l1_access = 1;
-    float l2_access = 2;
-    float dram_access = 30;
 };
 
 #endif

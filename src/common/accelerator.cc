@@ -13,7 +13,7 @@ accelerator_t::~accelerator_t() {
 
 // Accelerator APIs
 void accelerator_t::print_stats() const {
-    unsigned setw_num = 17;
+    unsigned setw_num = 20;
     unsigned line_num = 40;
     std::string mac_type_str;
     std::string precision_str;
@@ -202,27 +202,37 @@ void accelerator_t::print_stats() const {
         std::cout << std::setw(setw_num) << "S2 SIZE      : " << acc_cfg->s2_size << std::endl;
         handler.print_line(line_num, "-");
     }
+    // Energy references 
+    std::cout << "# ENERGY REFERENCES" << std::endl;
+    handler.print_line(setw_num, "*");
+    std::cout << "   MAC OPERATION           : " << acc_cfg->energy_ref.mac_operation << std::endl;
+    handler.print_line(line_num, "-");
+    std::cout << "   L1 INPUT  INGRESS/EGRESS: " << acc_cfg->energy_ref.l1_input_ingress << "/" << acc_cfg->energy_ref.l1_input_egress << "\n"
+              << "   L1 FILTER INGRESS/EGRESS: " << acc_cfg->energy_ref.l1_filter_ingress << "/" << acc_cfg->energy_ref.l1_filter_egress << "\n"
+              << "   L1 OUTPUT INGRESS/EGRESS: " << acc_cfg->energy_ref.l1_output_ingress << "/" << acc_cfg->energy_ref.l1_output_egress << std::endl;
+    handler.print_line(line_num, "-");
+    std::cout << "   L2 INPUT  INGRESS/EGRESS: " << acc_cfg->energy_ref.l2_input_ingress << "/" << acc_cfg->energy_ref.l2_input_egress << "\n"
+              << "   L2 FILTER INGRESS/EGRESS: " << acc_cfg->energy_ref.l2_filter_ingress << "/" << acc_cfg->energy_ref.l2_filter_egress << "\n"
+              << "   L2 OUTPUT INGRESS/EGRESS: " << acc_cfg->energy_ref.l2_output_ingress << "/" << acc_cfg->energy_ref.l2_output_egress << std::endl;
+    handler.print_line(line_num, "-");
+    std::cout << " - DRAM INGRESS/EGRESS     : " << acc_cfg->energy_ref.dram_ingress << "/" << acc_cfg->energy_ref.dram_egress << std::endl;
+    handler.print_line(line_num, "-");
 }
 
 std::string accelerator_t::get_name() const { return acc_cfg->name; }
 
 // MAC [T] 
 precision_t accelerator_t::precision() const { return acc_cfg->precision; }
-
 dataflow_t accelerator_t::mac_dataflow() const { return acc_cfg->mac_dataflow; }
 
 // S0 [S]
 unsigned accelerator_t::macs_per_pe() const { return acc_cfg->macs_per_pe; }
-
 unsigned accelerator_t::mac_width() const { return acc_cfg->mac_width; }
 
 // L1 [T]
 bool accelerator_t::l1_input_bypass() const { return acc_cfg->l1_input_bypass; }
-
 bool accelerator_t::l1_filter_bypass() const { return acc_cfg->l1_filter_bypass; }
-
 bool accelerator_t::l1_output_bypass() const { return acc_cfg->l1_output_bypass; }
-
 unsigned accelerator_t::l1_input_size() const { 
     unsigned rtn = acc_cfg->l1_input_size * 8;  // Byte to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -231,7 +241,6 @@ unsigned accelerator_t::l1_input_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 unsigned accelerator_t::l1_filter_size() const { 
     unsigned rtn = acc_cfg->l1_filter_size * 8;  // Byte to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -240,7 +249,6 @@ unsigned accelerator_t::l1_filter_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 unsigned accelerator_t::l1_output_size() const { 
     unsigned rtn = acc_cfg->l1_output_size * 8;  // Byte to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -249,7 +257,6 @@ unsigned accelerator_t::l1_output_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 unsigned accelerator_t::l1_shared_size() const { 
     unsigned rtn = acc_cfg->l1_shared_size * 8;  // Byte to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -258,25 +265,18 @@ unsigned accelerator_t::l1_shared_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 buffer_type_t accelerator_t::l1_type() const { return acc_cfg->l1_type; } 
-
 dataflow_t accelerator_t::l1_dataflow() const { return acc_cfg->l1_dataflow; }
 
 // S1_X & S1_Y [S]
 bool accelerator_t::s1_noc_exists() const { return acc_cfg->s1_noc_exists; }
-
 unsigned accelerator_t::s1_size_x() const { return acc_cfg->s1_size_x; }
-
 unsigned accelerator_t::s1_size_y() const { return acc_cfg->s1_size_y; }
 
 // L2 [T]
 bool accelerator_t::l2_input_bypass() const { return acc_cfg->l2_input_bypass; }
-
 bool accelerator_t::l2_filter_bypass() const { return acc_cfg->l2_filter_bypass; }
-
 bool accelerator_t::l2_output_bypass() const { return acc_cfg->l2_output_bypass; }
-
 unsigned accelerator_t::l2_input_size() const { 
     unsigned rtn = acc_cfg->l2_input_size * 8 * 1024;  // KB to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -285,7 +285,6 @@ unsigned accelerator_t::l2_input_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 unsigned accelerator_t::l2_filter_size() const { 
     unsigned rtn = acc_cfg->l2_filter_size * 8 * 1024;  // KB to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -294,7 +293,6 @@ unsigned accelerator_t::l2_filter_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 unsigned accelerator_t::l2_output_size() const { 
     unsigned rtn = acc_cfg->l2_output_size * 8 * 1024;  // KB to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -303,7 +301,6 @@ unsigned accelerator_t::l2_output_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 unsigned accelerator_t::l2_shared_size() const { 
     unsigned rtn = acc_cfg->l2_shared_size * 8 * 1024;  // KB to bit
     if(acc_cfg->precision == precision_t::FP8 || acc_cfg->precision == precision_t::INT8) rtn /= 8;
@@ -312,10 +309,31 @@ unsigned accelerator_t::l2_shared_size() const {
     else handler.print_err(err_type_t::INVAILD, "PRECISION"); 
     return rtn; 
 }
-
 buffer_type_t accelerator_t::l2_type() const { return acc_cfg->l2_type; }
-
 dataflow_t accelerator_t::l2_dataflow() const { return acc_cfg->l2_dataflow; }
 
 // S2 [S]
 unsigned accelerator_t::s2_size() const { return acc_cfg->s2_size; }
+
+// Energy references
+float accelerator_t::E_mac_op() const { return acc_cfg->energy_ref.mac_operation; }
+float accelerator_t::E_l1_i_igrs() const { return acc_cfg->energy_ref.l1_input_ingress; }
+float accelerator_t::E_l1_i_egrs() const { return acc_cfg->energy_ref.l1_input_egress; }
+float accelerator_t::E_l1_f_igrs() const { return acc_cfg->energy_ref.l1_filter_ingress; }
+float accelerator_t::E_l1_f_egrs() const { return acc_cfg->energy_ref.l1_filter_egress; }
+float accelerator_t::E_l1_o_igrs() const { return acc_cfg->energy_ref.l1_output_ingress; }
+float accelerator_t::E_l1_o_egrs() const { return acc_cfg->energy_ref.l1_output_egress; }
+float accelerator_t::E_l2_i_igrs() const { return acc_cfg->energy_ref.l2_input_ingress; }
+float accelerator_t::E_l2_i_egrs() const { return acc_cfg->energy_ref.l2_input_egress; }
+float accelerator_t::E_l2_f_igrs() const { return acc_cfg->energy_ref.l2_filter_ingress; }
+float accelerator_t::E_l2_f_egrs() const { return acc_cfg->energy_ref.l2_filter_egress; }
+float accelerator_t::E_l2_o_igrs() const { return acc_cfg->energy_ref.l2_output_ingress; }
+float accelerator_t::E_l2_o_egrs() const { return acc_cfg->energy_ref.l2_output_egress; }
+float accelerator_t::E_dram_igrs() const { return acc_cfg->energy_ref.dram_ingress; }
+float accelerator_t::E_dram_egrs() const { return acc_cfg->energy_ref.dram_egress; }
+
+// Cycle references
+float accelerator_t::C_mac_op() const { return acc_cfg->cycle_ref.mac_operation; }
+float accelerator_t::C_l1_access() const { return acc_cfg->cycle_ref.l1_access; }
+float accelerator_t::C_l2_access() const { return acc_cfg->cycle_ref.l2_access; }
+float accelerator_t::C_dram_access() const { return acc_cfg->cycle_ref.dram_access; }

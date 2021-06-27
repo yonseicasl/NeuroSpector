@@ -38,6 +38,31 @@ public:
     acc_cfg_t(const std::string& cfg_path_);
     ~acc_cfg_t();
     void parse();
+    // Energy references
+    struct energy_ref_t {
+        float mac_operation;
+        float l1_input_ingress;
+        float l1_input_egress;
+        float l1_filter_ingress;
+        float l1_filter_egress;
+        float l1_output_ingress;
+        float l1_output_egress;
+        float l2_input_ingress;
+        float l2_input_egress;
+        float l2_filter_ingress;
+        float l2_filter_egress;
+        float l2_output_ingress;
+        float l2_output_egress;
+        float dram_ingress;
+        float dram_egress;
+    };
+    // Cycle references
+    struct cycle_ref_t {
+        float mac_operation = 1;
+        float l1_access = 1;
+        float l2_access = 2;
+        float dram_access = 30;
+    };
     std::string name;
     // MAC [T] 
     precision_t precision;
@@ -71,6 +96,9 @@ public:
     dataflow_t l2_dataflow;
     // S2 [S]
     unsigned s2_size;
+    // Energy & cycle references
+    energy_ref_t energy_ref;
+    cycle_ref_t cycle_ref;
 };
 
 /* Mapping table configuration (for analyzer) */

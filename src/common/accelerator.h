@@ -49,7 +49,27 @@ public:
     dataflow_t l2_dataflow() const;
     // S2 [S]
     unsigned s2_size() const;
-    
+    // Energy references
+    float E_mac_op() const;
+    float E_l1_i_igrs() const;
+    float E_l1_i_egrs() const;
+    float E_l1_f_igrs() const;
+    float E_l1_f_egrs() const;
+    float E_l1_o_igrs() const;
+    float E_l1_o_egrs() const;
+    float E_l2_i_igrs() const;
+    float E_l2_i_egrs() const;
+    float E_l2_f_igrs() const;
+    float E_l2_f_egrs() const;
+    float E_l2_o_igrs() const;
+    float E_l2_o_egrs() const;
+    float E_dram_igrs() const;
+    float E_dram_egrs() const;
+    // Cycle references
+    float C_mac_op() const;
+    float C_l1_access() const;
+    float C_l2_access() const;
+    float C_dram_access() const;
 private:
     acc_cfg_t *acc_cfg;
 };

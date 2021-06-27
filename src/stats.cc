@@ -1,8 +1,6 @@
 #include "stats.h"
 
 static handler_t handler;
-static energy_ref_t energy_ref;
-static cycle_ref_t cycle_ref;
 
 /* Stats */
 stats_t::stats_t(const accelerator_t *accelerator_, 
@@ -648,22 +646,22 @@ void stats_t::update_energy() {
         l2_iteration.output_wt_it = 0;
     }
     // Between MAC and L1 with 'l1 iteration' and S0 NoC
-    mac_energy = mapping_table.get_num_macs() * energy_ref.mac_operation;
+    mac_energy = mapping_table.get_num_macs() * accelerator->E_mac_op();;
     if(accelerator->l1_type() == buffer_type_t::NONE) {
         l1_energy_upper = 0;
         l1_energy_lower = 0;
     }
     else {
-        l1_energy_upper = mac_input_tile_size_spatial * l1_iteration.input_rd_it * energy_ref.l1_input_egress
-                        + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * energy_ref.l1_filter_egress
-                        + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * energy_ref.l1_output_egress
-                        + mac_output_tile_size * l1_iteration.output_wt_it * num_s0_output_hosts * energy_ref.l1_output_ingress;
+        l1_energy_upper = mac_input_tile_size_spatial * l1_iteration.input_rd_it * accelerator->E_l1_i_egrs()
+                        + mac_filter_tile_size * l1_iteration.filter_rd_it * num_s0_filter_hosts * accelerator->E_l1_f_egrs()
+                        + mac_output_tile_size * l1_iteration.output_rd_it * num_s0_output_hosts * accelerator->E_l1_o_egrs()
+                        + mac_output_tile_size * l1_iteration.output_wt_it * num_s0_output_hosts * accelerator->E_l1_o_igrs();
         l1_energy_upper *= num_active_pes * num_active_accs;
         // Between L1 and L2 with 'l2_iteration' and S1 NoC
-        l1_energy_lower = l1_input_tile_size * l2_iteration.input_rd_it * energy_ref.l1_input_ingress 
-                        + l1_filter_tile_size * l2_iteration.filter_rd_it * energy_ref.l1_filter_ingress
-                        + l1_output_tile_size * l2_iteration.output_rd_it * energy_ref.l1_output_ingress
-                        + l1_output_tile_size * l2_iteration.output_wt_it * energy_ref.l1_output_egress;
+        l1_energy_lower = l1_input_tile_size * l2_iteration.input_rd_it * accelerator->E_l1_i_igrs() 
+                        + l1_filter_tile_size * l2_iteration.filter_rd_it * accelerator->E_l1_f_igrs()
+                        + l1_output_tile_size * l2_iteration.output_rd_it * accelerator->E_l1_o_igrs()
+                        + l1_output_tile_size * l2_iteration.output_wt_it * accelerator->E_l1_o_egrs();
         l1_energy_lower *= num_active_pes * num_active_accs;
     }
     l1_energy = l1_energy_upper + l1_energy_lower;
@@ -672,23 +670,23 @@ void stats_t::update_energy() {
         l2_energy_lower = 0;
     }
     else {
-        l2_energy_upper = l1_input_tile_size_spatial * l2_iteration.input_rd_it * energy_ref.l2_input_egress 
-                        + l1_filter_tile_size * l2_iteration.filter_rd_it * num_s1_filter_hosts * energy_ref.l2_filter_egress
-                        + l1_output_tile_size * l2_iteration.output_rd_it * num_s1_output_hosts * energy_ref.l2_output_egress
-                        + l1_output_tile_size * l2_iteration.output_wt_it * num_s1_output_hosts * energy_ref.l2_output_ingress; 
+        l2_energy_upper = l1_input_tile_size_spatial * l2_iteration.input_rd_it * accelerator->E_l2_i_egrs() 
+                        + l1_filter_tile_size * l2_iteration.filter_rd_it * num_s1_filter_hosts * accelerator->E_l2_f_egrs()
+                        + l1_output_tile_size * l2_iteration.output_rd_it * num_s1_output_hosts * accelerator->E_l2_o_egrs()
+                        + l1_output_tile_size * l2_iteration.output_wt_it * num_s1_output_hosts * accelerator->E_l2_o_igrs(); 
         l2_energy_upper *= num_active_accs;
         // Between L2 and DRAM with 'dram_iteration' and S2 NoC
-        l2_energy_lower = l2_input_tile_size * dram_iteration.input_rd_it * energy_ref.l2_input_ingress
-                        + l2_filter_tile_size * dram_iteration.filter_rd_it * energy_ref.l2_filter_ingress
-                        + l2_output_tile_size * dram_iteration.output_rd_it * energy_ref.l2_output_ingress
-                        + l2_output_tile_size * dram_iteration.output_wt_it * energy_ref.l2_output_egress;
+        l2_energy_lower = l2_input_tile_size * dram_iteration.input_rd_it * accelerator->E_l2_i_igrs()
+                        + l2_filter_tile_size * dram_iteration.filter_rd_it * accelerator->E_l2_f_igrs()
+                        + l2_output_tile_size * dram_iteration.output_rd_it * accelerator->E_l2_o_igrs()
+                        + l2_output_tile_size * dram_iteration.output_wt_it * accelerator->E_l2_o_egrs();
         l2_energy_lower *= num_active_accs;
     }
     l2_energy = l2_energy_upper + l2_energy_lower;
-    dram_energy = l2_input_tile_size_spatial * dram_iteration.input_rd_it * energy_ref.dram_egress
-                + l2_filter_tile_size * dram_iteration.filter_rd_it * num_s2_filter_hosts * energy_ref.dram_egress
-                + l2_output_tile_size * dram_iteration.output_rd_it * num_s2_output_hosts * energy_ref.dram_egress
-                + l2_output_tile_size * dram_iteration.output_wt_it * num_s2_output_hosts * energy_ref.dram_ingress;
+    dram_energy = l2_input_tile_size_spatial * dram_iteration.input_rd_it * accelerator->E_dram_egrs()
+                + l2_filter_tile_size * dram_iteration.filter_rd_it * num_s2_filter_hosts * accelerator->E_dram_egrs()
+                + l2_output_tile_size * dram_iteration.output_rd_it * num_s2_output_hosts * accelerator->E_dram_egrs()
+                + l2_output_tile_size * dram_iteration.output_wt_it * num_s2_output_hosts * accelerator->E_dram_igrs();
     total_energy = mac_energy + l1_energy + l2_energy + dram_energy;
     return;
 }
@@ -705,32 +703,32 @@ void stats_t::update_utilization() {
 }
 
 void stats_t::update_cycle() {
-    mac_cycle = mapping_table.get_iteration(component_t::L1) * cycle_ref.mac_operation;
-    l1_cycle = (l1_iteration.input_rd_it + l1_iteration.filter_rd_it + l1_iteration.output_rd_it + l1_iteration.output_wt_it) * cycle_ref.l1_access;
-    l2_cycle = (l2_iteration.input_rd_it + l2_iteration.filter_rd_it + l2_iteration.output_rd_it + l2_iteration.output_wt_it) * cycle_ref.l2_access;
-    dram_cycle = (dram_iteration.input_rd_it + dram_iteration.filter_rd_it + dram_iteration.output_rd_it + dram_iteration.output_wt_it) * cycle_ref.dram_access;
+    mac_cycle = mapping_table.get_iteration(component_t::L1) * accelerator->C_mac_op();
+    l1_cycle = (l1_iteration.input_rd_it + l1_iteration.filter_rd_it + l1_iteration.output_rd_it + l1_iteration.output_wt_it) * accelerator->C_l1_access();
+    l2_cycle = (l2_iteration.input_rd_it + l2_iteration.filter_rd_it + l2_iteration.output_rd_it + l2_iteration.output_wt_it) * accelerator->C_l2_access();
+    dram_cycle = (dram_iteration.input_rd_it + dram_iteration.filter_rd_it + dram_iteration.output_rd_it + dram_iteration.output_wt_it) * accelerator->C_dram_access();
     // L1 separated buffer adjustment
     if(accelerator->l1_type() == buffer_type_t::SEPARATED) {
         if(l1_iteration.input_rd_it >= l1_iteration.filter_rd_it)
-            l1_cycle -= l1_iteration.filter_rd_it * cycle_ref.l1_access;
+            l1_cycle -= l1_iteration.filter_rd_it * accelerator->C_l1_access();
         else
-            l1_cycle -= l1_iteration.input_rd_it * cycle_ref.l1_access;
+            l1_cycle -= l1_iteration.input_rd_it * accelerator->C_l1_access();
     }
     // TODO: support more buffer types 
     
     // Bypass adjustment
     if(accelerator->l1_input_bypass())
-        l2_cycle -= l2_iteration.input_rd_it * cycle_ref.l2_access;
+        l2_cycle -= l2_iteration.input_rd_it * accelerator->C_l2_access();
     if(accelerator->l1_filter_bypass())
-        l2_cycle -= l2_iteration.filter_rd_it * cycle_ref.l2_access;
+        l2_cycle -= l2_iteration.filter_rd_it * accelerator->C_l2_access();
     if(accelerator->l1_output_bypass()) 
-        l2_cycle -= (l2_iteration.output_rd_it + l2_iteration.output_wt_it) * cycle_ref.l2_access;
+        l2_cycle -= (l2_iteration.output_rd_it + l2_iteration.output_wt_it) * accelerator->C_l2_access();
     if(accelerator->l2_input_bypass())
-        dram_cycle -= dram_iteration.input_rd_it * cycle_ref.dram_access;
+        dram_cycle -= dram_iteration.input_rd_it * accelerator->C_dram_access();
     if(accelerator->l2_filter_bypass())
-        dram_cycle -= dram_iteration.filter_rd_it * cycle_ref.dram_access;
+        dram_cycle -= dram_iteration.filter_rd_it * accelerator->C_dram_access();
     if(accelerator->l2_output_bypass()) 
-        dram_cycle -= (dram_iteration.output_rd_it + dram_iteration.output_wt_it) * cycle_ref.dram_access;
+        dram_cycle -= (dram_iteration.output_rd_it + dram_iteration.output_wt_it) * accelerator->C_dram_access();
     total_cycle = mac_cycle + l1_cycle + l2_cycle + dram_cycle;
     return;
 }
@@ -738,35 +736,4 @@ void stats_t::update_cycle() {
 void stats_t::update_edp() {
     total_edp = total_energy / 1000000000000; // pJ -> J
     total_edp *= total_cycle;
-}
-
-/* Energy reference */
-energy_ref_t::energy_ref_t() {
-    handler.print_line(50, "*");
-    std::cout << "# ENERGY REFERENCE VALUES" << "\n"
-              << " - MAC OPERATION           : " << mac_operation << "\n"
-              << "-------------------------------------------" << "\n"
-              << " - L1 INPUT  INGRESS/EGRESS: " << l1_input_ingress << "/" << l1_input_egress << "\n"
-              << " - L1 FILTER INGRESS/EGRESS: " << l1_filter_ingress << "/" << l1_filter_egress << "\n"
-              << " - L1 OUTPUT INGRESS/EGRESS: " << l1_output_ingress << "/" << l1_output_egress << "\n"
-              << "-------------------------------------------" << "\n"
-              << " - L2 INPUT  INGRESS/EGRESS: " << l2_input_ingress << "/" << l2_input_egress << "\n"
-              << " - L2 FILTER INGRESS/EGRESS: " << l2_filter_ingress << "/" << l2_filter_egress << "\n"
-              << " - L2 OUTPUT INGRESS/EGRESS: " << l2_output_ingress << "/" << l2_output_egress << "\n"
-              << "-------------------------------------------" << "\n"
-              << " - DRAM INGRESS/EGRESS     : " << dram_ingress << "/" << dram_egress << std::endl;
-    handler.print_line(50, "*");
-}
-
-energy_ref_t::~energy_ref_t() {
-
-}
-
-/* Cycle reference */
-cycle_ref_t::cycle_ref_t() {
-
-}
-
-cycle_ref_t::~cycle_ref_t() {
-
 }

@@ -319,6 +319,44 @@ void acc_cfg_t::parse() {
             else if(line.find("S2") != std::string::npos) {
                 s2_size = get_line_uint(line, 1); continue;
             }
+            else if(line.find("MAC_OPERATION") != std::string::npos) {
+                energy_ref.mac_operation = std::stof(get_line_string(line, 1)); continue;
+            }
+            else if(line.find("L1_ACCESS_I") != std::string::npos) {
+                energy_ref.l1_input_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.l1_input_egress = energy_ref.l1_input_ingress; 
+                continue;
+            }
+            else if(line.find("L1_ACCESS_F") != std::string::npos) {
+                energy_ref.l1_filter_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.l1_filter_egress = energy_ref.l1_filter_ingress; 
+                continue;
+            }
+            else if(line.find("L1_ACCESS_O") != std::string::npos) {
+                energy_ref.l1_output_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.l1_output_egress = energy_ref.l1_output_ingress; 
+                continue;
+            }
+            else if(line.find("L2_ACCESS_I") != std::string::npos) {
+                energy_ref.l2_input_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.l2_input_egress = energy_ref.l2_input_ingress; 
+                continue;
+            }
+            else if(line.find("L2_ACCESS_F") != std::string::npos) {
+                energy_ref.l2_filter_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.l2_filter_egress = energy_ref.l2_filter_ingress; 
+                continue;
+            }
+            else if(line.find("L2_ACCESS_O") != std::string::npos) {
+                energy_ref.l2_output_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.l2_output_egress = energy_ref.l2_output_ingress; 
+                continue;
+            }
+            else if(line.find("DRAM_ACCESS") != std::string::npos) {
+                energy_ref.dram_ingress = std::stof(get_line_string(line, 1)); 
+                energy_ref.dram_egress = energy_ref.dram_ingress; 
+                continue;
+            }
             else 
                 handler.print_err(err_type_t::INVAILD, "ACC parsing");
         }
