@@ -130,34 +130,34 @@ public:
 
 private:
     // Optimizer private functions
-    void reset(const unsigned idx_);                                // Reset for the next dataflow or layer
+    void reset(const unsigned idx_);                         // Reset for the next dataflow or layer
     void engine(const unsigned idx_,
                 const dataflow_t l1_dataflow_, 
-                const dataflow_t l2_dataflow_);                     // bottom_up engine
+                const dataflow_t l2_dataflow_);              // bottom_up engine
     void update(const dataflow_t l1_dataflow_,
-                const dataflow_t l2_dataflow_);                     // Update final things
+                const dataflow_t l2_dataflow_);              // Update final things
     void worker(const unsigned seq_,
                 const mapping_table_t& init_mapping_,
                 const mapping_space_t& mapping_space_,
                 const dataflow_t l1_dataflow_,
                 const dataflow_t l2_dataflow_,
-                std::vector<mapping_table_t>& rtn_);                // bottom_up worker (seq_: 0 (L2-DRAM) - 1 (L1-L2) - 2 (MAC-L1))
+                std::vector<mapping_table_t>& rtn_);        // bottom_up worker (seq_: 0 (L2-DRAM) - 1 (L1-L2) - 2 (MAC-L1))
     // Variables & containers
-    component_t start_component;                                    // Current start component
-    component_t end_component;                                      // Current end component
-    std::vector<unsigned> used_levels;                              // # of the existent levels (not skipped levels)
-    std::vector<unsigned> top_k;                                    // Top k for each s-p level
-    std::vector<uint64_t> total_cnt;                                // Total # of mapping space: first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
-    std::vector<uint64_t> valid_cnt;                                // Total valid counts      : first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
+    component_t start_component;                            // Current start component
+    component_t end_component;                              // Current end component
+    std::vector<unsigned> used_levels;                      // # of the existent levels (not skipped levels)
+    std::vector<unsigned> top_k;                            // Top k for each s-p level
+    std::vector<uint64_t> total_cnt;                        // Total # of mapping space: first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
+    std::vector<uint64_t> valid_cnt;                        // Total valid counts      : first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
     std::vector<mapping_table_t> best_mappings;
     // Final
     unsigned seq_0_top_k;
     unsigned seq_1_top_k;
     unsigned seq_2_top_k;
-    unsigned final_best_idx;                                        // Final best mapping's index
-    double final_best_energy;                                       // Final best mapping's energy
-    std::vector<mapping_table_t> final_best_mappings;               // Final best mappings
-    std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
+    unsigned final_best_idx;                                // Final best mapping's index
+    double final_best_energy;                               // Final best mapping's energy
+    std::vector<mapping_table_t> final_best_mappings;       // Final best mappings
+    std::vector<dataflow_t> final_best_dataflows;           // Final best dataflows (L1 and L2)
 };
 
 #endif

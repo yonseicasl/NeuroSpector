@@ -65,7 +65,7 @@ int main(int argc, char **argv) {
         else handler.print_err(err_type_t::INVAILD, "dataflows: fixed or flexible");
         // Optimizer initialization
         if(opt_type == opt_type_t::BOTTOM_UP) {
-            bottom_up_t * optimizer = new bottom_up_t(argv[2], argv[3], is_fixed);
+            bottom_up_t *optimizer = new bottom_up_t(argv[2], argv[3], is_fixed);
             // Start hierarchical optimizing
             if(argc == 8) {
                 unsigned layer_idx = stoi(argv[7]);

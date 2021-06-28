@@ -5,6 +5,7 @@ static handler_t handler;
 /* Accelerator */
 accelerator_t::accelerator_t(const std::string &cfg_path_)
     : acc_cfg(new acc_cfg_t(cfg_path_)) {
+
 }
 
 accelerator_t::~accelerator_t() {

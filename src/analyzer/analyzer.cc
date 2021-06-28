@@ -31,8 +31,7 @@ analyzer_t::analyzer_t(const std::string& acc_cfg_path_,
         mapping_tmp.update_dram_row();
         mappings.push_back(mapping_tmp); 
         // Stat container
-        stats_t *stats = new stats_t(accelerator, mapping_tmp);
-        all_stats.push_back(stats);
+        all_stats.push_back(new stats_t(accelerator, mapping_tmp));
         update_stats(idx);
     }
     delete map_cfg;
@@ -40,9 +39,8 @@ analyzer_t::analyzer_t(const std::string& acc_cfg_path_,
 
 analyzer_t::~analyzer_t() {
     delete accelerator;
-    for(size_t idx = 0; idx < mappings.size(); idx++) {
+    for(size_t idx = 0; idx < all_stats.size(); idx++) 
         delete all_stats.at(idx);
-    }
 }
 
 // Analyzer APIs

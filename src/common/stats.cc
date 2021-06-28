@@ -24,7 +24,7 @@ stats_t::stats_t(const accelerator_t *accelerator_,
 }
 
 stats_t::~stats_t() {
-
+    
 }
 
 // stats_t's APIs
