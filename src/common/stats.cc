@@ -734,6 +734,6 @@ void stats_t::update_cycle() {
 }
 
 void stats_t::update_edp() {
-    total_edp = total_energy / 1000000000000; // pJ -> J
+    total_edp = total_energy / 1e12; // pJ -> J
     total_edp *= total_cycle;
 }
