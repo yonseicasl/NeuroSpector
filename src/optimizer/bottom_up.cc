@@ -7,10 +7,10 @@
 
 static handler_t handler;
 
-/* Hierarchical */
-hierarchical_t::hierarchical_t(const std::string& acc_cfg_path_, 
-                               const std::string& net_cfg_path_, 
-                               const bool is_fixed_)
+/* S-T Bottom-up */
+bottom_up_t::bottom_up_t(const std::string& acc_cfg_path_, 
+                         const std::string& net_cfg_path_, 
+                         const bool is_fixed_)
     : optimizer_t(acc_cfg_path_, net_cfg_path_, is_fixed_),
       final_best_idx(0),
       final_best_energy(DBL_MAX) {
@@ -45,24 +45,24 @@ hierarchical_t::hierarchical_t(const std::string& acc_cfg_path_,
         top_k.push_back(1);
 }     
 
-hierarchical_t::~hierarchical_t() {
+bottom_up_t::~bottom_up_t() {
 
 }
 
 // Optimizer APIs
-void hierarchical_t::run() {
+void bottom_up_t::run() {
     for(unsigned idx = 0; idx < mappings.size(); idx++) 
         run(idx + 1);
     return;
 }
 
-void hierarchical_t::run(const unsigned idx_) {
+void bottom_up_t::run(const unsigned idx_) {
     final_best_idx = 0;
     final_best_energy = DBL_MAX;
     final_best_mappings.clear();
     final_best_dataflows.clear();
     handler.print_line(50, "*");
-    std::cout << "# HIERARCHICAL OPTIMIZATION" << std::endl;
+    std::cout << "# bottom_up OPTIMIZATION" << std::endl;
     std::cout << "# NETWORK    : " << network_name << std::endl;
     std::cout << "# LAYER      : " << mappings.at(idx_ - 1).get_layer_name() << std::endl;
     handler.print_line(50, "*");
@@ -90,8 +90,7 @@ void hierarchical_t::run(const unsigned idx_) {
     return;
 }
 
-
-void hierarchical_t::print_stats() {
+void bottom_up_t::print_stats() {
     std::string df_str("IWO");
     handler.print_line(50, "*");
     std::cout << "# TOP K : " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
@@ -134,7 +133,7 @@ void hierarchical_t::print_stats() {
     return;
 }
 
-void hierarchical_t::print_csv() {
+void bottom_up_t::print_csv() {
     std::string df_str("IWO");
     handler.print_line(50, "*");
     std::cout << "# TOP K : " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
@@ -178,7 +177,7 @@ void hierarchical_t::print_csv() {
 }
 
 // Optimizer private functions
-void hierarchical_t::reset(const unsigned idx_) {
+void bottom_up_t::reset(const unsigned idx_) {
     start_component = component_t::L2;
     end_component = component_t::DRAM;
     total_cnt.clear();
@@ -187,7 +186,7 @@ void hierarchical_t::reset(const unsigned idx_) {
     return;
 }
 
-void hierarchical_t::engine(const unsigned idx_, 
+void bottom_up_t::engine(const unsigned idx_, 
                             const dataflow_t l1_dataflow_,
                             const dataflow_t l2_dataflow_) {
     std::vector<mapping_table_t> rtn_first;
@@ -276,8 +275,8 @@ void hierarchical_t::engine(const unsigned idx_,
     return;
 }
 
-void hierarchical_t::update(const dataflow_t l1_dataflow_,
-                            const dataflow_t l2_dataflow_) {
+void bottom_up_t::update(const dataflow_t l1_dataflow_,
+                         const dataflow_t l2_dataflow_) {
     unsigned local_best_idx = 0;
     double local_min_energy = DBL_MAX;
     for(size_t idx = 0; idx < best_mappings.size(); idx++) {
@@ -303,12 +302,12 @@ void hierarchical_t::update(const dataflow_t l1_dataflow_,
     return;
 }
 
-void hierarchical_t::worker(const unsigned seq_,
-                            const mapping_table_t& init_mapping_,
-                            const mapping_space_t& mapping_space_,
-                            const dataflow_t l1_dataflow_,
-                            const dataflow_t l2_dataflow_,
-                            std::vector<mapping_table_t>& rtn_) {
+void bottom_up_t::worker(const unsigned seq_,
+                         const mapping_table_t& init_mapping_,
+                         const mapping_space_t& mapping_space_,
+                         const dataflow_t l1_dataflow_,
+                         const dataflow_t l2_dataflow_,
+                         std::vector<mapping_table_t>& rtn_) {
     valid_cnt.push_back(0);
     // Validation required components 
     component_t temporal = component_t::SIZE;

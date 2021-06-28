@@ -3,12 +3,12 @@
 # Configurations
 # acc_arg    : Accelerator specification (*.cfg)
 # net_arg    : DNN layer configuration (*.csv)
-# opt_type   : "b-f-energy", "b-f-cycle", "b-f-edp", "s-t", "t-s", or "hierarchical"
+# opt_type   : "b-f-energy", "b-f-cycle", "b-f-edp", or "bottom-up"
 # num_threads: Multi-threading for brute-force (b-f-xxx)
 # dataflows  : "fixed" or "flexible"
 acc_arg=configs/accelerators/eyeriss.cfg
 net_arg=configs/networks/resnet50.csv
-opt_type=hierarchical
+opt_type=bottom-up
 num_threads=4
 dataflows=fixed
 

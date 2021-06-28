@@ -115,13 +115,13 @@ private:
     std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
 };
 
-/* Hierarchical */
-class hierarchical_t : public optimizer_t {
+/* S-T Bottom-up */
+class bottom_up_t : public optimizer_t {
 public:
-    hierarchical_t(const std::string& acc_cfg_path_, 
-                   const std::string& net_cfg_path_, 
-                   const bool is_fixed_);                
-    ~hierarchical_t();
+    bottom_up_t(const std::string& acc_cfg_path_, 
+                const std::string& net_cfg_path_, 
+                const bool is_fixed_);                
+    ~bottom_up_t();
     // Optimizer APIs
     void run();
     void run(const unsigned idx_);
@@ -133,7 +133,7 @@ private:
     void reset(const unsigned idx_);                                // Reset for the next dataflow or layer
     void engine(const unsigned idx_,
                 const dataflow_t l1_dataflow_, 
-                const dataflow_t l2_dataflow_);                     // Hierarchical engine
+                const dataflow_t l2_dataflow_);                     // bottom_up engine
     void update(const dataflow_t l1_dataflow_,
                 const dataflow_t l2_dataflow_);                     // Update final things
     void worker(const unsigned seq_,
@@ -141,7 +141,7 @@ private:
                 const mapping_space_t& mapping_space_,
                 const dataflow_t l1_dataflow_,
                 const dataflow_t l2_dataflow_,
-                std::vector<mapping_table_t>& rtn_);                // Hierarchical worker (seq_: 0 (L2-DRAM) - 1 (L1-L2) - 2 (MAC-L1))
+                std::vector<mapping_table_t>& rtn_);                // bottom_up worker (seq_: 0 (L2-DRAM) - 1 (L1-L2) - 2 (MAC-L1))
     // Variables & containers
     component_t start_component;                                    // Current start component
     component_t end_component;                                      // Current end component
@@ -158,45 +158,6 @@ private:
     double final_best_energy;                                       // Final best mapping's energy
     std::vector<mapping_table_t> final_best_mappings;               // Final best mappings
     std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
-};
-
-/* Pruning (s-t or t-s) */
-class pruning_t : public optimizer_t {
-public:
-    pruning_t(const std::string& acc_cfg_path_, 
-              const std::string& net_cfg_path_, 
-              const opt_type_t opt_type_, 
-              const unsigned num_threads_,
-              const bool is_fixed_);                
-    ~pruning_t();
-    // Optimizer APIs
-    void run();
-    void run(const unsigned idx_);
-    void print_stats();
-    void print_csv();
-
-private:
-    // Optimizer private functions
-    void reset(const unsigned idx_);                                // Reset for the next dataflow or layer
-    void engine(const unsigned idx_);                               // Pruning engine
-    void update(const dataflow_t l1_dataflow_,
-                const dataflow_t l2_dataflow_);                     // Update final things
-    void spatial_first_worker(const unsigned tid_,
-                              const mapping_table_t& init_mapping_,
-                              const mapping_space_t& mapping_space_,
-                              std::mutex& m_);
-    void temporal_first_worker(const unsigned tid_,
-                               const mapping_table_t& init_mapping_,
-                               const mapping_space_t& mapping_space_,
-                               std::mutex& m_);
-    // Variables & containers
-    const opt_type_t opt_type;                                      // Opt type: s-t or t-s
-    const unsigned num_threads;                                     // # of threads
-    unsigned num_spatial;
-    unsigned num_temporal;
-    std::vector<uint64_t> total_cnt;
-    std::vector<uint64_t> valid_cnt;
-    std::vector<mapping_table_t> best_mappings;
 };
 
 #endif

@@ -51,10 +51,8 @@ int main(int argc, char **argv) {
         if(opt_type_str.compare("b-f-energy") == 0) opt_type = opt_type_t::B_F_ENERGY;
         else if(opt_type_str.compare("b-f-cycle") == 0) opt_type = opt_type_t::B_F_CYCLE;
         else if(opt_type_str.compare("b-f-edp") == 0) opt_type = opt_type_t::B_F_EDP;
-        else if(opt_type_str.compare("s-t") == 0) opt_type = opt_type_t::S_T;
-        else if(opt_type_str.compare("t-s") == 0) opt_type = opt_type_t::T_S;
-        else if(opt_type_str.compare("hierarchical") == 0) opt_type = opt_type_t::HIERARCHICAL;
-        else handler.print_err(err_type_t::INVAILD, "opt_type: b-f-energy, b-f-cycle, b-f-edp, s-t, t-s, or systematic");
+        else if(opt_type_str.compare("bottom-up") == 0) opt_type = opt_type_t::BOTTOM_UP;
+        else handler.print_err(err_type_t::INVAILD, "opt_type: b-f-energy, b-f-cycle, b-f-edp, or bottom-up");
         // num_threads: Multi-threading for brute-force (b-f-xxx)
         int num_threads = stoi(argv[5]);
         if(num_threads <= 0)
@@ -66,22 +64,9 @@ int main(int argc, char **argv) {
         else if(is_fixed_str.compare("flexible") == 0) is_fixed = false;
         else handler.print_err(err_type_t::INVAILD, "dataflows: fixed or flexible");
         // Optimizer initialization
-        if(opt_type == opt_type_t::HIERARCHICAL) {
-            hierarchical_t * optimizer = new hierarchical_t(argv[2], argv[3], is_fixed);
+        if(opt_type == opt_type_t::BOTTOM_UP) {
+            bottom_up_t * optimizer = new bottom_up_t(argv[2], argv[3], is_fixed);
             // Start hierarchical optimizing
-            if(argc == 8) {
-                unsigned layer_idx = stoi(argv[7]);
-                if(layer_idx == 0)
-                    handler.print_err(err_type_t::INVAILD, "layer_idx must be more than 0");
-                optimizer->run(layer_idx);
-            }
-            else
-                optimizer->run();
-            delete optimizer;
-        }
-        else if(opt_type == opt_type_t::S_T || opt_type == opt_type_t::T_S) {
-            pruning_t * optimizer = new pruning_t(argv[2], argv[3], opt_type, num_threads, is_fixed);
-            // Start optimizing with pruning
             if(argc == 8) {
                 unsigned layer_idx = stoi(argv[7]);
                 if(layer_idx == 0)
