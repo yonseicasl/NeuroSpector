@@ -115,7 +115,7 @@ private:
     std::vector<dataflow_t> final_best_dataflows;                   // Final best dataflows (L1 and L2)
 };
 
-/* S-T Bottom-up */
+/* T-S Bottom-up */
 class bottom_up_t : public optimizer_t {
 public:
     bottom_up_t(const std::string& acc_cfg_path_, 
@@ -146,7 +146,7 @@ private:
     component_t start_component;                            // Current start component
     component_t end_component;                              // Current end component
     std::vector<unsigned> used_levels;                      // # of the existent levels (not skipped levels)
-    std::vector<unsigned> top_k;                            // Top k for each s-p level
+    std::vector<unsigned> top_k;                            // Top k for each t-s level
     std::vector<uint64_t> total_cnt;                        // Total # of mapping space: first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
     std::vector<uint64_t> valid_cnt;                        // Total valid counts      : first (1) - second (top_k[0]) - third (top_k[0] * top_k[1])
     std::vector<mapping_table_t> best_mappings;

@@ -7,7 +7,7 @@
 
 static handler_t handler;
 
-/* S-T Bottom-up */
+/* T-S Bottom-up */
 bottom_up_t::bottom_up_t(const std::string& acc_cfg_path_, 
                          const std::string& net_cfg_path_, 
                          const bool is_fixed_)
@@ -62,7 +62,7 @@ void bottom_up_t::run(const unsigned idx_) {
     final_best_mappings.clear();
     final_best_dataflows.clear();
     handler.print_line(50, "*");
-    std::cout << "# bottom_up OPTIMIZATION" << std::endl;
+    std::cout << "# BOTTOM-UP OPTIMIZATION" << std::endl;
     std::cout << "# NETWORK    : " << network_name << std::endl;
     std::cout << "# LAYER      : " << mappings.at(idx_ - 1).get_layer_name() << std::endl;
     handler.print_line(50, "*");
