@@ -10,7 +10,7 @@ acc_arg=configs/accelerators/eyeriss.cfg
 net_arg=configs/networks/resnet50.csv
 opt_type=bottom-up
 num_threads=4
-dataflows=fixed
+dataflows=flexible
 
 # Usage
 print_help() {
