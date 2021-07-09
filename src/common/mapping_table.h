@@ -29,6 +29,7 @@ public:
     unsigned get_degree(const parameter_t D, const component_t U) const;
     unsigned get_stride() const;
     size_t get_product(const parameter_t D, const component_t U) const;
+    size_t get_column_product(const component_t U) const;
     size_t get_temporal_product(const parameter_t D, const component_t U) const;
     size_t get_iteration(const component_t U) const;
     size_t get_iteration(const parameter_t D, const component_t U) const;

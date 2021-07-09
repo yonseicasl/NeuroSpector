@@ -133,6 +133,15 @@ size_t mapping_table_t::get_product(const parameter_t D, const component_t U) co
     return product;
 }
 
+size_t mapping_table_t::get_column_product(const component_t U) const {
+    unsigned row = static_cast<unsigned>(U);
+    size_t product = 1; 
+    for(unsigned column = 0; column < D_size; column++) {
+        product *= degrees.at(column + D_size * row);
+    }
+    return product;
+}
+
 size_t mapping_table_t::get_temporal_product(const parameter_t D, const component_t U) const {
   unsigned column =static_cast<unsigned>(D);
   size_t product = 1;

@@ -2,6 +2,31 @@
 
 static handler_t handler;
 
+std::string s1_x_constraints = "";
+std::string s1_y_constraints = "";
+std::string s2_constraints = "";
+
+parameter_t optimizer_t::return_parameter(std::string parameter_) const {
+    if(parameter_ == "G")
+        return parameter_t::G;
+    else if(parameter_ == "K")
+        return parameter_t::K;
+    else if(parameter_ == "B")
+        return parameter_t::B;
+    else if(parameter_ == "P")
+        return parameter_t::P;
+    else if(parameter_ == "Q")
+        return parameter_t::Q;
+    else if(parameter_ == "C")
+        return parameter_t::C;
+    else if(parameter_ == "R")
+        return parameter_t::R;
+    else if(parameter_ == "S")
+        return parameter_t::S;
+    else 
+        return parameter_t::SIZE;
+}
+
 /* Optimizer */
 optimizer_t::optimizer_t(const std::string& acc_cfg_path_, 
                          const std::string& net_cfg_path_, 
@@ -138,8 +163,7 @@ bool optimizer_t::s0_validity(const mapping_table_t& mapping_table_) const {
     if(macs_per_pe_val > accelerator->macs_per_pe() || mac_width_val > accelerator->mac_width()) 
         validity = false;
     return validity;
-}
-
+} 
 bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
     bool validity = true;
     unsigned shared_tile_size = 0; 
@@ -194,6 +218,17 @@ bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
 }     
 
 bool optimizer_t::s1_x_validity(const mapping_table_t& mapping_table_) const {
+    // Parameter constraints
+    if(s1_x_constraints.size() != 0) {
+        unsigned column_product = mapping_table_.get_column_product(component_t::S1_X);
+        for(unsigned i = 0; i < s1_x_constraints.size(); i++) {
+            std::string tmp;
+            tmp.push_back(s1_x_constraints.at(i));
+            column_product /= mapping_table_.get_degree(return_parameter(tmp), component_t::S1_X);
+        }
+        if(column_product > 1)
+            return false;
+    }
     bool validity = true;
     unsigned s1_size_x_val = 1;
     for(unsigned column = 0; column < D_size; column++)
@@ -207,6 +242,17 @@ bool optimizer_t::s1_x_validity(const mapping_table_t& mapping_table_) const {
 }     
 
 bool optimizer_t::s1_y_validity(const mapping_table_t& mapping_table_) const {
+    // Parameter constraints
+    if(s1_y_constraints.size() != 0) {
+        unsigned column_product = mapping_table_.get_column_product(component_t::S1_Y);
+        for(unsigned i = 0; i < s1_y_constraints.size(); i++) {
+            std::string tmp;
+            tmp.push_back(s1_y_constraints.at(i));
+            column_product /= mapping_table_.get_degree(return_parameter(tmp), component_t::S1_Y);
+        }
+        if(column_product > 1)
+            return false;
+    }
     bool validity = true;
     unsigned s1_size_y_val = 1;
     for(unsigned column = 0; column < D_size; column++)
@@ -273,6 +319,17 @@ bool optimizer_t::l2_validity(const mapping_table_t& mapping_table_) const {
 }     
 
 bool optimizer_t::s2_validity(const mapping_table_t& mapping_table_) const {
+    // Parameter constraints
+    if(s2_constraints.size() != 0) {
+        unsigned column_product = mapping_table_.get_column_product(component_t::S2);
+        for(unsigned i = 0; i < s2_constraints.size(); i++) {
+            std::string tmp;
+            tmp.push_back(s2_constraints.at(i));
+            column_product /= mapping_table_.get_degree(return_parameter(tmp), component_t::S2);
+        }
+        if(column_product > 1)
+            return false;
+    }
     bool validity = true;
     unsigned s2_size_val = 1;
     for(unsigned column = 0; column < D_size; column++) {
