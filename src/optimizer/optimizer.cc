@@ -1,12 +1,17 @@
 #include "optimizer.h"
 
-static handler_t handler;
+#define L1_THRESHOLD 0
+#define S1_THRESHOLD 0
+#define L2_THRESHOLD 0
 
+std::string s0_constraints = "";
 std::string s1_x_constraints = "";
 std::string s1_y_constraints = "";
 std::string s2_constraints = "";
 
-parameter_t optimizer_t::return_parameter(std::string parameter_) const {
+static handler_t handler;
+
+parameter_t return_parameter(std::string parameter_) {
     if(parameter_ == "G")
         return parameter_t::G;
     else if(parameter_ == "K")
@@ -150,6 +155,17 @@ bool optimizer_t::mac_validity(const mapping_table_t& mapping_table_) const {
 }     
 
 bool optimizer_t::s0_validity(const mapping_table_t& mapping_table_) const {
+    // Parameter constraints
+    if(s0_constraints.size() != 0) {
+        unsigned column_product = mapping_table_.get_column_product(component_t::S0);
+        for(unsigned i = 0; i < s0_constraints.size(); i++) {
+            std::string tmp;
+            tmp.push_back(s0_constraints.at(i));
+            column_product /= mapping_table_.get_degree(return_parameter(tmp), component_t::S0);
+        }
+        if(column_product > 1)
+            return false;
+    }
     bool validity = true;
     unsigned macs_per_pe_val = 1;
     unsigned mac_width_val = 1;
@@ -164,6 +180,7 @@ bool optimizer_t::s0_validity(const mapping_table_t& mapping_table_) const {
         validity = false;
     return validity;
 } 
+
 bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
     bool validity = true;
     unsigned shared_tile_size = 0; 

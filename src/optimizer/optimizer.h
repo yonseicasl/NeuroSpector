@@ -18,10 +18,6 @@
 #include "mapping_table.h"
 #include "stats.h"
 
-#define L1_THRESHOLD 0
-#define S1_THRESHOLD 0
-#define L2_THRESHOLD 0
-
 /* Optimizer */
 class optimizer_t {
 public:
@@ -38,7 +34,6 @@ public:
 protected:
     // Initialze dataflows
     void init_dataflows();
-    parameter_t return_parameter(std::string parameter_) const;
     // Check each mapping table with the accelerator
     bool check_all_validity(const mapping_table_t& mapping_table_) const; 
     bool check_validity(const component_t U, const mapping_table_t& mapping_table_) const; 
