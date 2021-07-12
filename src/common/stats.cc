@@ -34,8 +34,8 @@ double stats_t::get_energy(component_t U) const {
     double rtn = 0;
     switch(U) {
         case component_t::L1: rtn = l1_energy_upper; break;
-        case component_t::L2: rtn = l2_energy_upper + l1_energy_lower; break;
-        case component_t::DRAM: rtn = dram_energy + l2_energy_lower; break;
+        case component_t::L2: rtn = l2_energy_upper + l1_energy_lower + l1_energy_upper; break;
+        case component_t::DRAM: rtn = dram_energy + l2_energy_lower + l2_energy_upper; break;
         default: handler.print_err(err_type_t::INVAILD, "COMPONENT"); break;
     }
     return rtn; 
