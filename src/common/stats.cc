@@ -35,7 +35,7 @@ double stats_t::get_energy(component_t U) const {
     switch(U) {
         case component_t::L1: rtn = l1_energy_upper; break;
         case component_t::L2: rtn = l2_energy_upper + l1_energy_lower + l1_energy_upper; break;
-        case component_t::DRAM: rtn = dram_energy + l2_energy_lower + l2_energy_upper; break;
+        case component_t::DRAM: rtn = dram_energy + l2_energy_lower; break;
         default: handler.print_err(err_type_t::INVAILD, "COMPONENT"); break;
     }
     return rtn; 
@@ -703,32 +703,48 @@ void stats_t::update_utilization() {
 }
 
 void stats_t::update_cycle() {
+    unsigned l1_bandwidth = 1;
+    unsigned l2_bandwidth = 1;
+    unsigned dram_bandwidth = 4;
+
     mac_cycle = mapping_table.get_iteration(component_t::L1) * accelerator->C_mac_op();
-    l1_cycle = (l1_iteration.input_rd_it + l1_iteration.filter_rd_it + l1_iteration.output_rd_it + l1_iteration.output_wt_it) * accelerator->C_l1_access();
-    l2_cycle = (l2_iteration.input_rd_it + l2_iteration.filter_rd_it + l2_iteration.output_rd_it + l2_iteration.output_wt_it) * accelerator->C_l2_access();
-    dram_cycle = (dram_iteration.input_rd_it + dram_iteration.filter_rd_it + dram_iteration.output_rd_it + dram_iteration.output_wt_it) * accelerator->C_dram_access();
+    l1_cycle = (mac_input_tile_size / l1_bandwidth * l1_iteration.input_rd_it 
+             +  mac_filter_tile_size / l1_bandwidth * l1_iteration.filter_rd_it 
+             +  mac_output_tile_size / l1_bandwidth * l1_iteration.output_rd_it 
+             +  mac_output_tile_size / l1_bandwidth * l1_iteration.output_wt_it) 
+             * accelerator->C_l1_access();
+    l2_cycle = (l1_input_tile_size / l2_bandwidth * l2_iteration.input_rd_it 
+             + l1_filter_tile_size / l2_bandwidth * l2_iteration.filter_rd_it 
+             + l1_output_tile_size / l2_bandwidth * l2_iteration.output_rd_it 
+             + l1_output_tile_size / l2_bandwidth * l2_iteration.output_wt_it) 
+             * accelerator->C_l2_access();
+    dram_cycle = (l2_input_tile_size / dram_bandwidth * dram_iteration.input_rd_it 
+               + l2_filter_tile_size / dram_bandwidth * dram_iteration.filter_rd_it 
+               + l2_output_tile_size / dram_bandwidth * dram_iteration.output_rd_it 
+               + l2_output_tile_size / dram_bandwidth * dram_iteration.output_wt_it) 
+               * accelerator->C_dram_access();
     // L1 separated buffer adjustment
     if(accelerator->l1_type() == buffer_type_t::SEPARATED) {
         if(l1_iteration.input_rd_it >= l1_iteration.filter_rd_it)
-            l1_cycle -= l1_iteration.filter_rd_it * accelerator->C_l1_access();
+            l1_cycle -= mac_filter_tile_size / l1_bandwidth * l1_iteration.filter_rd_it * accelerator->C_l1_access();
         else
-            l1_cycle -= l1_iteration.input_rd_it * accelerator->C_l1_access();
+            l1_cycle -= mac_input_tile_size / l1_bandwidth * l1_iteration.input_rd_it * accelerator->C_l1_access();
     }
     // TODO: support more buffer types 
     
     // Bypass adjustment
     if(accelerator->l1_input_bypass())
-        l2_cycle -= l2_iteration.input_rd_it * accelerator->C_l2_access();
+        l2_cycle -= l1_input_tile_size / l2_bandwidth * l2_iteration.input_rd_it * accelerator->C_l2_access();
     if(accelerator->l1_filter_bypass())
-        l2_cycle -= l2_iteration.filter_rd_it * accelerator->C_l2_access();
+        l2_cycle -= l1_filter_tile_size / l2_bandwidth * l2_iteration.filter_rd_it * accelerator->C_l2_access();
     if(accelerator->l1_output_bypass()) 
-        l2_cycle -= (l2_iteration.output_rd_it + l2_iteration.output_wt_it) * accelerator->C_l2_access();
+        l2_cycle -= l1_output_tile_size / l2_bandwidth * (l2_iteration.output_rd_it + l2_iteration.output_wt_it) * accelerator->C_l2_access();
     if(accelerator->l2_input_bypass())
-        dram_cycle -= dram_iteration.input_rd_it * accelerator->C_dram_access();
+        dram_cycle -= l2_input_tile_size / dram_bandwidth * dram_iteration.input_rd_it * accelerator->C_dram_access();
     if(accelerator->l2_filter_bypass())
-        dram_cycle -= dram_iteration.filter_rd_it * accelerator->C_dram_access();
+        dram_cycle -= l2_filter_tile_size / dram_bandwidth * dram_iteration.filter_rd_it * accelerator->C_dram_access();
     if(accelerator->l2_output_bypass()) 
-        dram_cycle -= (dram_iteration.output_rd_it + dram_iteration.output_wt_it) * accelerator->C_dram_access();
+        dram_cycle -= l2_output_tile_size / dram_bandwidth * (dram_iteration.output_rd_it + dram_iteration.output_wt_it) * accelerator->C_dram_access();
     total_cycle = mac_cycle + l1_cycle + l2_cycle + dram_cycle;
     return;
 }
