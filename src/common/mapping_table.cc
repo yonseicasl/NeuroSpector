@@ -360,3 +360,39 @@ std::vector<unsigned> mapping_table_t::get_row_degrees(const component_t U) cons
         rtn_degrees.push_back(degrees.at(column + D_size * static_cast<unsigned>(U)));
     return rtn_degrees;
 }
+void mapping_table_t::leverage(dataflow_t df_) {
+    if(df_ == dataflow_t::IS) {
+        for(unsigned column = 0; column < D_size; column++) {
+            if(column == static_cast<unsigned>(parameter_t::K)) continue;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) 
+                                                                                 * degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) = 1;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+        }
+    }
+    else if(df_ == dataflow_t::WS) {
+        for(unsigned column = 0; column < D_size; column++) {
+            if(column == static_cast<unsigned>(parameter_t::B)
+            || column == static_cast<unsigned>(parameter_t::P) 
+            || column == static_cast<unsigned>(parameter_t::Q)) continue;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) 
+                                                                                 * degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) = 1;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+        }
+    }
+    else if(df_ == dataflow_t::OS) {
+        for(unsigned column = 0; column < D_size; column++) {
+            if(column == static_cast<unsigned>(parameter_t::C)
+            || column == static_cast<unsigned>(parameter_t::R) 
+            || column == static_cast<unsigned>(parameter_t::S)) continue;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) 
+                                                                                 * degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) = 1;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+        }
+    }
+    else 
+        handler.print_err(err_type_t::INVAILD, "Dataflow");
+    return;
+}

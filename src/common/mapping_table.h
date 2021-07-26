@@ -58,6 +58,8 @@ public:
     std::vector<unsigned> get_degrees() const; 
     std::vector<unsigned> get_layer_values() const;
     std::vector<unsigned> get_row_degrees(const component_t U) const;
+    // S2 x L2 -> L1
+    void leverage(const dataflow_t df_);
 
 private:
     bool is_grouped;                          // For group conv

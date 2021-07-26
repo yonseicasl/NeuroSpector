@@ -355,9 +355,18 @@ void bottom_up_t::worker(const unsigned seq_,
                                     // Validity check
                                     if(check_validity(temporal, curr_mapping) & check_validity(spatial, curr_mapping)) {
                                         // Get current energy
-                                        stats_t curr_stats(accelerator, curr_mapping, l1_dataflow_, l2_dataflow_);
-                                        curr_stats.update_stats();
-                                        curr_energy = curr_stats.get_energy(bottom);
+                                        if(seq_ == 0) {
+                                            mapping_table_t tmp_mapping(curr_mapping);
+                                            tmp_mapping.leverage(l1_dataflow_);
+                                            stats_t curr_stats(accelerator, tmp_mapping, l1_dataflow_, l2_dataflow_);
+                                            curr_stats.update_stats();
+                                            curr_energy = curr_stats.get_total_energy();
+                                        }
+                                        else {
+                                            stats_t curr_stats(accelerator, curr_mapping, l1_dataflow_, l2_dataflow_);
+                                            curr_stats.update_stats();
+                                            curr_energy = curr_stats.get_energy(bottom);
+                                        }
                                         // 'local_best_mappings' includes the same energy key value with the current energy
                                         auto entry = local_best_mappings.find(curr_energy);
                                         if(entry == local_best_mappings.end()) {
