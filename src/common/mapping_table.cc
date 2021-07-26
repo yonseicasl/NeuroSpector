@@ -364,9 +364,7 @@ void mapping_table_t::leverage(dataflow_t df_) {
     if(df_ == dataflow_t::IS) {
         for(unsigned column = 0; column < D_size; column++) {
             if(column == static_cast<unsigned>(parameter_t::K)) continue;
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) 
-                                                                                 * degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) = 1;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
             degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
         }
     }
@@ -375,9 +373,7 @@ void mapping_table_t::leverage(dataflow_t df_) {
             if(column == static_cast<unsigned>(parameter_t::B)
             || column == static_cast<unsigned>(parameter_t::P) 
             || column == static_cast<unsigned>(parameter_t::Q)) continue;
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) 
-                                                                                 * degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) = 1;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
             degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
         }
     }
@@ -386,9 +382,7 @@ void mapping_table_t::leverage(dataflow_t df_) {
             if(column == static_cast<unsigned>(parameter_t::C)
             || column == static_cast<unsigned>(parameter_t::R) 
             || column == static_cast<unsigned>(parameter_t::S)) continue;
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) 
-                                                                                 * degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::S2)) = 1;
+            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
             degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
         }
     }
