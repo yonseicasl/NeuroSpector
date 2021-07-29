@@ -84,6 +84,8 @@ public:
     bool s1_noc_exists;
     unsigned s1_size_x;
     unsigned s1_size_y;
+    std::string s1_constraints_x;
+    std::string s1_constraints_y;
     // L2 [T]
     bool l2_input_bypass;
     bool l2_filter_bypass;

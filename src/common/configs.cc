@@ -96,6 +96,8 @@ acc_cfg_t::acc_cfg_t(const std::string& cfg_path_)
       s1_noc_exists(false), 
       s1_size_x(1), 
       s1_size_y(1), 
+      s1_constraints_x(""),
+      s1_constraints_y(""),
       l2_input_bypass(false), 
       l2_filter_bypass(false), 
       l2_output_bypass(false),
@@ -243,6 +245,20 @@ void acc_cfg_t::parse() {
             }
             else if(line.find("S1_Y") != std::string::npos) {
                 s1_size_y = get_line_uint(line, 1); continue;
+            }
+            else if(line.find("S1_CONSTRAINT_X") != std::string::npos) {
+                if(get_line_string(line, 1).compare("NONE") == 0) 
+                    s1_constraints_x = "";
+                else 
+                    s1_constraints_x = get_line_string(line, 1);
+                continue;
+            }
+            else if(line.find("S1_CONSTRAINT_Y") != std::string::npos) {
+                if(get_line_string(line, 1).compare("NONE") == 0)
+                    s1_constraints_y = "";
+                else 
+                    s1_constraints_y = get_line_string(line, 1);
+                continue;
             }
             // L2 [T]
             else if(line.find("L2_DATAFLOW") != std::string::npos) {

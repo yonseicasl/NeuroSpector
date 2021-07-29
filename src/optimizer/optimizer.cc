@@ -5,9 +5,9 @@
 #define L2_THRESHOLD 0
 
 std::string s0_constraints = "";
-std::string s1_x_constraints = "KCP";
-std::string s1_y_constraints = "KCR";
-std::string s2_constraints = "";
+std::string s1_x_constraints = "";
+std::string s1_y_constraints = "";
+std::string s2_constraints = "KC";
 
 static handler_t handler;
 
@@ -236,11 +236,11 @@ bool optimizer_t::l1_validity(const mapping_table_t& mapping_table_) const {
 
 bool optimizer_t::s1_x_validity(const mapping_table_t& mapping_table_) const {
     // Parameter constraints
-    if(s1_x_constraints.size() != 0) {
+    if(accelerator->s1_constraints_x().size() != 0) {
         unsigned column_product = mapping_table_.get_column_product(component_t::S1_X);
-        for(unsigned i = 0; i < s1_x_constraints.size(); i++) {
+        for(unsigned i = 0; i < accelerator->s1_constraints_x().size(); i++) {
             std::string tmp;
-            tmp.push_back(s1_x_constraints.at(i));
+            tmp.push_back(accelerator->s1_constraints_x().at(i));
             column_product /= mapping_table_.get_degree(return_parameter(tmp), component_t::S1_X);
         }
         if(column_product > 1)
@@ -260,11 +260,11 @@ bool optimizer_t::s1_x_validity(const mapping_table_t& mapping_table_) const {
 
 bool optimizer_t::s1_y_validity(const mapping_table_t& mapping_table_) const {
     // Parameter constraints
-    if(s1_y_constraints.size() != 0) {
-        unsigned column_product = mapping_table_.get_column_product(component_t::S1_Y);
-        for(unsigned i = 0; i < s1_y_constraints.size(); i++) {
+    if(accelerator->s1_constraints_y().size() != 0) {
+    unsigned column_product = mapping_table_.get_column_product(component_t::S1_Y);
+        for(unsigned i = 0; i < accelerator->s1_constraints_y().size(); i++) {
             std::string tmp;
-            tmp.push_back(s1_y_constraints.at(i));
+            tmp.push_back(accelerator->s1_constraints_y().at(i));
             column_product /= mapping_table_.get_degree(return_parameter(tmp), component_t::S1_Y);
         }
         if(column_product > 1)

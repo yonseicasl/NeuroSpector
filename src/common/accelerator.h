@@ -37,6 +37,8 @@ public:
     bool s1_noc_exists() const;
     unsigned s1_size_x() const;
     unsigned s1_size_y() const;
+    std::string s1_constraints_x() const;
+    std::string s1_constraints_y() const;
     // L2 [T]
     bool l2_input_bypass() const;
     bool l2_filter_bypass() const;

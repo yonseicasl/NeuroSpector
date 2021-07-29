@@ -273,6 +273,8 @@ dataflow_t accelerator_t::l1_dataflow() const { return acc_cfg->l1_dataflow; }
 bool accelerator_t::s1_noc_exists() const { return acc_cfg->s1_noc_exists; }
 unsigned accelerator_t::s1_size_x() const { return acc_cfg->s1_size_x; }
 unsigned accelerator_t::s1_size_y() const { return acc_cfg->s1_size_y; }
+std::string accelerator_t::s1_constraints_x() const { return acc_cfg->s1_constraints_x; }
+std::string accelerator_t::s1_constraints_y() const { return acc_cfg->s1_constraints_y; }
 
 // L2 [T]
 bool accelerator_t::l2_input_bypass() const { return acc_cfg->l2_input_bypass; }
