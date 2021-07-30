@@ -5,8 +5,6 @@
 #define L2_THRESHOLD 0
 
 std::string s0_constraints = "";
-std::string s1_x_constraints = "";
-std::string s1_y_constraints = "";
 std::string s2_constraints = "KC";
 
 static handler_t handler;
