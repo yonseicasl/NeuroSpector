@@ -1,0 +1,84 @@
+# ACCELERATOR: EYERISS
+----------------------------------------
+# MAC [T]
+********************
+      PRECISION   : FP16
+      MAC DATAFLOW: NONE
+----------------------------------------
+# S0 [S]
+********************
+     MAC UNIT TYPE: SDSO
+     MACS PER PE  : 1
+     MAC WIDTH    : 1
+----------------------------------------
+# L1 [T]
+********************
+    L1 DATAFLOW   : WS
+    L1 TYPE       : SEPARATED 
+    L1 INPUT SIZE :   24 B
+    L1 FILTER SIZE:  448 B
+    L1 OUTPUT SIZE:   48 B
+----------------------------------------
+# S1_X & S1_Y [S]
+********************
+     S1 NOC EXISTS: 1
+     S1 SIZE X    : 14
+     S1 SIZE Y    : 12
+----------------------------------------
+# L2 [T]
+********************
+    L2 DATAFLOW   : WS
+    L2 TYPE       : SHARED
+    L2 SHARED SIZE:  108 KB
+----------------------------------------
+# ENERGY REFERENCES
+********************
+   MAC OPERATION           : 0.075
+----------------------------------------
+   L1 INPUT  INGRESS/EGRESS: 0.05/0.05
+   L1 FILTER INGRESS/EGRESS: 0.94/0.94
+   L1 OUTPUT INGRESS/EGRESS: 0.1/0.1
+----------------------------------------
+   L2 INPUT  INGRESS/EGRESS: 13.5/13.5
+   L2 FILTER INGRESS/EGRESS: 13.5/13.5
+   L2 OUTPUT INGRESS/EGRESS: 13.5/13.5
+----------------------------------------
+ - DRAM INGRESS/EGRESS     : 200/200
+----------------------------------------
+**************************************************
+# DELAY-ENERGY OPTIMIZATION
+# NETWORK    : MOBILENET
+# LAYER      : GROUP_1
+**************************************************
+VALID MAPPINGS,TOTAL MAPPINGS,SIMILAR MAPPINGS
+13020892,385875000,2
+**************************************************
+# BEST MAPPING TABLE 1
+# DATAFLOWS (L1-L2): WS-WS
+GROUP_1,32,1,1,112,112,1,3,3,1
+
+  L1,2,1,1,1,4,1,1,3,
+S1_X,2,1,1,1,7,1,1,1,
+S1_Y,4,1,1,1,1,1,3,1,
+  L2,1,1,1,28,2,1,1,1,
+DRAM,2,1,1,4,2,1,1,1,
+
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+,270950.4,4391291.4,34277472.0,169427200.0,208366913.8,21504.0,57344.0,3588.0,1020.0,83456.0,17.4,100.0,10.0,100.0,96.0,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 2
+# DATAFLOWS (L1-L2): WS-WS
+GROUP_1,32,1,1,112,112,1,3,3,1
+
+  L1,2,1,1,1,4,1,1,3,
+S1_X,2,1,1,1,7,1,1,1,
+S1_Y,4,1,1,1,1,1,3,1,
+  L2,1,1,1,56,1,1,1,1,
+DRAM,2,1,1,2,4,1,1,1,
+
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+,270950.4,4391291.4,34277472.0,169427200.0,208366913.8,21504.0,57344.0,3588.0,1020.0,83456.0,17.4,100.0,10.0,100.0,96.0,100.0
+--------------------------------------------------
+**************************************************
+# TIME: 1 min 18 sec (78)
+**************************************************
