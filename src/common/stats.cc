@@ -451,9 +451,9 @@ void stats_t::update_iteration() {
     */
     if(mac_input_tile_size_spatial == l1_input_tile_size)
         l1_iteration.input_rd_it = l2_iteration.input_rd_it;
-    if(mac_filter_tile_size_spatial == l1_input_tile_size)
+    if(mac_filter_tile_size_spatial == l1_filter_tile_size)
         l1_iteration.filter_rd_it = l2_iteration.filter_rd_it;
-    if(mac_output_tile_size_spatial == l1_input_tile_size) {
+    if(mac_output_tile_size_spatial == l1_output_tile_size) {
         l1_iteration.output_rd_it = l2_iteration.output_rd_it;
         l1_iteration.output_wt_it = l2_iteration.output_wt_it;
     }
