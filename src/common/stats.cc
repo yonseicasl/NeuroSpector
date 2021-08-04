@@ -101,18 +101,20 @@ void stats_t::print_stats() const {
 }
 
 void stats_t::print_csv() const {
-    std::cout << "STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION\n" 
+    std::cout << "STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY\n" 
               << "," << std::fixed << std::setprecision(1) << mac_energy 
               << "," << std::fixed << std::setprecision(1) << l1_energy 
               << "," << std::fixed << std::setprecision(1) << l2_energy 
               << "," << std::fixed << std::setprecision(1) << dram_energy 
-              << "," << std::fixed << std::setprecision(1) << total_energy 
+              << "," << std::fixed << std::setprecision(1) << total_energy  << std::endl;
+    std::cout << "STATS,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE)\n" 
               << "," << mac_cycle 
               << "," << l1_cycle 
               << "," << l2_cycle 
               << "," << dram_cycle 
               << "," << total_cycle 
-              << "," << total_edp 
+              << "," << total_edp << std::endl;
+    std::cout << "STATS,S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION\n" 
               << "," << s0_utilization 
               << "," << l1_utilization 
               << "," << s1_utilization 
