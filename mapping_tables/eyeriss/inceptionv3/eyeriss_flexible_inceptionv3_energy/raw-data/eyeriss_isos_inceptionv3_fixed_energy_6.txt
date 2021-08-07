@@ -1,0 +1,1833 @@
+# ACCELERATOR: EYERISS
+----------------------------------------
+# MAC [T]
+********************
+      PRECISION   : FP16
+      MAC DATAFLOW: NONE
+----------------------------------------
+# S0 [S]
+********************
+     MAC UNIT TYPE: SDSO
+     MACS PER PE  : 1
+     MAC WIDTH    : 1
+----------------------------------------
+# L1 [T]
+********************
+    L1 DATAFLOW   : IS
+    L1 TYPE       : SEPARATED 
+    L1 INPUT SIZE :   24 B
+    L1 FILTER SIZE:  448 B
+    L1 OUTPUT SIZE:   48 B
+----------------------------------------
+# S1_X & S1_Y [S]
+********************
+  S1 NOC EXISTS   : 1
+  S1 SIZE X       : 14
+  S1 SIZE Y       : 12
+  S1 CONSTRAINT X : 
+  S1 CONSTRAINT Y : 
+----------------------------------------
+# L2 [T]
+********************
+    L2 DATAFLOW   : OS
+    L2 TYPE       : SHARED
+    L2 SHARED SIZE:  108 KB
+----------------------------------------
+# ENERGY REFERENCES
+********************
+   MAC OPERATION           : 0.075
+----------------------------------------
+   L1 INPUT  INGRESS/EGRESS: 0.05/0.05
+   L1 FILTER INGRESS/EGRESS: 0.94/0.94
+   L1 OUTPUT INGRESS/EGRESS: 0.1/0.1
+----------------------------------------
+   L2 INPUT  INGRESS/EGRESS: 13.5/13.5
+   L2 FILTER INGRESS/EGRESS: 13.5/13.5
+   L2 OUTPUT INGRESS/EGRESS: 13.5/13.5
+----------------------------------------
+ - DRAM INGRESS/EGRESS     : 200/200
+----------------------------------------
+**************************************************
+# PRUNING (S-T-ENERGY) OPTIMIZATION
+# NETWORK    : GOOGLENETV3
+# LAYER      : CONV_6
+**************************************************
+BRUTEFORCE, 31007812500
+**************************************************
+# SPATIAL
+ - NUM OF TOTAL MAPPINGS  :         7715736
+ - NUM OF VALID MAPPINGS  :            2313
+# TEMPORAL
+ - NUM OF TOTAL MAPPINGS  :      1601969481
+ - NUM OF VALID MAPPINGS  :       212202867
+# VALID MAPPINGS,TOTAL MAPPINGS,SIMILAR MAPPINGS
+212205180,1609685217,36
+TOTAL SEARCH SPACE, 1609685217
+**************************************************
+# BEST MAPPING TABLE 1
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,1,1,1,1,1,3,3,
+S1_Y,1,8,1,1,1,1,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 2
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,1,1,1,1,1,3,3,
+S1_Y,1,8,1,1,1,1,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 3
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,1,1,1,1,3,1,3,
+S1_Y,1,8,1,1,1,1,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 4
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,1,1,1,1,3,1,3,
+S1_Y,1,8,1,1,1,1,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 5
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,1,1,1,1,3,3,1,
+S1_Y,1,8,1,1,1,1,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 6
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,1,1,1,1,3,3,1,
+S1_Y,1,8,1,1,1,1,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 7
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,2,1,1,1,1,1,3,
+S1_Y,1,4,1,1,1,1,3,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 8
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,2,1,1,1,1,1,3,
+S1_Y,1,4,1,1,1,1,3,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 9
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,2,1,1,1,1,3,1,
+S1_Y,1,4,1,1,1,1,1,3,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 10
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,2,1,1,1,1,3,1,
+S1_Y,1,4,1,1,1,1,1,3,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 11
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,2,1,1,1,1,1,3,
+S1_Y,1,4,1,1,1,3,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 12
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,2,1,1,1,1,1,3,
+S1_Y,1,4,1,1,1,3,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 13
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,2,1,1,1,1,3,1,
+S1_Y,1,4,1,1,1,3,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 14
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,2,1,1,1,1,3,1,
+S1_Y,1,4,1,1,1,3,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 15
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,2,1,1,1,3,1,1,
+S1_Y,1,4,1,1,1,1,1,3,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 16
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,2,1,1,1,3,1,1,
+S1_Y,1,4,1,1,1,1,1,3,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 17
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,2,1,1,1,3,1,1,
+S1_Y,1,4,1,1,1,1,3,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 18
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,2,1,1,1,3,1,1,
+S1_Y,1,4,1,1,1,1,3,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 19
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,4,1,1,1,1,1,3,
+S1_Y,1,2,1,1,1,1,3,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 20
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,4,1,1,1,1,1,3,
+S1_Y,1,2,1,1,1,1,3,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 21
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,4,1,1,1,1,3,1,
+S1_Y,1,2,1,1,1,1,1,3,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 22
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,4,1,1,1,1,3,1,
+S1_Y,1,2,1,1,1,1,1,3,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 23
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,4,1,1,1,1,1,3,
+S1_Y,1,2,1,1,1,3,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 24
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,4,1,1,1,1,1,3,
+S1_Y,1,2,1,1,1,3,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 25
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,4,1,1,1,1,3,1,
+S1_Y,1,2,1,1,1,3,1,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 26
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,4,1,1,1,1,3,1,
+S1_Y,1,2,1,1,1,3,1,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 27
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,4,1,1,1,3,1,1,
+S1_Y,1,2,1,1,1,1,1,3,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 28
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,4,1,1,1,3,1,1,
+S1_Y,1,2,1,1,1,1,1,3,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 29
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,4,1,1,1,3,1,1,
+S1_Y,1,2,1,1,1,1,3,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 30
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,4,1,1,1,3,1,1,
+S1_Y,1,2,1,1,1,1,3,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 31
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,8,1,1,1,1,1,1,
+S1_Y,1,1,1,1,1,1,3,3,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 32
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,12,1,1,
+S1_X,1,8,1,1,1,1,1,1,
+S1_Y,1,1,1,1,1,1,3,3,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 33
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,8,1,1,1,1,1,1,
+S1_Y,1,1,1,1,1,3,1,3,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 34
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,3,1,
+S1_X,1,8,1,1,1,1,1,1,
+S1_Y,1,1,1,1,1,3,1,3,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 35
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,8,1,1,1,1,1,1,
+S1_Y,1,1,1,1,1,3,3,1,
+  L2,1,1,1,7,35,1,1,1,
+DRAM,1,2,1,5,1,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+# BEST MAPPING TABLE 36
+# DATAFLOWS (L1-L2): IS-OS
+CONV_6,1,288,1,35,35,192,3,3,1
+
+  L1,1,18,1,1,1,4,1,3,
+S1_X,1,8,1,1,1,1,1,1,
+S1_Y,1,1,1,1,1,3,3,1,
+  L2,1,1,1,35,7,1,1,1,
+DRAM,1,2,1,1,5,16,1,1,
+
+**************************************************
+ - L1 TILE SIZE (I)  : 12
+ - L1 TILE SIZE (F)  : 216
+ - L1 TILE SIZE (O)  : 18
+ - L2 TILE SIZE (I)  : 3996
+ - L2 TILE SIZE (F)  : 15552
+ - L2 TILE SIZE (O)  : 35280
+**************************************************
+ - L1   ITERATION (I): 8467200
+ - L1   ITERATION (F): 8467200
+ - L1   ITERATION (O): 16890300
+ - L2   ITERATION (I): 39200
+ - L2   ITERATION (F): 160
+ - L2   ITERATION (O): 75950
+ - DRAM ITERATION (I): 160
+ - DRAM ITERATION (F): 160
+ - DRAM ITERATION (O): 10
+**************************************************
+ - # OF S0 HOSTS (I) : 1
+ - # OF S0 HOSTS (F) : 1
+ - # OF S0 HOSTS (O) : 1
+ - # OF S1 HOSTS (I) : 9
+ - # OF S1 HOSTS (F) : 72
+ - # OF S1 HOSTS (O) : 8
+ - # OF S2 HOSTS (I) : 1
+ - # OF S2 HOSTS (F) : 1
+ - # OF S2 HOSTS (O) : 1
+**************************************************
+ - # OF ACTIVE MACs  : 1
+ - # OF ACTIVE  PEs  : 72
+ - # OF ACTIVE ACCs  : 1
+**************************************************
+ - L1       ACCESSES : 2570166720
+ - L2       ACCESSES : 21139200
+ - DRAM     ACCESSES : 3480480
+**************************************************
+STATS,MAC ENERGY,L1 ENERGY,L2 ENERGY,DRAM ENERGY,TOTAL ENERGY,MAC CYCLE,L1 CYCLE,L2 CYCLE,DRAM CYCLE,TOTAL CYCLE,TOTAL EDP (JxCYCLE),S0 UTILIZATION,L1 UTILIZATION,S1 UTILIZATION,L2 UTILIZATION,S2 UTILIZATION
+DATA, 45722880.0,739027757.2,285379200.0,696096000.0,1766225837.2,8467200.0,25357500.0,230620.0,9900.0,34065220.0,60166.9,100.0,94.6,42.9,99.2,100.0
+--------------------------------------------------
+**************************************************
+# TIME: 27 min 3 sec (1623)
+**************************************************
