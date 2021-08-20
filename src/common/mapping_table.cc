@@ -390,3 +390,99 @@ void mapping_table_t::leverage(dataflow_t df_) {
         handler.print_err(err_type_t::INVAILD, "Dataflow");
     return;
 }
+bool mapping_table_t::check_input_read_once(const component_t U) const {
+    unsigned degrees = 1;
+    switch(U) {
+        case component_t::L1:
+            degrees *= get_degree(parameter_t::G, component_t::L1)
+                     * get_degree(parameter_t::B, component_t::L1)
+                     * get_degree(parameter_t::P, component_t::L1)
+                     * get_degree(parameter_t::Q, component_t::L1)
+                     * get_degree(parameter_t::C, component_t::L1)
+                     * get_degree(parameter_t::R, component_t::L1)
+                     * get_degree(parameter_t::S, component_t::L1);
+            break;
+        case component_t::L2:
+            degrees *= get_degree(parameter_t::G, component_t::L2)
+                     * get_degree(parameter_t::B, component_t::L2)
+                     * get_degree(parameter_t::P, component_t::L2)
+                     * get_degree(parameter_t::Q, component_t::L2)
+                     * get_degree(parameter_t::C, component_t::L2)
+                     * get_degree(parameter_t::R, component_t::L2)
+                     * get_degree(parameter_t::S, component_t::L2);
+            break;
+        case component_t::DRAM:
+            degrees *= get_degree(parameter_t::G, component_t::DRAM)
+                     * get_degree(parameter_t::B, component_t::DRAM)
+                     * get_degree(parameter_t::P, component_t::DRAM)
+                     * get_degree(parameter_t::Q, component_t::DRAM)
+                     * get_degree(parameter_t::C, component_t::DRAM)
+                     * get_degree(parameter_t::R, component_t::DRAM)
+                     * get_degree(parameter_t::S, component_t::DRAM);
+            break;
+        default: handler.print_err(err_type_t::INVAILD, "CHECK INPUT READ ONCE");
+            break;
+    }
+    if (degrees == 1 ) return true;
+    else return false;
+}
+bool mapping_table_t::check_filter_read_once(const component_t U) const {
+    unsigned degrees = 1;
+    switch(U) {
+        case component_t::L1:
+            degrees *= get_degree(parameter_t::G, component_t::L1)
+                     * get_degree(parameter_t::K, component_t::L1)
+                     * get_degree(parameter_t::C, component_t::L1)
+                     * get_degree(parameter_t::R, component_t::L1)
+                     * get_degree(parameter_t::S, component_t::L1);
+            break;
+        case component_t::L2:
+            degrees *= get_degree(parameter_t::G, component_t::L2)
+                     * get_degree(parameter_t::K, component_t::L2)
+                     * get_degree(parameter_t::C, component_t::L2)
+                     * get_degree(parameter_t::R, component_t::L2)
+                     * get_degree(parameter_t::S, component_t::L2);
+            break;
+        case component_t::DRAM:
+            degrees *= get_degree(parameter_t::G, component_t::DRAM)
+                     * get_degree(parameter_t::K, component_t::DRAM)
+                     * get_degree(parameter_t::C, component_t::DRAM)
+                     * get_degree(parameter_t::R, component_t::DRAM)
+                     * get_degree(parameter_t::S, component_t::DRAM);
+            break;
+        default: handler.print_err(err_type_t::INVAILD, "CHECK FILTER READ ONCE");
+            break;
+    }
+    if (degrees == 1 ) return true;
+    else return false;
+}
+bool mapping_table_t::check_output_read_once(const component_t U) const {
+    unsigned degrees = 1;
+    switch(U) {
+        case component_t::L1:
+            degrees *= get_degree(parameter_t::G, component_t::L1)
+                     * get_degree(parameter_t::K, component_t::L1)
+                     * get_degree(parameter_t::B, component_t::L1)
+                     * get_degree(parameter_t::P, component_t::L1)
+                     * get_degree(parameter_t::Q, component_t::L1);
+            break;
+        case component_t::L2:
+            degrees *= get_degree(parameter_t::G, component_t::L2)
+                     * get_degree(parameter_t::K, component_t::L2)
+                     * get_degree(parameter_t::B, component_t::L2)
+                     * get_degree(parameter_t::P, component_t::L2)
+                     * get_degree(parameter_t::Q, component_t::L2);
+            break;
+        case component_t::DRAM:
+            degrees *= get_degree(parameter_t::G, component_t::DRAM)
+                     * get_degree(parameter_t::K, component_t::DRAM)
+                     * get_degree(parameter_t::B, component_t::DRAM)
+                     * get_degree(parameter_t::P, component_t::DRAM)
+                     * get_degree(parameter_t::Q, component_t::DRAM);
+            break;
+        default: handler.print_err(err_type_t::INVAILD, "CHECK OUTPUT READ ONCE");
+            break;
+    }
+    if (degrees == 1 ) return true;
+    else return false;
+}

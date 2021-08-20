@@ -451,38 +451,68 @@ void stats_t::update_iteration() {
     2. if(l1 tile size_spatial == l2 tile size)
        -> l2 iteration = dram iteration
     */
-    if(mac_input_tile_size_spatial == l1_input_tile_size)
-        l1_iteration.input_rd_it = l2_iteration.input_rd_it;
-    if(mac_filter_tile_size_spatial == l1_filter_tile_size)
-        l1_iteration.filter_rd_it = l2_iteration.filter_rd_it;
-    if(mac_output_tile_size_spatial == l1_output_tile_size) {
-        l1_iteration.output_rd_it = l2_iteration.output_rd_it;
-        l1_iteration.output_wt_it = l2_iteration.output_wt_it;
+    if(mapping_table.check_input_read_once(component_t::DRAM))
+        dram_iteration.input_rd_it = 1; 
+    if(mapping_table.check_filter_read_once(component_t::DRAM))
+        dram_iteration.filter_rd_it = 1;
+    if(mapping_table.check_output_read_once(component_t::DRAM)) {
+        dram_iteration.output_wt_it = 1;
+        dram_iteration.output_rd_it = 0;
     }
-    if(l1_input_tile_size_spatial == l2_input_tile_size) 
+    if(mapping_table.check_input_read_once(component_t::L2))
         l2_iteration.input_rd_it = dram_iteration.input_rd_it; 
-    if(l1_filter_tile_size_spatial == l2_filter_tile_size) 
+    if(mapping_table.check_filter_read_once(component_t::L2))
         l2_iteration.filter_rd_it = dram_iteration.filter_rd_it;
-    if(l1_output_tile_size_spatial == l2_output_tile_size) {
+    if(mapping_table.check_output_read_once(component_t::L2)) {
         l2_iteration.output_wt_it = dram_iteration.output_wt_it;
         l2_iteration.output_rd_it = dram_iteration.output_rd_it;
     }
-    // Bypass adjustment
-    if(accelerator->l1_input_bypass())
-        l2_iteration.input_rd_it = l1_iteration.input_rd_it;
-    if(accelerator->l1_filter_bypass())
-        l2_iteration.filter_rd_it = l1_iteration.filter_rd_it;
-    if(accelerator->l1_output_bypass()) {
-        l2_iteration.output_rd_it = l1_iteration.output_rd_it;
-        l2_iteration.output_wt_it = l1_iteration.output_wt_it;
+    if(mapping_table.check_input_read_once(component_t::L1))
+        l1_iteration.input_rd_it = l2_iteration.input_rd_it;
+    if(mapping_table.check_filter_read_once(component_t::L1))
+        l1_iteration.filter_rd_it = l2_iteration.filter_rd_it;
+    if(mapping_table.check_output_read_once(component_t::L1)) {
+        l1_iteration.output_rd_it = l2_iteration.output_rd_it;
+        l1_iteration.output_wt_it = l2_iteration.output_wt_it;
     }
-    if(accelerator->l2_input_bypass())
+    // Bypass adjustment
+    if(accelerator->l2_input_bypass()) {
         dram_iteration.input_rd_it = l2_iteration.input_rd_it;
-    if(accelerator->l2_filter_bypass())
+        l2_iteration.input_rd_it = 0;
+        l1_iteration.input_rd_it /= mapping_table.get_degree(parameter_t::K, component_t::L2);
+        if(mapping_table.check_input_read_once(component_t::DRAM)) {
+            l1_iteration.input_rd_it /= mapping_table.get_degree(parameter_t::K, component_t::DRAM);
+        }
+    }
+    if(accelerator->l2_filter_bypass()) {
         dram_iteration.filter_rd_it = l2_iteration.filter_rd_it;
+        l2_iteration.filter_rd_it = 0;
+        l1_iteration.filter_rd_it /= mapping_table.get_degree(parameter_t::B, component_t::L2)
+                                  *  mapping_table.get_degree(parameter_t::P, component_t::L2)
+                                  *  mapping_table.get_degree(parameter_t::Q, component_t::L2);
+        if(mapping_table.check_filter_read_once(component_t::DRAM)) {
+            l1_iteration.filter_rd_it /= mapping_table.get_degree(parameter_t::B, component_t::DRAM)
+                                      *  mapping_table.get_degree(parameter_t::P, component_t::DRAM)
+                                      *  mapping_table.get_degree(parameter_t::Q, component_t::DRAM);
+        }
+    }
     if(accelerator->l2_output_bypass()) {
         dram_iteration.output_rd_it = l2_iteration.output_rd_it;
         dram_iteration.output_wt_it = l2_iteration.output_wt_it;
+        l2_iteration.output_rd_it = 0;
+        l2_iteration.output_wt_it = 0;
+        l1_iteration.output_rd_it /= (gamma_dram_iteration * gamma_l2_iteration * gamma_l1_iteration - 1);
+        l1_iteration.output_rd_it *= (gamma_dram_iteration * gamma_l1_iteration - 1);
+        l1_iteration.output_wt_it /= mapping_table.get_degree(parameter_t::C, component_t::L2)
+                                  *  mapping_table.get_degree(parameter_t::R, component_t::L2)
+                                  *  mapping_table.get_degree(parameter_t::S, component_t::L2);
+        if(mapping_table.check_output_read_once(component_t::DRAM)) {
+            l1_iteration.output_rd_it /= (gamma_dram_iteration * gamma_l1_iteration - 1);
+            l1_iteration.output_rd_it *= (gamma_l1_iteration - 1);
+            l1_iteration.output_wt_it /= mapping_table.get_degree(parameter_t::C, component_t::DRAM)
+                                      *  mapping_table.get_degree(parameter_t::R, component_t::DRAM)
+                                      *  mapping_table.get_degree(parameter_t::S, component_t::DRAM);
+        }
     }
     return;
 }
@@ -513,7 +543,6 @@ void stats_t::update_active_components() {
                    * mapping_table.get_degree(parameter_t::S, component_t::S1_Y)
                    * mapping_table.get_degree(parameter_t::R, component_t::S1_Y);
     num_active_accs = mapping_table.get_degree(parameter_t::K, component_t::S2)
-                    * mapping_table.get_degree(parameter_t::K, component_t::S2)
                     * mapping_table.get_degree(parameter_t::B, component_t::S2)
                     * mapping_table.get_degree(parameter_t::P, component_t::S2)
                     * mapping_table.get_degree(parameter_t::Q, component_t::S2)
@@ -632,20 +661,6 @@ void stats_t::update_energy() {
     if(accelerator->l1_output_bypass()) {
         l2_iteration.output_rd_it = l1_iteration.output_rd_it;
         l2_iteration.output_wt_it = l1_iteration.output_wt_it;
-    }
-    if(accelerator->l2_input_bypass()) {
-        dram_iteration.input_rd_it = l2_iteration.input_rd_it * num_s1_input_hosts;
-        l2_iteration.input_rd_it = 0;
-    }
-    if(accelerator->l2_filter_bypass()) {
-        dram_iteration.filter_rd_it = l2_iteration.filter_rd_it * num_s1_filter_hosts;
-        l2_iteration.filter_rd_it = 0;
-    }
-    if(accelerator->l2_output_bypass()) {
-        dram_iteration.output_rd_it = l2_iteration.output_rd_it * num_s1_output_hosts;
-        dram_iteration.output_wt_it = l2_iteration.output_wt_it * num_s1_output_hosts;
-        l2_iteration.output_rd_it = 0;
-        l2_iteration.output_wt_it = 0;
     }
     // Between MAC and L1 with 'l1 iteration' and S0 NoC
     mac_energy = mapping_table.get_num_macs() * accelerator->E_mac_op();;
