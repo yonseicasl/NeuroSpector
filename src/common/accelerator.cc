@@ -4,8 +4,26 @@ static handler_t handler;
 
 /* Accelerator */
 accelerator_t::accelerator_t(const std::string &cfg_path_)
-    : acc_cfg(new acc_cfg_t(cfg_path_)) {
-
+    : acc_cfg(new acc_cfg_t(cfg_path_)), 
+      seq1_input_max(s1_size_x() * s1_size_y()),
+      seq1_filter_max(s1_size_x() * s1_size_y()),
+      seq1_output_max(s1_size_x() * s1_size_y()), 
+      seq2_input_max(0),
+      seq2_filter_max(0),
+      seq2_output_max(0) {
+      if(l1_type() == buffer_type_t::SEPARATED) {
+          seq1_input_max *= l1_input_size();
+          seq1_filter_max *= l1_filter_size();
+          seq1_output_max *= l1_output_size();
+      }
+      else if(l1_type() == buffer_type_t::SHARED) {
+          seq1_input_max *= l1_shared_size();
+          seq1_filter_max *= l1_shared_size();
+          seq1_output_max *= l1_shared_size();
+      }
+      else {
+        std::cout << "Not yet" << std::endl;
+      }
 }
 
 accelerator_t::~accelerator_t() {
@@ -340,3 +358,18 @@ float accelerator_t::C_mac_op() const { return acc_cfg->cycle_ref.mac_operation;
 float accelerator_t::C_l1_access() const { return acc_cfg->cycle_ref.l1_access; }
 float accelerator_t::C_l2_access() const { return acc_cfg->cycle_ref.l2_access; }
 float accelerator_t::C_dram_access() const { return acc_cfg->cycle_ref.dram_access; }
+
+// Leverage
+unsigned accelerator_t::seq1_max(dataflow_t df_) const {
+    unsigned rtn = 0;
+    switch(df_) {
+        case dataflow_t::IS: rtn = seq1_input_max; break;
+        case dataflow_t::WS: rtn = seq1_filter_max; break;
+        case dataflow_t::OS: rtn = seq1_output_max; break;
+        default: break;
+    }
+    return rtn;
+}
+unsigned accelerator_t::seq2_max(dataflow_t df_) const {
+    return 0;
+}

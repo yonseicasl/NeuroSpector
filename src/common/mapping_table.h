@@ -59,7 +59,8 @@ public:
     std::vector<unsigned> get_layer_values() const;
     std::vector<unsigned> get_row_degrees(const component_t U) const;
     // S2 x L2 -> L1
-    void leverage(const dataflow_t df_);
+    void l1_prediction(const dataflow_t df_, const unsigned max_);
+
     bool check_input_read_once(const component_t U)  const;
     bool check_filter_read_once(const component_t U) const;
     bool check_output_read_once(const component_t U) const;

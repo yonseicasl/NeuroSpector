@@ -72,8 +72,18 @@ public:
     float C_l1_access() const;
     float C_l2_access() const;
     float C_dram_access() const;
+    // Leverage
+    unsigned seq1_max(dataflow_t df_) const;
+    unsigned seq2_max(dataflow_t df_) const;
+    
 private:
     acc_cfg_t *acc_cfg;
+    unsigned seq1_input_max;
+    unsigned seq1_filter_max;
+    unsigned seq1_output_max;
+    unsigned seq2_input_max;
+    unsigned seq2_filter_max;
+    unsigned seq2_output_max;
 };
 
 #endif

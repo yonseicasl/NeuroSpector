@@ -61,11 +61,11 @@ void bottom_up_t::run(const unsigned idx_) {
     final_best_energy = DBL_MAX;
     final_best_mappings.clear();
     final_best_dataflows.clear();
-    handler.print_line(50, "*");
-    std::cout << "# BOTTOM-UP OPTIMIZATION" << std::endl;
-    std::cout << "# NETWORK    : " << network_name << std::endl;
-    std::cout << "# LAYER      : " << mappings.at(idx_ - 1).get_layer_name() << std::endl;
-    handler.print_line(50, "*");
+//    handler.print_line(50, "*");
+//    std::cout << "# BOTTOM-UP OPTIMIZATION" << std::endl;
+//    std::cout << "# NETWORK    : " << network_name << std::endl;
+//    std::cout << "# LAYER      : " << mappings.at(idx_ - 1).get_layer_name() << std::endl;
+//    handler.print_line(50, "*");
     // Start optimizing
     for(unsigned l1_df = 0; l1_df < l1_dataflows.size(); l1_df++) {
         for(unsigned l2_df = 0; l2_df < l2_dataflows.size(); l2_df++) {
@@ -134,45 +134,45 @@ void bottom_up_t::print_stats() {
 }
 
 void bottom_up_t::print_csv() {
-    std::string df_str("IWO");
-    handler.print_line(50, "*");
-    std::cout << "# TOP K : " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
-    std::cout << "# WINNER: " << seq_0_top_k << "-" << seq_1_top_k << "-" << seq_2_top_k << std::endl;
-    handler.print_line(50, "*");
-    std::cout << "# SEQ 0 (L2-S2)"<< "\n"
-              << " - NUM OF TOTAL MAPPINGS  : " 
-              << std::setw(15) << total_cnt.at(0) << "\n"
-              << " - NUM OF VALID MAPPINGS  : " 
-              << std::setw(15) << valid_cnt.at(0) << std::endl;
-    std::cout << "# SEQ 1 (L1-S1)" << std::endl;
-    for(size_t i = 0; i < top_k.at(0); i++) {
-        std::cout << " - NUM OF TOTAL MAPPINGS  : " 
-                  << std::setw(15) << total_cnt.at(1 + i) << "\n"
-                  << " - NUM OF VALID MAPPINGS  : " 
-                  << std::setw(15) << valid_cnt.at(1 + i) << std::endl;
-    }
-    // TODO
-    if(used_levels.at(2) != 0) {
-        std::cout << "# SEQ 2 (MAC-S0)" << std::endl;
-        for(size_t i = 0; i < top_k.at(0) * top_k.at(1); i++) {
-            std::cout << " - NUM OF TOTAL MAPPINGS  : " 
-                      << std::setw(15) << total_cnt.at(1 + top_k.at(0) + i) << "\n"
-                      << " - NUM OF VALID MAPPINGS  : " 
-                      << std::setw(15) << valid_cnt.at(1 + top_k.at(0) + i) << std::endl;
-        }
-    }
-    handler.print_line(50, "*");
-    std::cout << "# BEST MAPPING TABLE "<< std::endl;
-    std::cout << "# DATAFLOWS (L1-L2): " 
-              << df_str.at(static_cast<unsigned>(final_best_dataflows.at(0))) 
-              << "S-" 
-              << df_str.at(static_cast<unsigned>(final_best_dataflows.at(1))) 
-              << "S" << std::endl; 
-    final_best_mappings.at(final_best_idx).print_csv();
+//    std::string df_str("IWO");
+//    handler.print_line(50, "*");
+//    std::cout << "# TOP K : " << top_k.at(0) << "-" << top_k.at(1) << "-" << top_k.at(2) << std::endl;
+//    std::cout << "# WINNER: " << seq_0_top_k << "-" << seq_1_top_k << "-" << seq_2_top_k << std::endl;
+//    handler.print_line(50, "*");
+//    std::cout << "# SEQ 0 (L2-S2)"<< "\n"
+//              << " - NUM OF TOTAL MAPPINGS  : " 
+//              << std::setw(15) << total_cnt.at(0) << "\n"
+//              << " - NUM OF VALID MAPPINGS  : " 
+//              << std::setw(15) << valid_cnt.at(0) << std::endl;
+//    std::cout << "# SEQ 1 (L1-S1)" << std::endl;
+//    for(size_t i = 0; i < top_k.at(0); i++) {
+//        std::cout << " - NUM OF TOTAL MAPPINGS  : " 
+//                  << std::setw(15) << total_cnt.at(1 + i) << "\n"
+//                  << " - NUM OF VALID MAPPINGS  : " 
+//                  << std::setw(15) << valid_cnt.at(1 + i) << std::endl;
+//    }
+//    // TODO
+//    if(used_levels.at(2) != 0) {
+//        std::cout << "# SEQ 2 (MAC-S0)" << std::endl;
+//        for(size_t i = 0; i < top_k.at(0) * top_k.at(1); i++) {
+//            std::cout << " - NUM OF TOTAL MAPPINGS  : " 
+//                      << std::setw(15) << total_cnt.at(1 + top_k.at(0) + i) << "\n"
+//                      << " - NUM OF VALID MAPPINGS  : " 
+//                      << std::setw(15) << valid_cnt.at(1 + top_k.at(0) + i) << std::endl;
+//        }
+//    }
+//    handler.print_line(50, "*");
+//    std::cout << "# BEST MAPPING TABLE "<< std::endl;
+//    std::cout << "# DATAFLOWS (L1-L2): " 
+//              << df_str.at(static_cast<unsigned>(final_best_dataflows.at(0))) 
+//              << "S-" 
+//              << df_str.at(static_cast<unsigned>(final_best_dataflows.at(1))) 
+//              << "S" << std::endl; 
+//    final_best_mappings.at(final_best_idx).print_csv();
     stats_t stats_tmp(accelerator, final_best_mappings.at(final_best_idx), final_best_dataflows.at(0), final_best_dataflows.at(1));
     stats_tmp.update_stats();
     stats_tmp.print_csv();
-    handler.print_line(50, "*");
+//    handler.print_line(50, "*");
     return;
 }
 
@@ -187,8 +187,8 @@ void bottom_up_t::reset(const unsigned idx_) {
 }
 
 void bottom_up_t::engine(const unsigned idx_, 
-                            const dataflow_t l1_dataflow_,
-                            const dataflow_t l2_dataflow_) {
+                         const dataflow_t l1_dataflow_,
+                         const dataflow_t l2_dataflow_) {
     std::vector<mapping_table_t> rtn_first;
     std::vector<mapping_table_t> rtn_second;
     std::vector<mapping_table_t> rtn_third;
@@ -357,7 +357,7 @@ void bottom_up_t::worker(const unsigned seq_,
                                         // Get current energy
                                         if(seq_ == 0) {
                                             mapping_table_t tmp_mapping(curr_mapping);
-                                            tmp_mapping.leverage(l1_dataflow_);
+                                            tmp_mapping.l1_prediction(l1_dataflow_, accelerator->seq1_max(l1_dataflow_));
                                             stats_t curr_stats(accelerator, tmp_mapping, l1_dataflow_, l2_dataflow_);
                                             curr_stats.update_stats();
                                             curr_energy = curr_stats.get_total_energy();

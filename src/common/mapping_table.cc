@@ -360,36 +360,108 @@ std::vector<unsigned> mapping_table_t::get_row_degrees(const component_t U) cons
         rtn_degrees.push_back(degrees.at(column + D_size * static_cast<unsigned>(U)));
     return rtn_degrees;
 }
-void mapping_table_t::leverage(dataflow_t df_) {
+
+void mapping_table_t::l1_prediction(const dataflow_t df_, const unsigned max_) {
     if(df_ == dataflow_t::IS) {
+//        for(unsigned column = 0; column < D_size; column++) {
+//            if(column == static_cast<unsigned>(parameter_t::K)) continue;
+//            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+//            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+//        }
+//        unsigned its = get_input_tile_size(component_t::L2);
+//        if(its > max_) {
+//            unsigned overflow = its / max_;
+//            if(its % max_ > 0) overflow++;
+//            if(degrees.at(static_cast<unsigned>(parameter_t::C) + D_size * static_cast<unsigned>(component_t::L1)) > overflow) {
+//                degrees.at(static_cast<unsigned>(parameter_t::C) + D_size * static_cast<unsigned>(component_t::L1)) = 1;
+//                degrees.at(static_cast<unsigned>(parameter_t::C) + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+//            }
+//            else {
+//
+//            }
+//        }
+        unsigned its = 1;
         for(unsigned column = 0; column < D_size; column++) {
             if(column == static_cast<unsigned>(parameter_t::K)) continue;
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+            unsigned lower_degree = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+            if(its * lower_degree < max_) {
+                degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = lower_degree;
+                degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+                its *= lower_degree;
+            }
         }
     }
     else if(df_ == dataflow_t::WS) {
+//        unsigned fts = get_filter_tile_size(component_t::L2);
+//        for(unsigned column = 0; column < D_size; column++) {
+//            if(column == static_cast<unsigned>(parameter_t::B)
+//            || column == static_cast<unsigned>(parameter_t::P) 
+//            || column == static_cast<unsigned>(parameter_t::Q)) continue;
+//            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+//            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+//        }
+//        if(fts > max_) {
+//            unsigned overflow = fts / max_;
+//            if(fts % max_ > 0) overflow++;
+//            for(unsigned column = 0; column < D_size; column++) {
+//                if(degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) > overflow) {
+//                    degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+//                    degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+//                }
+//            }
+//        }
+        unsigned fts = 1;
         for(unsigned column = 0; column < D_size; column++) {
             if(column == static_cast<unsigned>(parameter_t::B)
             || column == static_cast<unsigned>(parameter_t::P) 
             || column == static_cast<unsigned>(parameter_t::Q)) continue;
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+            unsigned lower_degree = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+            if(fts * lower_degree < max_) {
+                degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = lower_degree;
+                degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+                fts *= lower_degree;
+            }
         }
     }
     else if(df_ == dataflow_t::OS) {
+//        unsigned ots = get_output_tile_size(component_t::L2);
+//        if(ots < max_) {
+//            for(unsigned column = 0; column < D_size; column++) {
+//                if(column == static_cast<unsigned>(parameter_t::C)
+//                || column == static_cast<unsigned>(parameter_t::R) 
+//                || column == static_cast<unsigned>(parameter_t::S)) continue;
+//                degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+//                degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+//            }
+//        }
+//        else {
+//            unsigned overflow = ots / max_;
+//            if(ots % max_ > 0) overflow++;
+//            for(unsigned column = 0; column < D_size; column++) {
+//                if(column == static_cast<unsigned>(parameter_t::C)
+//                || column == static_cast<unsigned>(parameter_t::R) 
+//                || column == static_cast<unsigned>(parameter_t::S)) continue;
+//
+//            }
+//        }
+        unsigned ots = 1;
         for(unsigned column = 0; column < D_size; column++) {
             if(column == static_cast<unsigned>(parameter_t::C)
             || column == static_cast<unsigned>(parameter_t::R) 
             || column == static_cast<unsigned>(parameter_t::S)) continue;
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
-            degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+            unsigned lower_degree = degrees.at(column + D_size * static_cast<unsigned>(component_t::L2));
+            if(ots * lower_degree < max_) {
+                degrees.at(column + D_size * static_cast<unsigned>(component_t::L1)) = lower_degree;
+                degrees.at(column + D_size * static_cast<unsigned>(component_t::L2)) = 1;
+                ots *= lower_degree;
+            }
         }
     }
     else 
         handler.print_err(err_type_t::INVAILD, "Dataflow");
     return;
 }
+
 bool mapping_table_t::check_input_read_once(const component_t U) const {
     unsigned degrees = 1;
     switch(U) {
@@ -426,6 +498,7 @@ bool mapping_table_t::check_input_read_once(const component_t U) const {
     if (degrees == 1 ) return true;
     else return false;
 }
+
 bool mapping_table_t::check_filter_read_once(const component_t U) const {
     unsigned degrees = 1;
     switch(U) {
@@ -456,6 +529,7 @@ bool mapping_table_t::check_filter_read_once(const component_t U) const {
     if (degrees == 1 ) return true;
     else return false;
 }
+
 bool mapping_table_t::check_output_read_once(const component_t U) const {
     unsigned degrees = 1;
     switch(U) {
