@@ -241,9 +241,9 @@ void accelerator_t::print_spec() {
 void accelerator_t::print_stats() {
     std::cout << "==== Component stats  ====" << std::endl;
     for(unsigned idx = 0; idx < get_num_components(); idx++) {
-            std::cout << "[[["
+            std::cout << "[["
                       << components.at(idx)->get_name() 
-                      << "]]]"
+                      << "]]"
                       << std::endl;
             components.at(idx)->print_stats();
             std::cout << std::endl;

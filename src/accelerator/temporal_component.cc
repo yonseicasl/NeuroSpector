@@ -202,32 +202,32 @@ void temporal_component_t::print_spec() {
 // Print component status
 void temporal_component_t::print_stats() {
     std::string data_type[4] = {"input", "weight", "output", "NONE"};
-    std::cout << "- [[Tile Size]] (exchange with upper level)\n";
+    std::cout << "- [Tile Size] (exchange with upper level)\n";
     for(unsigned i = 0; i < allocated_size.at(direction_type_t::UPPER).size(); i++) { 
-        std::cout << "--- [" << data_type[i] << "]="
+        std::cout << "-- " << data_type[i] << " = "
                   << allocated_size.at(direction_type_t::UPPER).at(i) << "\n";
     }
-    std::cout << "  [[Access Counts]] (exchange with upper level)\n"; 
+    std::cout << "  [Access Counts] (exchange with upper level)\n"; 
     for(unsigned i = 0; i < access_count_to_upper.at(operation_type_t::READ).size(); i++) { 
-        std::cout << "--- [" << data_type[i] << "(read)]="
+        std::cout << "-- " << data_type[i] << "(read) = "
                   << access_count_to_upper.at(operation_type_t::READ).at(i) << "\n";
     }
     for(unsigned i = 0; i < access_count_to_upper.at(operation_type_t::WRITE).size(); i++) { 
-        std:: cout << "--- [" << data_type[i] << "(write)]="
+        std:: cout << "-- " << data_type[i] << "(write) = "
                    << access_count_to_upper.at(operation_type_t::WRITE).at(i) << "\n";
     }
-    std::cout << "- [[Tile Size]] (exchange with lower level)\n";
+    std::cout << "- [Tile Size] (exchange with lower level)\n";
     for(unsigned i = 0; i < allocated_size.at(direction_type_t::LOWER).size(); i++) { 
-        std:: cout << "--- [" << data_type[i] << "]="
+        std:: cout << "-- " << data_type[i] << " = "
                    << allocated_size.at(direction_type_t::LOWER).at(i) << "\n";
     }
-    std::cout << "- [[Access Counts]] (exchange with lower level)\n"; 
+    std::cout << "- [Access Counts] (exchange with lower level)\n"; 
     for(unsigned i = 0; i < access_count_to_lower.at(operation_type_t::READ).size(); i++) { 
-        std::cout << "--- [" << data_type[i] << "(read)]="
+        std::cout << "-- " << data_type[i] << "(read) = "
                   << access_count_to_lower.at(operation_type_t::READ).at(i) << "\n";
     }
     for(unsigned i = 0; i < access_count_to_lower.at(operation_type_t::WRITE).size(); i++) { 
-        std:: cout << "--- [" << data_type[i] << "(write)]="
+        std:: cout << "-- " << data_type[i] << "(write) = "
                    << access_count_to_lower.at(operation_type_t::WRITE).at(i) << "\n";
     }
     return;

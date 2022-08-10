@@ -86,10 +86,10 @@ void spatial_component_t::print_spec() {
     std::cout << std::endl;
 }
 void spatial_component_t::print_stats() {
-    std::string dimension[2]  = {"[DIM X]", "[DIM Y]"};
-    std::cout << "- [[Activated Components]]\n";
+    std::string dimension[2]  = {"DIM X", "DIM Y"};
+    std::cout << "- [Activated Components]\n";
     for(unsigned i = 0; i < active_components.size(); i++) {
-        std::cout << "--- " << dimension[i] << "="
+        std::cout << "-- " << dimension[i] << " = "
                   << active_components.at(i) << "\n";
     }
     float num_active_components = 1.0f;
@@ -101,7 +101,7 @@ void spatial_component_t::print_stats() {
     }
     utilization = num_active_components/num_total_components;
     std::cout.precision(2); 
-    std::cout << "- [[Utilization (%)]]="
+    std::cout << "- [Utilization (%)] = "
               << std::fixed 
               << utilization * 100
               << std::endl;
