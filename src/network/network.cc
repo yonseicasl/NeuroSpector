@@ -59,6 +59,18 @@ std::vector<unsigned> network_t::get_layer_parameters(unsigned idx_) {
     layer_t layer = layers.at(idx_); 
     return layer.get_parameters();
 }
+unsigned  network_t::get_layer_index(std::string name_) {
+    unsigned index = 0;
+    for(unsigned i = 0; i < layers.size(); i++) {
+        index = i; 
+        if(layers.at(i).get_name() == name_) { break;}
+    }
+    if(index == layers.size()) { 
+        std::cerr << "Error: invalid layer name" << name_ << std::endl;
+        exit(0);
+    }
+    return index;
+}
 unsigned network_t::get_num_layers() {
     return layers.size();
 }

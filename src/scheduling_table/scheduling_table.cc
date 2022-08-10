@@ -10,6 +10,7 @@ scheduling_table_t::scheduling_table_t(accelerator_t *accelerator_,
                                        network_t *network_)
     :accelerator(accelerator_),
      network(network_),
+     layer_name(""),
      layer_index(0),
      layer_parameters((unsigned)parameter_t::SIZE, 1),
      num_mac_operations(1),
@@ -21,6 +22,7 @@ scheduling_table_t::scheduling_table_t(accelerator_t *accelerator_,
                                        const std::string& scheduling_table_pth_)
     :accelerator(accelerator_),
      network(network_),
+     layer_name(""),
      layer_index(0),
      layer_parameters((unsigned)parameter_t::SIZE, 1),
      num_mac_operations(1),
@@ -38,6 +40,7 @@ scheduling_table_t::~scheduling_table_t() {
 scheduling_table_t::scheduling_table_t(const scheduling_table_t &scheduling_table_) 
     :accelerator(scheduling_table_.accelerator),
      network(scheduling_table_.network),
+     layer_name(scheduling_table_.layer_name),
      layer_index(scheduling_table_.layer_index),
      layer_parameters(scheduling_table_.layer_parameters),
      num_mac_operations(scheduling_table_.num_mac_operations),
@@ -265,10 +268,12 @@ bool scheduling_table_t::is_virtual(unsigned idx_) {
 // Update DRAM mapping values to layer parameters
 void scheduling_table_t::load_dnn_layer(unsigned idx_) {
     unsigned dram_pos = num_table_rows - 1; // DRAM should be placed in lowest level
+    layer_name       = network->get_layer_name(idx_);
     layer_parameters = network->get_layer_parameters(idx_);
     layer_index      = idx_;
     update_row(dram_pos, layer_parameters);
     
+    num_mac_operations = 1; 
     for(unsigned i = 0; i <layer_parameters.size(); i++) {
         num_mac_operations *= layer_parameters.at(i);
     }
@@ -370,28 +375,41 @@ void scheduling_table_t::fill_out_mapping_values(const parser_t parser_) {
     std::vector<unsigned> target_level_mapping;
     for(unsigned i = 0; i < parser_.sections.size(); i++) {
         section_config_t section_config = parser_.sections[i];
-        for(unsigned i = 0; i < get_num_rows(); i++) {
-            target_level_name = get_component_name(i);
-            if(target_level_name == "virtual") {
-                target_level_mapping_str.assign((unsigned)parameter_t::SIZE, 1);
-            }
-            else {
-                section_config.get_setting(target_level_name, 
-                                           &target_level_mapping_str);
-                if(target_level_mapping_str.empty()) {
-                    std::cerr << "Please enter the mapping value of "
-                              << target_level_name << std::endl;
-                    exit(0);
+        if(section_config.name == "SCHEDULING_TABLE") {
+            for(unsigned i = 0; i < get_num_rows(); i++) {
+                target_level_name = get_component_name(i);
+                if(target_level_name == "virtual") {
+                    target_level_mapping_str.assign((unsigned)parameter_t::SIZE, 1);
                 }
-                target_level_mapping = comma_to_vector(target_level_mapping_str);
+                else {
+                    section_config.get_setting(target_level_name, 
+                                            &target_level_mapping_str);
+                    if(target_level_mapping_str.empty()) {
+                        std::cerr << "Please enter the mapping value of "
+                                << target_level_name << std::endl;
+                        exit(0);
+                    }
+                    target_level_mapping = comma_to_vector(target_level_mapping_str);
+                }
+                update_row(i, target_level_mapping);
+                target_level_mapping.clear();
             }
-            update_row(i, target_level_mapping);
-            target_level_mapping.clear();
+        }
+        else {
+            section_config.get_setting("layer_name", &layer_name);
+            layer_index = network->get_layer_index(layer_name);
         }
     }
     // Update layer_parameters
+    std::string parameter[(unsigned)parameter_t::SIZE] = { "K", "B", "P", "Q", "C", "R", "S", "G" };
     for(unsigned i = 0; i < (unsigned)parameter_t::SIZE; i++) {
         layer_parameters.at(i) = get_column_wise_product((parameter_t)i, 0, get_num_rows() - 1);
+        if(layer_parameters.at(i) != network->get_layer_parameters(layer_index).at(i)) {
+            std::cerr << "Error: Violate parameter constraint; column "
+                      << parameter[i] 
+                      << std::endl;
+            exit(0);
+        }
         num_mac_operations *= layer_parameters.at(i);
     }
     return;

@@ -30,7 +30,13 @@ NeuroSpector supports Optimizer which finds the optimal scheduling solution amon
 
 A run command to execute NeuroSpector optimizer follows the format shown below.
 
-	$ ./NeuroSpector --run_type=optimizer --accelerator=<PATH TO ACCELERATOR> --network=<PATH TO DNN MODEL> --dataflow=<fixed or flexible> --optimizer=<OPTIMIZATION METRIC> --metric=<energy, cycle> --layer=<SELECT TARGET LAYER>
+	$ ./NeuroSpector --run_type=optimizer 
+			 --accelerator=<PATH TO ACCELERATOR> 
+			 --network=<PATH TO DNN MODEL> 
+			 --dataflow=<fixed or flexible> 
+			 --optimizer=<OPTIMIZATION METRIC> 
+			 --metric=<energy, cycle> 
+			 --layer=<SELECT TARGET LAYER>
 
 For example, a user can find  an `energy`-optimal scheduling solution using `bottom-up` search for (`Eyeriss`, `ResNet50`).
 
@@ -40,6 +46,15 @@ For example, a user can find  an `energy`-optimal scheduling solution using `bot
 			 --dataflow=fixed\
 			 --optimizer=bottom-up\
 			 --metric=energy
+
+### Analyzer
+NeuroSpector also supports `analzyer` which evaluate a given scheduling table.
+Following command is an example command for evaluating sample scheduling table.
+
+	$ ./NeuroSpector --run_type=analyzer\
+			 --accelerator=configs/accelerators/eyeriss.cfg\
+			 --network=configs/networks/resnet50.cfg\
+			 --scheduling_table=configs/scheduling_table/eyeriss_sample.cfg
 
 
 ## Download

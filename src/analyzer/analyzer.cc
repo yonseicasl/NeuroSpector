@@ -11,6 +11,7 @@ analyzer_t::analyzer_t(const std::string& accelerator_pth_,
     : accelerator(new accelerator_t(accelerator_pth_)),
       network(new network_t(network_pth_)) {
         accelerator->init_accelerator();
+        accelerator->print_spec();
         network->init_network();
         scheduling_table = scheduling_table_t(accelerator, 
                                               network,

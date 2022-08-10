@@ -58,7 +58,8 @@ private:
 
     accelerator_t         *accelerator;                             // Target accelerator
     network_t             *network;                                 // Target network
-    
+
+    std::string           layer_name; 
     unsigned              layer_index;
     std::vector<unsigned> layer_parameters;
     float                 num_mac_operations;                      // Total number of MAC operations in a layer
