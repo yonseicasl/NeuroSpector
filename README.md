@@ -26,7 +26,8 @@ NeuroSpector uses g++ to compile C++ codes to execute on CPUs. Compile of NeuroS
 	$ make
 
 ## Run
-NeuroSpector supports Optimizer which finds the optimal scheduling solution among all possible scheduling options for a given accelerator and DNN model configurations.  
+### Optimizer
+NeuroSpector supports `optimizer` which finds the optimal scheduling solution among all possible scheduling options for a given accelerator and DNN model configurations.  
 
 A run command to execute NeuroSpector optimizer follows the format shown below.
 
