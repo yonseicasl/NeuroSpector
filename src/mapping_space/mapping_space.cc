@@ -69,7 +69,6 @@ void mapping_space_t::generate(const unsigned num_levels_,
     // the number of layer parameters equals to 8 (KBPQCRSG)
     assert(layer_values_.size() == (unsigned)parameter_t::SIZE);
     for(unsigned i = 0; i < (unsigned)parameter_t::SIZE; i++) {
-        // 개구리다 진짜 왜 코딩 잘한다고 깝친거냐, 이게 존나 병신같은 코딩이지.. ㅅㅂ 
         std::vector<std::vector<unsigned>> permutations;
         layer_permutations.push_back(permutations);
         std::vector<unsigned> permutation;
@@ -81,10 +80,6 @@ void mapping_space_t::generate(const unsigned num_levels_,
 
 uint64_t mapping_space_t::get_num_permutations() const {
     return num_permutations;
-}
-
-std::vector<std::vector<unsigned>> mapping_space_t::get_permutations(const unsigned idx_) const {
-    return layer_permutations.at(idx_); 
 }
 
 std::vector<std::vector<std::vector<unsigned>>> mapping_space_t::get_layer_permutations() const {
@@ -175,6 +170,10 @@ std::vector<unsigned> mapping_space_t::get_factors(const unsigned val_) {
     std::sort(rtn.begin(), rtn.end());
     return rtn;
 } 
+
+std::vector<std::vector<unsigned>> mapping_space_t::get_permutations(const unsigned idx_) const {
+    return layer_permutations.at(idx_); 
+}
 
 void mapping_space_t::get_permutations(const unsigned idx_, const unsigned val_, 
                                        std::vector<unsigned> &permutation_) {

@@ -22,7 +22,8 @@ public:
     void print_stats();                                             // Print scheduling table
 
     unsigned get_above_buffer_pos(unsigned pos_) const;             // Get buffer index one level above 
-    unsigned get_below_buffer_pos(unsigned pos_) const;          // Get lower temporal level's index
+    unsigned get_below_buffer_pos(unsigned pos_) const;             // Get lower temporal level's index
+    unsigned get_above_spatial_level_pos(unsigned pos_) const;      // Get upper spatial-X level index
     unsigned get_num_rows() const;                                  // Get # rows of scheduling table
     unsigned get_correlation_product(int idx_, 
                                      correlation_type_t correlation_);
@@ -39,8 +40,11 @@ public:
     bool is_virtual(unsigned idx_);
     
     void load_dnn_layer(unsigned idx_);                             // Update DRAM mapping values to layer parameters
+    void clear_set_of_rows(unsigned begin_, unsigned end_ );
     void update_set_of_rows(unsigned begin_, unsigned end_, 
                             std::vector<std::vector<unsigned>> mapping_values_set_);
+    void update_row(unsigned component_pos_, 
+                    std::vector<unsigned> mapping_values_);
     void update_dataflow(std::vector<dataflow_t>);
     void fill_out_mapping_values(const parser_t parser_);
     unsigned get_column_wise_product(parameter_t param_, 
@@ -52,8 +56,6 @@ private:
     void add_virtual_component(component_type_t component_type_); 
     void add_virtual_component(component_type_t component_type_,
                                unsigned component_idx_); 
-    void update_row(unsigned component_pos_, 
-                    std::vector<unsigned> mapping_values_);
     void update_mapping_value(unsigned dst_, unsigned val_); 
 
     accelerator_t         *accelerator;                             // Target accelerator

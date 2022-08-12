@@ -147,6 +147,16 @@ unsigned scheduling_table_t::get_below_buffer_pos(unsigned pos_) const {
     }
     return rtn;
 }
+// Get spatial-level (dim-X) index one level above
+unsigned scheduling_table_t::get_above_spatial_level_pos(unsigned pos_) const {
+    unsigned rtn = pos_;
+    for(int i = (int)rtn-1; i >= 0; i--) {
+        rtn--;
+        if(row_types.at(i) == component_type_t::SPATIAL
+        && row_names.at(i).find("(X)") != std::string::npos) { break; }
+    }
+    return rtn;
+}
 // Get total number of rows of scheduling table
 unsigned scheduling_table_t::get_num_rows() const { 
    return num_table_rows; 
@@ -276,6 +286,15 @@ void scheduling_table_t::load_dnn_layer(unsigned idx_) {
     num_mac_operations = 1; 
     for(unsigned i = 0; i <layer_parameters.size(); i++) {
         num_mac_operations *= layer_parameters.at(i);
+    }
+    return;
+}
+// 
+void scheduling_table_t::clear_set_of_rows(unsigned begin_, unsigned end_) {
+    std::vector<unsigned> mapping_values_set = {1, 1, 1, 1, 1, 1, 1, 1};
+    for(unsigned row_idx = begin_; row_idx < end_ + 1; row_idx++) {
+        if(is_virtual(row_idx)) continue;
+        update_row(row_idx, mapping_values_set); 
     }
     return;
 }

@@ -65,7 +65,7 @@ void bottom_up_t::run(const std::vector<unsigned> indices_) {
 // Run bottom-up search for a layer
 void bottom_up_t::run(const unsigned idx_) {
     std::cerr << "[message] Run bottom-up search for a layer #" << idx_ + 1 << std::endl;
-    // update target layer info.
+    // Update target layer info.
     global_best_scheduling_option.scheduling_table = *scheduling_table;
     global_best_scheduling_option.strategy.clear();
     // Generate for all possible dataflow combinations
@@ -216,6 +216,7 @@ void bottom_up_t::search(unsigned tid_,
                          std::mutex& m_) {
     float    lowest_cost          = FLT_MAX;
     unsigned largest_facto_degree = 0;
+    unsigned spatial_pos = begin_pos_ + 1; // TODO
     std::vector<std::vector<unsigned>> mapping_values_set;
 
     accelerator_t m_accelerator = accelerator_t(*accelerator);
@@ -226,19 +227,19 @@ void bottom_up_t::search(unsigned tid_,
     scheduling_table_t scheduling_table_sp = scheduling_candidates_.scheduling_table;
 
     // Find a mapping values that are yet to be optimized
-    std::vector<unsigned> undetermined_values;
-    undetermined_values = scheduling_table_curr.get_row_values(end_pos_);
+    std::vector<unsigned> undetermined_values = scheduling_table_curr.get_row_values(end_pos_);
     // Get num targeted levels
-    unsigned num_targeted_levels = get_num_targeted_levels(begin_pos_, end_pos_);
+    unsigned num_targeted_levels = get_num_targeted_levels(spatial_pos, end_pos_);
     // Generate mapping space
     mapping_space_t mapping_space;
+    mapping_space_t temporal_mapping_space;
     mapping_space.generate(num_targeted_levels, undetermined_values);
     // Traverse all possible mapping options in targeted levels
     while(!mapping_space.is_last()) {
         // Get new mapping values
         mapping_values_set = mapping_space.get_mapping_set();
         // Update mapping values of scheduling table
-        scheduling_table_curr.update_set_of_rows(begin_pos_, end_pos_,
+        scheduling_table_curr.update_set_of_rows(spatial_pos, end_pos_,
                                                  mapping_values_set);
         // Reset analyzer's variables
         analyzer.reset();
@@ -246,21 +247,35 @@ void bottom_up_t::search(unsigned tid_,
         analyzer.init(scheduling_table_curr);
         // Check_Validity
         if(!analyzer.check_validity()) continue;
-        // Consider scheduling option based on primary strategy
-        optimize_with_primary_strategy(end_pos_,
-                                       analyzer, lowest_cost,
-                                       scheduling_table_curr,
-                                       scheduling_table_pm);
-        // If the target optimization set is the top-most set,
-        // NeuroSpector doesn't have to consider supplementary strategy.
-        if(begin_pos_ == 0) continue;
-        // Consider scheduling option supplementary strategy
-        optimize_with_supplementary_strategy(begin_pos_,
-                                             end_pos_,
-                                             analyzer,
-                                             largest_facto_degree,
-                                             scheduling_table_curr,
-                                             scheduling_table_sp);
+        //	Re-generate mapping space for the remain levels of target set 
+        num_targeted_levels = 2;
+        undetermined_values = scheduling_table_curr.get_row_values(end_pos_);
+        temporal_mapping_space.generate(num_targeted_levels, undetermined_values);
+        while(!temporal_mapping_space.is_last()) {
+            mapping_values_set = temporal_mapping_space.get_mapping_set();
+            scheduling_table_curr.update_row(begin_pos_, mapping_values_set.at(0));
+            scheduling_table_curr.update_row(end_pos_, mapping_values_set.at(1));
+            analyzer.reset();
+            analyzer.init(scheduling_table_curr);
+            if(!analyzer.check_validity()) continue;
+            // Consider scheduling option based on primary strategy
+            optimize_with_primary_strategy(end_pos_,
+                                        analyzer, lowest_cost,
+                                        scheduling_table_curr,
+                                        scheduling_table_pm);
+            // If the target optimization set is the top-most set,
+            // NeuroSpector doesn't have to consider supplementary strategy.
+            if(begin_pos_ == 0) continue;
+            // Consider scheduling option supplementary strategy
+            optimize_with_supplementary_strategy(begin_pos_,
+                                                end_pos_,
+                                                analyzer,
+                                                largest_facto_degree,
+                                                scheduling_table_curr,
+                                                scheduling_table_sp);
+        }
+        temporal_mapping_space.clear();
+        scheduling_table_curr.clear_set_of_rows(begin_pos_, end_pos_);
     }
     // Update Output candidates
     StrategyContainer candidate;
@@ -283,7 +298,7 @@ void bottom_up_t::search(unsigned tid_,
 unsigned bottom_up_t::get_num_targeted_levels(unsigned begin_pos_, 
                                                 unsigned end_pos_) {
     unsigned partiton_comb = 1;
-    // From begin_pos_ to end_pos_, count the number of actual levels.
+    // From begin_pos_ to end_pos_, count the number of actually exist levels.
     for(unsigned i = begin_pos_; i < end_pos_; i++) {
         if(!scheduling_table->is_virtual(i)) partiton_comb++;
     }
