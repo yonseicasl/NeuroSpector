@@ -51,8 +51,6 @@ bool analyzer_t::check_validity() const {
     rtn *= check_hardware_constraints();
     // Traverse all columns and check network constraints. 
     rtn *= check_network_constraints();
-    // VERBOSE DEBUGGER
-    // std::cerr << "                          VALIDITY : " << rtn << std::endl;
     return rtn;
 }
 bool analyzer_t::check_hardware_constraints() const {
@@ -100,7 +98,6 @@ bool analyzer_t::check_temporal_validity(unsigned idx_) const {
     }
     // Separated buffer
     else if(capacity.size() == 3) {
-        // std::cerr << accelerator->get_name(idx_) << "(T) : ";
         for(unsigned i = 0; i < allocated_size.size(); i++) {
             // Bypass check
             if(find(bypass.begin(), bypass.end(), (data_type_t)i) 
@@ -108,10 +105,7 @@ bool analyzer_t::check_temporal_validity(unsigned idx_) const {
                 continue; 
             }
             rtn *= (float)allocated_size.at(i) <= (capacity.at(i) * BYTE) / accelerator->get_precision();
-            // VERBOSE DEBUGGER
-            // std::cerr << "(" << allocated_size.at(i) << "/" << capacity.at(i) << ") ";
         }
-        // std::cerr << " Validity : " << rtn << std::endl;
     }
     return rtn;
 }
@@ -771,9 +765,9 @@ void analyzer_t::update_cycle() {
     }
 }
 void analyzer_t::update_static_energy() {
-    /** Total static energy (pJ) 
-     *      = Unit static power (mW) x clock time (ns) x total cycle count
-     */
+    // Total static energy (pJ) 
+    // = Unit static power (mW) x clock time (ns) x total cycle count
+    ///
     float mac_static_energy = 0.0;
     float buffer_static_energy = 0.0;
     unsigned component_idx = 0;

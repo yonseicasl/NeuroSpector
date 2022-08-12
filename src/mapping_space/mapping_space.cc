@@ -91,15 +91,6 @@ mapping_space_t mapping_space_t::partition_off(unsigned tid_,
     std::vector<std::vector<unsigned>> permutations;
     // Set range based on tid_ and num_threads_
     range_t range(tid_, num_threads_, layer_permutations);
-    // Verbose debugger
-    // std::cout << range.start_k << "<= K <" << range.end_k << " "
-    //           << range.start_b << "<= B <" << range.end_b << " "
-    //           << range.start_p << "<= P <" << range.end_p << " "
-    //           << range.start_q << "<= Q <" << range.end_q << " "
-    //           << range.start_c << "<= C <" << range.end_c << " "
-    //           << range.start_r << "<= R <" << range.end_r << " "
-    //           << range.start_s << "<= S <" << range.end_s << " "
-    //           << range.start_g << "<= G <" << range.end_g << std::endl;
 
     for(unsigned i = 0; i < (unsigned)parameter_t::SIZE; i++) {
         partitioned_permutations.push_back(permutations);
@@ -201,19 +192,6 @@ std::vector<std::vector<unsigned>> mapping_space_t::get_mapping_set() {
     std::vector<std::vector<unsigned>> mapping_set;
     std::vector<unsigned> tmp_row_mapping;
     
-    // Print current permutation_idx 
-    // std::cout << "[message] permuation index " <<  std::setw(8) 
-    //                                            << permutation_index 
-    //                                            << " / "
-    //                                            << num_permutations
-    //                                            << " "; 
-    // for(unsigned i = 0; i < (unsigned) parameter_t::SIZE; i++) {
-    //     std::cout << std::setw(3) << parameter_index.at(i) 
-    //               << "(" 
-    //               << std::setw(3) << get_permutations(i).size()-1 
-    //               << "),";
-    // }
-    // std::cout << std::endl;
     // Change parameter index
     parameter_index.at((unsigned) parameter_t::G)++;
     // From S to K parameter in scheduling table, increase parameter indices sequencially.
