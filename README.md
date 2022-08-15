@@ -3,7 +3,7 @@ Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Intelligent Computing Systems Lab, Yonsei University
 
 ## Notice
-The NeuroSpector framework is at the final stage of code cleanup. The public release is expected to be ready by mid-August, 2022.
+NeuroSpector is currently at the final stage of code cleanup, and we expect that the initial release will be ready by mid-August, 2022. The master branch has the latest stable copy of the NeuroSpector framework.
 
 ## Table of Contents
 1. [Intoduction](#introduction)
