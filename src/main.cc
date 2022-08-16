@@ -67,8 +67,7 @@ int main(int argc, char **argv) {
             if(optimizer_type.compare("bottom-up") == 0) {
                 bottom_up_t *optimizer = new bottom_up_t(accelerator, dataflow, 
                                                         network, layer, metric,
-                                                        cl_optimization,
-                                                        thread);
+                                                        cl_optimization);
             
                 // Run optimizer
                 std::cerr << "[message] Run optimizer" << std::endl;

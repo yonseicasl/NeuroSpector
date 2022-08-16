@@ -20,17 +20,29 @@ optimizer_t::optimizer_t(const std::string& accelerator_pth_,
     if(!layer_.empty()) { layer_idx = stoi(layer_); }       // If layer_ is empty, run all layers
     std::cout << "[message] end optimzier constructor" << std::endl;
 }
-
 optimizer_t::~optimizer_t() {
     delete accelerator;
     delete network;
     delete scheduling_table;
 }
-
+// Run optimizer for all layers
 void optimizer_t::run() { return; }
+// Run optimizer for target layer
 void optimizer_t::run(const unsigned idx_) { return; }
-void optimizer_t::print_stats() { return; }
+// Print results
+void optimizer_t::print_results() { return; }
 
+// Count total number of component level to fill out
+unsigned optimizer_t::get_num_targeted_levels(unsigned begin_pos_, 
+                                              unsigned end_pos_) {
+    unsigned partiton_comb = 1;
+    // From begin_pos_ to end_pos_, count the number of actually exist levels.
+    for(unsigned i = begin_pos_; i < end_pos_; i++) {
+        if(!scheduling_table->is_virtual(i)) partiton_comb++;
+    }
+    return partiton_comb;
+}
+// Generate all possible dataflow combination for the target accelerator
 std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations() {
     std::vector<std::vector<dataflow_t>> dataflow_combinations;
     std::vector<dataflow_t> combination;

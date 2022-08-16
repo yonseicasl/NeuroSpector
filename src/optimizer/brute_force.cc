@@ -11,7 +11,9 @@ brute_force_t::brute_force_t(const std::string& accelerator_pth_,
                          const std::string& layer_,
                          const std::string& metric_,
                          const std::string& thread_)
-    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_) {
+    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
+      metric(metric_type_t::ENERGY),
+      num_threads(1) {
           std::cerr << "[message] construct brute_force class" << std::endl;
           // Init metric
           metric = (metric_type_t)get_enum_type(metric_str, metric_);
@@ -48,17 +50,17 @@ void brute_force_t::run(const unsigned idx_) {
         update();
         ++it;
     }
-    print_stats();
+    print_results();
 }
-void brute_force_t::print_stats() {
+void brute_force_t::print_results() {
     analyzer_t analyzer(accelerator, network);
-    analyzer.init(global_best_scheduling_scheme);
+    analyzer.init(global_best_scheduling_option);
     analyzer.estimate_cost();
     analyzer.print_stats();
 }
 void brute_force_t::reset() {
     // Reset all variables
-    local_best_scheduling_scheme.clear();
+    best_scheduling_option.clear();
 }
 void brute_force_t::engine() {
     std::cerr << "[message] Engine start" << std::endl;
@@ -102,8 +104,8 @@ void brute_force_t::update() {
     float curr_cost;
     // Update the optimal scheduling option for each dataflow
     // Traverse all optimal scheduling schemes for all threads
-    assert(local_best_scheduling_scheme.size() == num_threads);
-    for(auto it = local_best_scheduling_scheme.begin(); it != local_best_scheduling_scheme.end(); ++it) {
+    assert(best_scheduling_option.size() == num_threads);
+    for(auto it = best_scheduling_option.begin(); it != best_scheduling_option.end(); ++it) {
         analyzer_t analyzer(accelerator, network);
         analyzer.init(*it);
         analyzer.estimate_cost();
@@ -111,7 +113,7 @@ void brute_force_t::update() {
         analyzer.reset();
         if(curr_cost < global_best_cost) { 
             global_best_cost = curr_cost; 
-            global_best_scheduling_scheme = *it;
+            global_best_scheduling_option = *it;
         }
     }
 }
@@ -170,15 +172,6 @@ void brute_force_t::search(unsigned tid_,
         analyzer.reset();
     }
     m_.lock();
-    local_best_scheduling_scheme.push_back(best_local_scheduling_option);
+    best_scheduling_option.push_back(best_local_scheduling_option);
     m_.unlock();
-}
-unsigned brute_force_t::get_num_targeted_levels(unsigned begin_pos_, 
-                                                unsigned end_pos_) {
-    unsigned rtn = 1;
-    // From begin_pos_ to end_pos_, count the number of actual levels.
-    for(unsigned i = begin_pos_; i < end_pos_; i++) {
-        if(!scheduling_table->is_virtual(i)) rtn++;
-    }
-    return rtn;
 }

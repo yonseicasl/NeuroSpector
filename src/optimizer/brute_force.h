@@ -14,26 +14,34 @@ public:
                   const std::string& metric_,
                   const std::string& thread_);
     ~brute_force_t();
+    // Run brute-force search for all layers
     void run();
+    // Run brute-force search for a layer
     void run(const unsigned idx_);
-    void print_stats();
+    // Print results
+    void print_results();
 
+private:
+    // Reset all variables
     void reset(); 
+    // Optimize for a given dataflow combination
     void engine();
+    // Update the optimal scheduling table
     void update();
+    // Search for an optimal mapping option for a given dataflow
     void search(unsigned tid_,
              unsigned begin_pos_,
              unsigned end_pos_,
              mapping_space_t& mapping_space_,
              std::mutex& m_);
-    unsigned get_num_targeted_levels(unsigned begin_pos_, unsigned end_pos_);
 
-private:
-    metric_type_t metric = metric_type_t::ENERGY;
-    unsigned num_threads = 1;
+    metric_type_t metric;    // Optimization metric
+    unsigned num_threads;    // Num. threads to be used
     
-    std::vector<scheduling_table_t> local_best_scheduling_scheme;
-    scheduling_table_t              global_best_scheduling_scheme;
+    // Best scheduling option for all dataflow
+    scheduling_table_t              global_best_scheduling_option;
+    // Best scheduling option for a given dataflow
+    std::vector<scheduling_table_t> best_scheduling_option;
     float global_best_cost;
 
 };

@@ -10,16 +10,14 @@ bottom_up_t::bottom_up_t(const std::string& accelerator_pth_,
                          const std::string& network_pth_,
                          const std::string& layer_,
                          const std::string& metric_,
-                         const std::string& cl_optimization_,
-                         const std::string& thread_)
-    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_) {
+                         const std::string& cl_optimization_)
+    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
+      metric(metric_type_t::ENERGY) {
           std::cerr << "[message] construct bottom_up class" << std::endl;
           // Init metric
           metric = (metric_type_t)get_enum_type(metric_str, metric_);
           // Init cross_layer_optimziation
           is_cross_layer_opt = cl_optimization_ == "true" ? true : false;
-          // Init num threads
-          num_threads = stoi(thread_);
 }
 
 bottom_up_t::~bottom_up_t() {
@@ -79,10 +77,11 @@ void bottom_up_t::run(const unsigned idx_) {
         update();
         ++it;
     }
-    print_stats();
+    print_results();
     list_of_scheduling_table.push_back(global_best_scheduling_option.scheduling_table);
 }
-void bottom_up_t::print_stats() {
+// Print results
+void bottom_up_t::print_results() {
     analyzer_t analyzer(accelerator, network);
     std::cerr << "[message] Print out optimization result" << std::endl;
     std::string strategy[2] = {"PM", "SP"};
@@ -102,11 +101,12 @@ void bottom_up_t::print_stats() {
     analyzer.print_stats(); 
     analyzer.reset();
 }
+// Reset all variables
 void bottom_up_t::reset() {
-    // Reset all variables
     best_scheduling_option.scheduling_table = *scheduling_table;
     best_scheduling_option.strategy.clear();
 }
+// Optimize for a given dataflow combination
 void bottom_up_t::engine() {
     std::cerr << "[message] Engine start" << std::endl;
     unsigned begin_pos, end_pos;
@@ -186,8 +186,8 @@ void bottom_up_t::engine() {
     analyzer.reset();
     return;
 }
+// Update the optimal scheduling table
 void bottom_up_t::update() {
-    // Update the optimal scheduling option for each dataflow
     // best_scheduling_option vs global_best_scheduling_option
     // Select global best scheduling option
     analyzer_t analyzer(accelerator, network);
@@ -208,6 +208,7 @@ void bottom_up_t::update() {
         global_best_scheduling_option = best_scheduling_option;
     }
 }
+// Search for an optimal mapping option for a given dataflow
 void bottom_up_t::search(unsigned tid_,
                          unsigned begin_pos_,
                          unsigned end_pos_,
@@ -295,16 +296,7 @@ void bottom_up_t::search(unsigned tid_,
     mapping_space.clear();
     return;
 }
-unsigned bottom_up_t::get_num_targeted_levels(unsigned begin_pos_, 
-                                                unsigned end_pos_) {
-    unsigned partiton_comb = 1;
-    // From begin_pos_ to end_pos_, count the number of actually exist levels.
-    for(unsigned i = begin_pos_; i < end_pos_; i++) {
-        if(!scheduling_table->is_virtual(i)) partiton_comb++;
-    }
-    return partiton_comb;
-}
-// Primary strategy (PM)
+// Find optimal scheudling option based on primary strategy (PM)
 void bottom_up_t::optimize_with_primary_strategy(unsigned end_pos_,
                                                  analyzer_t& analyzer_,
                                                  float& lowest_cost_,
@@ -350,7 +342,7 @@ void bottom_up_t::optimize_with_primary_strategy(unsigned end_pos_,
     }
     return;
 }
-// Supplementargy strategy (SP)
+// Find optimal scheudling option based on supplementary strategy (SP)
 void bottom_up_t::optimize_with_supplementary_strategy(unsigned begin_pos_,
                                                        unsigned end_pos_,
                                                    analyzer_t& analyzer_,
@@ -374,7 +366,7 @@ void bottom_up_t::optimize_with_supplementary_strategy(unsigned begin_pos_,
         // If current working set is DRAM-GLB and cross-layer optimization is ON
         if(end_pos_ == curr_table_.get_num_rows() - 1 && is_cross_layer_opt 
            && !list_of_scheduling_table.empty()) {
-            // analyzer_.estimate_cross_layer_reuse(list_of_scheduling_table.back());
+            analyzer_.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
         }
         analyzer.reset();
         // Get supplementary strategy's scheduling table's cost
@@ -382,7 +374,7 @@ void bottom_up_t::optimize_with_supplementary_strategy(unsigned begin_pos_,
         analyzer.estimate_cost();
         if(end_pos_ == curr_table_.get_num_rows() - 1 && is_cross_layer_opt 
            && !list_of_scheduling_table.empty()) {
-            // analyzer_.evaluate_CL_reuse(list_of_scheduling_table.back());
+            analyzer_.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
         }
         cost_sp = analyzer.get_target_level_cost(end_pos_, metric);
         // Compare cost of scheduling options
@@ -390,7 +382,7 @@ void bottom_up_t::optimize_with_supplementary_strategy(unsigned begin_pos_,
     }
     return;
 }
-// Find the optimal solution to process multiple layers on multi-chip acceleartor in parallel
+// Find the optimal way to process layers which are branched off the same root layer in parallel
 void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& tables_) {
     std::vector<std::vector<PartitioningInfo>> partition_comb_list;
     std::vector<PartitioningInfo> tmp_partition_comb;
@@ -503,7 +495,7 @@ void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& table
     }
     return;
 }
-// Collect all possible partitioning cases for each layer
+// Collect all possible partitioning cases for a layer
 std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_table_t table_) {
     std::vector<PartitioningInfo> partiton_comb;
     std::map<unsigned, PartitioningInfo> list_of_partition;

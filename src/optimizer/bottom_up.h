@@ -17,44 +17,53 @@ public:
                 const std::string& network_pth_,
                 const std::string& layer_,
                 const std::string& metric_,
-                const std::string& cl_optimization_,
-                const std::string& thread_);
+                const std::string& cl_optimization_);
     ~bottom_up_t();
+    // Run bottom-up search for all layers
     void run();
+    // Run optimal scheduling option that processing multiple layers in parallel.
+    void run(const std::vector<unsigned> indices_);  
+    // Run bottom-up search for a layer
     void run(const unsigned idx_);
-    void run(const std::vector<unsigned> indices_);  // Multi-chip parititioning
-    void print_stats();
+    // Print results
+    void print_results();
 
+private:
+    // Reset all variables
     void reset(); 
+    // Optimize for a given dataflow combination
     void engine();
+    // Update the optimal scheduling table
     void update();
+    // Search for an optimal mapping option for a given dataflow
     void search(unsigned tid_,
                 unsigned begin_pos_,
                 unsigned end_pos_,
                 StrategyContainer& scheduling_candidate_,
                 std::vector<StrategyContainer>& output_candidates_,
                 std::mutex& m_);
-    unsigned get_num_targeted_levels(unsigned begin_pos_, unsigned end_pos_);
-    
+    // Find optimal scheudling option based on primary strategy 
     void optimize_with_primary_strategy(unsigned end_pos_,
                                         analyzer_t& analyzer_,
                                         float& best_cost_,
                                         scheduling_table_t& curr_table_,
                                         scheduling_table_t& pm_table_);
+    // Find optimal scheudling option based on supplementary strategy 
     void optimize_with_supplementary_strategy(unsigned begin_pos_,
                                               unsigned end_pos_,
                                               analyzer_t& analyzer_,
                                               unsigned& best_opportunity_,
                                               scheduling_table_t& curr_table_,
                                               scheduling_table_t& sp_table_);
+    // Find the optimal way to process layers which are branched off the same root layer in parallel
     void multi_chip_partitioning(std::vector<scheduling_table_t>& tables_);
+    // Collect all possible partitioning cases for a layer
     std::vector<PartitioningInfo> collect_partition_comb(scheduling_table_t table_); 
-private:
-    metric_type_t metric = metric_type_t::ENERGY;
-    unsigned num_threads;
-    bool     is_cross_layer_opt;
+
+    metric_type_t metric;                               // Optimization metric
+    bool     is_cross_layer_opt;                        // Optimize for network-level or not
    
-    StrategyContainer global_best_scheduling_option;
-    StrategyContainer best_scheduling_option;
+    StrategyContainer global_best_scheduling_option;    // Best scheduling option for all dataflow
+    StrategyContainer best_scheduling_option;           // Best scheduling option for a given dataflow
 };
 #endif

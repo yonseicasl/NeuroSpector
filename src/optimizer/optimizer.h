@@ -18,11 +18,17 @@ class optimizer_t {
                     const std::string& network_pth_,
                     const std::string& layer_);
         virtual ~optimizer_t();
-        virtual void run() = 0;                         // Run optimizer for all layers
-        virtual void run(const unsigned idx_) = 0;      // Run optimizer for target layer
-        virtual void print_stats() = 0;                 // Print stats
+        // Run optimizer for all layers
+        virtual void run() = 0;                         
+        // Run optimizer for target layer
+        virtual void run(const unsigned idx_) = 0;      
+        // Print results
+        virtual void print_results() = 0;               
+        // Count total number of component level to fill out
+        unsigned get_num_targeted_levels(unsigned begin_pos_, unsigned end_pos_);
 
     protected:
+        // Generate all possible dataflow combination for the target accelerator
         std::vector<std::vector<dataflow_t>> generate_dataflow_combinations();
 
         bool     is_fixed = true;                       // Fix accelerator's dataflow
@@ -30,7 +36,10 @@ class optimizer_t {
         accelerator_t      *accelerator;                // Target accelerator
         network_t          *network;                    // Target network
         scheduling_table_t *scheduling_table;           // Scheduling table
-        std::vector<scheduling_table_t> list_of_scheduling_table;
+
+        // list of optimal scheduling tables for all layers of target network
+        std::vector<scheduling_table_t> list_of_scheduling_table; 
+        // possible datalfow combination for the target accelerator
         std::vector<std::vector<dataflow_t>> dataflow_combinations;
 };
 
