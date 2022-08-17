@@ -72,3 +72,5 @@ Related publication is currently under review.
 	    month     = {Aug.},
 	    year      = {2022},
 	}
+
+For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr. Or, visit our lab webpage: https://icsl.yonsei.ac.kr
