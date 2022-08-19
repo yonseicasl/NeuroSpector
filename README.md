@@ -1,7 +1,7 @@
 # NeuroSpector: Dataflow and Mapping Optimizer for Deep Neural Network Accelerators
 Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Intelligent Computing Systems Lab, Yonsei University\
-Current release: v1.0 (Aug. 2022)
+Current release: TBD (v1.0 to be released in Aug. 2022)
 
 ## Notice
 NeuroSpector is currently at the final stage of code cleanup, and we expect that the initial release will be ready by mid-August, 2022. The master branch has the latest stable copy of the NeuroSpector framework.
