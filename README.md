@@ -54,7 +54,7 @@ The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs 
 
 
 ## Download
-The latest release of NeuroSpector framework is v1.0 (as of Aug. 2022). To obtain the latest version of NeuroSpector, use the following git command in a terminal.
+The latest release of NeuroSpector framework is v1.0 (to be released in Aug. 2022). To obtain the latest version of NeuroSpector, use the following git command in a terminal.
 
 	$ git clone --branch v1.0 https://github.com/yonsei-icsl/NeuroSpector
 
