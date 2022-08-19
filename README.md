@@ -3,9 +3,6 @@ Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Intelligent Computing Systems Lab, Yonsei University\
 Current release: TBD (v1.0 to be released in Aug. 2022)
 
-## Notice
-NeuroSpector is currently at the final stage of code cleanup, and we expect that the initial release will be ready by mid-August, 2022. The master branch has the latest stable copy of the NeuroSpector framework.
-
 ## Table of Contents
 1. [Intoduction](#introduction)
 2. [Compile](#compile)
@@ -19,13 +16,13 @@ A number of hardware accelerators have been proposed to speed up deep neural net
 _NeuroSpector_ is a scheduling optimization framework that systematically analyzes the dataflow and mapping possibilities of DNN workloads in accelerators and rapidly identifies optimal scheduling schemes. NeuroSpector finds efficient scheduling solutions for a variety of DNN accelerators 8,000x faster than prior techniques with only 1% energy and cycle differences on average to the optimal schemes, whereas the previous techniques exhibit 85% greater energy and cycle results than the optimal solutions and as much as 15x in the worst case. In addition, NeuroSpector supports many essential features of DNN accelerators and workloads including group convolutions, multi-chip accelerators, data bypassing in buffers, unified/separate buffer types, static power modeling, and network-wise scheduling optimization, which were overlooked or only partly supported in the prior work.
 
 ## Compile
-NeuroSpector uses g++ to compile C++ codes for executions on CPUs. To build NeuroSpector, simply type `make` in a terminal.
+NeuroSpector is implemented in C++ codes. To build NeuroSpector, type `make` in a terminal.
 
 	$ make
 
 ## Run
 ### Optimizer
-NeuroSpector has two different types of executions modes, `optimizer` and `analyzer`. The `optimizer` mode triggers a scheduling optimization algorithm to find an optimal scheduling scheme (i.e., dataflow and mapping) for given accelerator and neural layer configurations. The following run command executes NeuroSpector in the `analyzer` mode.
+NeuroSpector has two different execution modes, `optimizer` and `analyzer`. The `optimizer` mode triggers a scheduling optimization algorithm to find an optimal scheduling scheme (i.e., dataflow and mapping) for the given accelerator and neural layer configurations. The following run command executes NeuroSpector in the `analyzer` mode.
 
 	$ ./NeuroSpector --run_type=optimizer 
 			 --accelerator=<accelerator input> 
@@ -45,7 +42,7 @@ For example, the following command triggers NeuroSpector to find the most energy
 			 --metric=energy
 
 ### Analyzer
-The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs of an accelerator for a provided scheduling option. A combinatorial case of dataflow and mapping in an accelerator is represented via the notion of scheduling table. The following command invokes NeuroSpector to calculate the cost metrics of Eyeriss for ResNet-50 layers based on a given scheduling option.
+The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs of an accelerator using a scheduling scheme provided in the `--scheduling_table` option of a run command. A combinatorial case of dataflow and mapping in an accelerator is represented via the notion of scheduling table in NeuroSpector. The following command invokes NeuroSpector to calculate the cost metrics of Eyeriss for ResNet-50 layers based on the given scheduling option.
 
 	$ ./NeuroSpector --run_type=analyzer\
 			 --accelerator=configs/accelerators/eyeriss.cfg\
@@ -54,11 +51,7 @@ The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs 
 
 
 ## Download
-The latest release of NeuroSpector framework is v1.0 (to be released in Aug. 2022). To obtain the latest version of NeuroSpector, use the following git command in a terminal.
-
-	$ git clone --branch v1.0 https://github.com/yonsei-icsl/NeuroSpector
-
-Alternatively, the master branch maintains the lastest stable copy of NeuroSpector (possibly untagged yet).
+The latest release of the NeuroSpector framework is untagged yet. The initial version of NeuroSpector is expected to be ready in Aug. 2022. The master branch maintains the lastest stable copy of NeuroSpector at this moment.
 
 	$ git clone https://github.com/yonsei-icsl/NeuroSpector
 
