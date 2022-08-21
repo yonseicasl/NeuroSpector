@@ -8,7 +8,7 @@
 class bottom_up_t : public optimizer_t {
 public:
     struct StrategyContainer {
-        std::vector<strategy_type_t> strategy;
+        std::vector<strategy_t> strategy;
         scheduling_table_t scheduling_table;
     };
 
@@ -64,7 +64,7 @@ private:
     std::vector<PartitioningInfo> collect_partition_comb(scheduling_table_t table_); 
     float best_cost_of_multiple_layers; 
 
-    metric_type_t metric;                               // Optimization metric
+    metric_t metric;                               // Optimization metric
     bool     is_cross_layer_opt;                        // Optimize for network-level or not
    
     StrategyContainer global_best_scheduling_option;    // Best scheduling option for all dataflow

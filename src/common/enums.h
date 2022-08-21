@@ -5,7 +5,7 @@
 #include <vector>
 #include <string>
 
-enum class run_type_t : unsigned {
+enum class run_t : unsigned {
     OPTIMIZER, ANALYZER, SIZE
 };
 // Component types for separating the kinds of data-reuse
@@ -18,17 +18,16 @@ static std::vector<std::string> component_type_str __attribute__((unused)) = {
     "spatial",
     "size",
 };
-
 // Eight parameters that comprise DNN data (columns of scheduling table)
 enum class parameter_t : unsigned {
     K, B, P, Q, C, R, S, G, SIZE
 };
 // Three types of DNN data
-enum class data_type_t : unsigned {
+enum class data_t : unsigned {
     INPUT, WEIGHT, OUTPUT, SIZE
 };
 // Four correlation types of DNN parameters
-enum class correlation_type_t : unsigned {
+enum class correlation_t : unsigned {
     WO, OI, IW, IWO, SIZE
 };
 // Three types of dataflow
@@ -36,17 +35,17 @@ enum class dataflow_t : unsigned {
     NONE = 0, IS, WS, OS, SIZE
 };
 // Data read and write operations
-enum class operation_type_t :unsigned {
+enum class operation_t :unsigned {
     READ, WRITE, SIZE
 };
 // Where to send (or receive) tile data
-enum class direction_type_t:unsigned {
+enum class direction_t:unsigned {
     UPPER, LOWER, SIZE
 };
-enum class metric_type_t:unsigned {
+enum class metric_t:unsigned {
     ENERGY, CYCLE, SIZE
 };
-enum class strategy_type_t:unsigned {
+enum class strategy_t:unsigned {
     PM, SP, SIZE
 };
 

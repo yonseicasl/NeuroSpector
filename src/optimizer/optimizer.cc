@@ -61,8 +61,8 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
     }
     else {
         std::vector<dataflow_t> possible_dataflows;
-        std::vector<data_type_t> bypass;
-        data_type_t stationary_data;
+        std::vector<data_t> bypass;
+        data_t stationary_data;
         
         unsigned permutation_cnt   = 0;
         unsigned permutation_bound = 1;
@@ -83,7 +83,7 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
                     }
                     else {
                         bypass = accelerator->get_bypass(component_idx);
-                        stationary_data = (data_type_t)(df-1);
+                        stationary_data = (data_t)(df-1);
                         auto exist = find(bypass.begin(), bypass.end(), 
                                           stationary_data);
                         if(exist != bypass.end()) { continue; }

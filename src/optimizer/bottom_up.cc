@@ -13,10 +13,10 @@ bottom_up_t::bottom_up_t(const std::string& accelerator_pth_,
                          const std::string& cl_optimization_)
     : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
       best_cost_of_multiple_layers(FLT_MAX),
-      metric(metric_type_t::ENERGY) {
+      metric(metric_t::ENERGY) {
           std::cerr << "[message] construct bottom_up class" << std::endl;
           // Init metric
-          metric = (metric_type_t)get_enum_type(metric_str, metric_);
+          metric = (metric_t)get_enum_type(metric_str, metric_);
           // Init cross_layer_optimziation
           is_cross_layer_opt = cl_optimization_ == "true" ? true : false;
 }
@@ -301,7 +301,7 @@ void bottom_up_t::search(unsigned tid_,
     StrategyContainer candidate;
     // Update PM strategy
     candidate.strategy = scheduling_candidates_.strategy;
-    candidate.strategy.push_back(strategy_type_t::PM);
+    candidate.strategy.push_back(strategy_t::PM);
     // Update PM scheduling table
     candidate.scheduling_table = scheduling_table_pm;
     output_candidates_.push_back(candidate);
@@ -309,7 +309,7 @@ void bottom_up_t::search(unsigned tid_,
     if(scheduling_table_pm != scheduling_table_sp && begin_pos_ != 0) {
         // If not, add SP scheduling table
         candidate.strategy = scheduling_candidates_.strategy;
-        candidate.strategy.push_back(strategy_type_t::SP);
+        candidate.strategy.push_back(strategy_t::SP);
         candidate.scheduling_table = scheduling_table_sp;
         output_candidates_.push_back(candidate);
     }
@@ -447,7 +447,7 @@ void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& table
         unsigned num_total_parallelized_layer = 0;
         unsigned access_count = 1;
         unsigned dram_index   = accelerator->get_num_components() - 1;
-        float    input_access_energy = accelerator->get_component_energy(dram_index).at((unsigned)data_type_t::INPUT);
+        float    input_access_energy = accelerator->get_component_energy(dram_index).at((unsigned)data_t::INPUT);
         for(auto it = tmp_partition_comb.begin(); 
                  it != tmp_partition_comb.end(); 
                  ++it) {
@@ -536,10 +536,10 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         partition_case.cost = analyzer.get_target_level_cost(dram_pos, metric);
         // Get input tile size that DRAM transfers
         partition_case.input_tile_size = analyzer.get_tile_size(dram_pos, 
-                                                      data_type_t::INPUT);
+                                                      data_t::INPUT);
         // Get tile-granular access count of input in DRAM 
         partition_case.input_access_count = analyzer.get_access_count(dram_pos, 
-                                                            data_type_t::INPUT);
+                                                            data_t::INPUT);
         partition_case.num_assigned_chips = num_activated_chips;
         partition_case.scheduling_table = table_;
         // Find the num_activated_chips already exist in map

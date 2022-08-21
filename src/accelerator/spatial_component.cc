@@ -28,13 +28,13 @@ component_type_t spatial_component_t::get_type() const {
 std::vector<float> spatial_component_t::get_size() const {
     return size;
 }
-std::vector<unsigned> spatial_component_t::get_allocated_size(direction_type_t direction_) const { 
+std::vector<unsigned> spatial_component_t::get_allocated_size(direction_t direction_) const { 
     return allocated_size.at(direction_);
 }
-std::vector<unsigned> spatial_component_t::get_tile_access_count(operation_type_t operation_, direction_type_t direction_) const { 
+std::vector<unsigned> spatial_component_t::get_tile_access_count(operation_t operation_, direction_t direction_) const { 
     std::vector<unsigned> rtn;
-    if(direction_ == direction_type_t::UPPER) { rtn = access_count_to_upper.at(operation_); }
-    else if(direction_ == direction_type_t::LOWER) { rtn = access_count_to_lower.at(operation_); }
+    if(direction_ == direction_t::UPPER) { rtn = access_count_to_upper.at(operation_); }
+    else if(direction_ == direction_t::LOWER) { rtn = access_count_to_lower.at(operation_); }
     else { std::cerr << "Error invalid direction type" << std::endl; exit(0); }
     return rtn; 
 }
@@ -54,15 +54,15 @@ std::vector<float> spatial_component_t::get_unit_cycle() const {
     return unit_cycle;
 }
 // Update allocated tile size of component
-void spatial_component_t::update_allocated_tile_size(unsigned size_, data_type_t data_type_,
-                                                     direction_type_t direction_) {
+void spatial_component_t::update_allocated_tile_size(unsigned size_, data_t data_type_,
+                                                     direction_t direction_) {
     // Nothing to do.
     return;
 }
 // Update tile access count of component
-void spatial_component_t::update_tile_access_count(unsigned size_, data_type_t data_type_,
-                                                   operation_type_t operation_,
-                                                   direction_type_t direction_) {
+void spatial_component_t::update_tile_access_count(unsigned size_, data_t data_type_,
+                                                   operation_t operation_,
+                                                   direction_t direction_) {
     // Nothing to do.
     return;
 }

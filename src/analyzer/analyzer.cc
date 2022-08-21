@@ -44,7 +44,7 @@ void analyzer_t::init(scheduling_table_t scheduling_table_) {
     update_access_count();
     return;
 }
-/* Section 1. Check validity of components */
+// Check scheduling table's validity
 bool analyzer_t::check_validity() const {
     bool rtn = true;
     // Traverse all rows and check hardware constraints. 
@@ -53,6 +53,7 @@ bool analyzer_t::check_validity() const {
     rtn *= check_network_constraints();
     return rtn;
 }
+// Check hardware constraints
 bool analyzer_t::check_hardware_constraints() const {
     bool rtn = true;
     // Traverse accelerator components and check the size validity
@@ -67,6 +68,7 @@ bool analyzer_t::check_hardware_constraints() const {
     }
     return rtn;
 }
+// Check active components doesn't exceed physical # components or not
 bool analyzer_t::check_spatial_validity(unsigned idx_) const {
     bool rtn = true;
     std::vector<float>    capacity = accelerator->get_size(idx_);
@@ -77,31 +79,29 @@ bool analyzer_t::check_spatial_validity(unsigned idx_) const {
     }
     return rtn;
 }
+// Check allocated tile size fit in buffer capacity or not
 bool analyzer_t::check_temporal_validity(unsigned idx_) const {
     bool rtn = true;
     unsigned size = 0;
     std::vector<float>    capacity = accelerator->get_size(idx_);
-    std::vector<unsigned> allocated_size = accelerator->get_allocated_size(idx_, direction_type_t::LOWER);
-    std::vector<data_type_t> bypass   = accelerator->get_bypass(idx_);
+    std::vector<unsigned> allocated_size = accelerator->get_allocated_size(idx_, direction_t::LOWER);
+    std::vector<data_t> bypass   = accelerator->get_bypass(idx_);
     // Shared buffer
     if(capacity.size() == 1) {
         for(unsigned i = 0; i < allocated_size.size(); i++) {
             // Bypass check
-            if(find(bypass.begin(), bypass.end(), (data_type_t)i) 
-                                                    != bypass.end()) { 
+            if(find(bypass.begin(), bypass.end(), (data_t)i) != bypass.end()) { 
                 continue; 
             }
             size += allocated_size.at(i);
         }
-        // Check validity
         rtn = (float)size <= (capacity.at(0) * BYTE) / accelerator->get_precision();
     }
     // Separated buffer
     else if(capacity.size() == 3) {
         for(unsigned i = 0; i < allocated_size.size(); i++) {
             // Bypass check
-            if(find(bypass.begin(), bypass.end(), (data_type_t)i) 
-                                                    != bypass.end()) { 
+            if(find(bypass.begin(), bypass.end(), (data_t)i) != bypass.end()) { 
                 continue; 
             }
             rtn *= (float)allocated_size.at(i) <= (capacity.at(i) * BYTE) / accelerator->get_precision();
@@ -109,12 +109,13 @@ bool analyzer_t::check_temporal_validity(unsigned idx_) const {
     }
     return rtn;
 }
+// Check parameter constraints
 bool analyzer_t::check_network_constraints() const {
     bool rtn = true;
     return rtn;
 }
 
-/* Section 2. Compute tile sizes */
+// Update tile size to receive from adjacent buffer (or memory)
 void analyzer_t::update_tile_size_to_receive() {
     for(unsigned i = 0; i < scheduling_table.get_num_rows(); i++) {
         if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL
@@ -127,14 +128,15 @@ void analyzer_t::update_tile_size_to_receive() {
                         *= scheduling_table.get_mapping_value(row_idx, param_idx);
                 }
             }
-            update_component_input_tile_size(i, values, direction_type_t::LOWER);
-            update_component_weight_tile_size(i, values, direction_type_t::LOWER);
-            update_component_output_tile_size(i, values, direction_type_t::LOWER);
+            update_component_input_tile_size(i, values, direction_t::LOWER);
+            update_component_weight_tile_size(i, values, direction_t::LOWER);
+            update_component_output_tile_size(i, values, direction_t::LOWER);
             std::fill(values.begin(), values.end(), 1); // Reset vector
         }
     }
     return;
 }
+// Update tile size to send to adjacent buffer (or memory)
 void analyzer_t::update_tile_size_to_send() {
     for(unsigned i = 0; i < scheduling_table.get_num_rows(); i++) {
         if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL
@@ -147,21 +149,22 @@ void analyzer_t::update_tile_size_to_send() {
                         *= scheduling_table.get_mapping_value(row_idx, param_idx);
                 }
             }
-            update_component_input_tile_size(i, values, direction_type_t::UPPER);
-            update_component_weight_tile_size(i, values, direction_type_t::UPPER);
-            update_component_output_tile_size(i, values, direction_type_t::UPPER);
+            update_component_input_tile_size(i, values, direction_t::UPPER);
+            update_component_weight_tile_size(i, values, direction_t::UPPER);
+            update_component_output_tile_size(i, values, direction_t::UPPER);
             std::fill(values.begin(), values.end(), 1); // Reset vector
         }
     }
     return;
 }
+// Update input tile size to receive (or send)
 void analyzer_t::update_component_input_tile_size(unsigned idx_, 
                                                   std::vector<unsigned> values_,
-                                                  direction_type_t direction_) {
+                                                  direction_t direction_) {
     unsigned tile_size = 1;
     unsigned component_idx = 1;
     unsigned above_component_idx = 1;
-    std::vector<data_type_t> bypass;
+    std::vector<data_t> bypass;
 
     // Compute input height & width
     unsigned input_height = 1;
@@ -180,36 +183,36 @@ void analyzer_t::update_component_input_tile_size(unsigned idx_,
     component_idx = scheduling_table.get_component_index(idx_);
     // Bypass adjustment
     above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
-    // if the upper level component bypasses the weight data
+    // if the upper level component bypasses the input data
     if(above_component_idx != UINT_MAX) {
         bypass = accelerator->get_bypass(above_component_idx);
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::INPUT) != bypass.end()) {
+    if(find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) {
         std::vector<unsigned> upper_level_tile_size 
                         = accelerator->get_allocated_size(above_component_idx, 
-                                                          direction_type_t::UPPER);
+                                                          direction_t::UPPER);
         // then change tile size to be sended to that of upper level components. 
-        tile_size = upper_level_tile_size.at((unsigned)data_type_t::INPUT);
+        tile_size = upper_level_tile_size.at((unsigned)data_t::INPUT);
         // And then change upper level tile size to be sended and received to zero.
         accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_type_t::INPUT,
-                                                direction_type_t::UPPER);
+                                                data_t::INPUT,
+                                                direction_t::UPPER);
         accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_type_t::INPUT,
-                                                direction_type_t::LOWER);
+                                                data_t::INPUT,
+                                                direction_t::LOWER);
     }
     accelerator->update_allocated_tile_size(component_idx, tile_size, 
-                                            data_type_t::INPUT,
+                                            data_t::INPUT,
                                             direction_);
     return;
 }
 void analyzer_t::update_component_weight_tile_size(unsigned idx_,
                                                    std::vector<unsigned> values_,
-                                                   direction_type_t direction_) {
+                                                   direction_t direction_) {
     unsigned tile_size = 1;
     unsigned component_idx = 1;
     unsigned above_component_idx = 1;
-    std::vector<data_type_t> bypass;
+    std::vector<data_t> bypass;
     // Compute weight tile size
     tile_size *= values_.at((unsigned)parameter_t::K) 
                * values_.at((unsigned)parameter_t::C)
@@ -220,37 +223,37 @@ void analyzer_t::update_component_weight_tile_size(unsigned idx_,
     // Bypass adjustment
     above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
     // if the upper level component bypasses the weight data
-    if(direction_ == direction_type_t::UPPER) {
+    if(direction_ == direction_t::UPPER) {
         if(above_component_idx != UINT_MAX) {
             bypass = accelerator->get_bypass(above_component_idx);
         }
-        if (find(bypass.begin(), bypass.end(), data_type_t::WEIGHT) != bypass.end()) {
+        if (find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) {
             std::vector<unsigned> upper_level_tile_size 
                         = accelerator->get_allocated_size(above_component_idx, 
-                                                          direction_type_t::UPPER);
+                                                          direction_t::UPPER);
             // then change tile size to be sended to that of upper level components.
-            tile_size = upper_level_tile_size.at((unsigned)data_type_t::WEIGHT);
+            tile_size = upper_level_tile_size.at((unsigned)data_t::WEIGHT);
             // And then change upper level tile size to be sended and received to zero.
             accelerator->update_allocated_tile_size(above_component_idx, 0,
-                                                    data_type_t::WEIGHT,
-                                                    direction_type_t::UPPER);
+                                                    data_t::WEIGHT,
+                                                    direction_t::UPPER);
             accelerator->update_allocated_tile_size(above_component_idx, 0,
-                                                    data_type_t::WEIGHT,
-                                                    direction_type_t::LOWER);
+                                                    data_t::WEIGHT,
+                                                    direction_t::LOWER);
         }
     }
     accelerator->update_allocated_tile_size(component_idx, tile_size, 
-                                            data_type_t::WEIGHT,
+                                            data_t::WEIGHT,
                                             direction_);
     return;
 }
 void analyzer_t::update_component_output_tile_size(unsigned idx_,
                                                    std::vector<unsigned> values_,
-                                                   direction_type_t direction_) {
+                                                   direction_t direction_) {
     unsigned     tile_size = 1;
     unsigned component_idx = 1;
     unsigned above_component_idx = 1;
-    std::vector<data_type_t> bypass;
+    std::vector<data_t> bypass;
     // Compute output tile size/ab
     tile_size *= values_.at((unsigned)parameter_t::K) 
                * values_.at((unsigned)parameter_t::B)
@@ -260,26 +263,26 @@ void analyzer_t::update_component_output_tile_size(unsigned idx_,
     component_idx = scheduling_table.get_component_index(idx_);
     // Bypass adjustment
     above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
-    // if the upper level component bypasses the weight data
+    // if the upper level component bypasses the output data
     if(above_component_idx != UINT_MAX) {
         bypass = accelerator->get_bypass(above_component_idx);
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::OUTPUT) != bypass.end()) {
+    if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) {
         std::vector<unsigned> upper_level_tile_size 
                         = accelerator->get_allocated_size(above_component_idx, 
-                                                          direction_type_t::UPPER);
+                                                          direction_t::UPPER);
         // then change tile size to be sended to that of upper level components. 
-        tile_size = upper_level_tile_size.at((unsigned)data_type_t::OUTPUT);
+        tile_size = upper_level_tile_size.at((unsigned)data_t::OUTPUT);
         // And then change upper level tile size to be sended and received to zero.
         accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_type_t::OUTPUT,
-                                                direction_type_t::UPPER);
+                                                data_t::OUTPUT,
+                                                direction_t::UPPER);
         accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_type_t::OUTPUT,
-                                                direction_type_t::LOWER);
+                                                data_t::OUTPUT,
+                                                direction_t::LOWER);
     }
     accelerator->update_allocated_tile_size(component_idx, tile_size, 
-                                            data_type_t::OUTPUT,
+                                            data_t::OUTPUT,
                                             direction_);
     return;
 }
@@ -314,7 +317,7 @@ void analyzer_t::update_component_input_access_count(unsigned idx_,
     component_idx_curr = scheduling_table.get_component_index(idx_);
     component_idx_lower = scheduling_table.get_component_index(lower_level_idx);
     component_idx_upper = scheduling_table.get_component_index(upper_level_idx);
-    std::vector<data_type_t> bypass;
+    std::vector<data_t> bypass;
 
     if(component_idx_curr == 0) {
         unsigned tile_access_count = 1;
@@ -326,51 +329,51 @@ void analyzer_t::update_component_input_access_count(unsigned idx_,
             }
         }
         accelerator->update_tile_access_count(component_idx_curr, tile_access_count, 
-                                              data_type_t::INPUT, operation_type_t::READ,
-                                              direction_type_t::UPPER);
+                                              data_t::INPUT, operation_t::READ,
+                                              direction_t::UPPER);
     }
     // Get dataflow
     dataflow = accelerator->get_dataflow(component_idx_curr);
     if(dataflow == dataflow_t::IS) { 
-        access_count /= update_irrelevant_mapping_value(idx_, data_type_t::INPUT); 
+        access_count /= update_irrelevant_mapping_value(idx_, data_t::INPUT); 
     }
     // Bypass adjustment
     // if the upper level component bypasses the weight data
     if(component_idx_curr != UINT_MAX) {
         bypass = accelerator->get_bypass(component_idx_curr);
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::INPUT) != bypass.end()) { 
+    if(find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) { 
         access_count = 0; 
     }
     accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                          data_type_t::INPUT, operation_type_t::WRITE,
-                                          direction_type_t::LOWER);
+                                          data_t::INPUT, operation_t::WRITE,
+                                          direction_t::LOWER);
 
     std::vector<unsigned> send_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_type_t::UPPER);
+            = accelerator->get_allocated_size(component_idx_curr, direction_t::UPPER);
     std::vector<unsigned> received_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_type_t::LOWER);
-    if(send_tile_size.at((unsigned)data_type_t::INPUT) == received_tile_size.at((unsigned)data_type_t::INPUT) &&
-       send_tile_size.at((unsigned)data_type_t::INPUT) != 0) {
+            = accelerator->get_allocated_size(component_idx_curr, direction_t::LOWER);
+    if(send_tile_size.at((unsigned)data_t::INPUT) == received_tile_size.at((unsigned)data_t::INPUT) &&
+       send_tile_size.at((unsigned)data_t::INPUT) != 0) {
         if(component_idx_curr != 0) {
         // Change access count to lower level access count
         accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                              data_type_t::INPUT, operation_type_t::READ,
-                                              direction_type_t::UPPER);
+                                              data_t::INPUT, operation_t::READ,
+                                              direction_t::UPPER);
         }
     }
 
-    if(find(bypass.begin(), bypass.end(), data_type_t::INPUT) != bypass.end()) {
+    if(find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) {
         std::vector<unsigned> upper_level_tile_access_count
-                        = accelerator->get_tile_access_count(component_idx_curr, operation_type_t::READ,
-                                                             direction_type_t::UPPER);
-        access_count = upper_level_tile_access_count.at((unsigned)data_type_t::INPUT);
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_type_t::INPUT, 
-                                              operation_type_t::READ, direction_type_t::UPPER);
+                        = accelerator->get_tile_access_count(component_idx_curr, operation_t::READ,
+                                                             direction_t::UPPER);
+        access_count = upper_level_tile_access_count.at((unsigned)data_t::INPUT);
+        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::INPUT, 
+                                              operation_t::READ, direction_t::UPPER);
     }
     accelerator->update_tile_access_count(component_idx_lower, access_count, 
-                                            data_type_t::INPUT, operation_type_t::READ,
-                                            direction_type_t::UPPER);
+                                            data_t::INPUT, operation_t::READ,
+                                            direction_t::UPPER);
     return;
 }
 void analyzer_t::update_component_weight_access_count(unsigned idx_,
@@ -382,7 +385,7 @@ void analyzer_t::update_component_weight_access_count(unsigned idx_,
     component_idx_curr = scheduling_table.get_component_index(idx_);
     component_idx_lower = scheduling_table.get_component_index(lower_level_idx);
     component_idx_upper = scheduling_table.get_component_index(upper_level_idx);
-    std::vector<data_type_t> bypass;
+    std::vector<data_t> bypass;
 
     // If the component connected to MAC
     if(component_idx_curr == 0) {
@@ -395,62 +398,62 @@ void analyzer_t::update_component_weight_access_count(unsigned idx_,
             }
         }
         accelerator->update_tile_access_count(component_idx_curr, tile_access_count, 
-                                              data_type_t::WEIGHT, operation_type_t::READ,
-                                              direction_type_t::UPPER);
+                                              data_t::WEIGHT, operation_t::READ,
+                                              direction_t::UPPER);
     }
     // Dataflow adjustment
     dataflow = accelerator->get_dataflow(component_idx_curr);
     if(dataflow == dataflow_t::WS) { 
-        access_count /= update_irrelevant_mapping_value(idx_, data_type_t::WEIGHT); 
+        access_count /= update_irrelevant_mapping_value(idx_, data_t::WEIGHT); 
     }
     // Bypass adjustment
     // if the current level component bypasses the weight data
     if(component_idx_curr != UINT_MAX) {
         bypass = accelerator->get_bypass(component_idx_curr);
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::WEIGHT) != bypass.end()) { access_count = 0; }
+    if(find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) { access_count = 0; }
     // Update component tile access count
     accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                          data_type_t::WEIGHT, operation_type_t::WRITE,
-                                          direction_type_t::LOWER);
+                                          data_t::WEIGHT, operation_t::WRITE,
+                                          direction_t::LOWER);
     // Read once adjustment
     if(dataflow != dataflow_t::NONE) {
         std::vector<unsigned> send_tile_size 
-                = accelerator->get_allocated_size(component_idx_curr, direction_type_t::UPPER);
+                = accelerator->get_allocated_size(component_idx_curr, direction_t::UPPER);
         std::vector<unsigned> received_tile_size 
-                = accelerator->get_allocated_size(component_idx_curr, direction_type_t::LOWER);
-        if(send_tile_size.at((unsigned)data_type_t::WEIGHT) == received_tile_size.at((unsigned)data_type_t::WEIGHT) &&
-        send_tile_size.at((unsigned)data_type_t::WEIGHT) != 0) {
+                = accelerator->get_allocated_size(component_idx_curr, direction_t::LOWER);
+        if(send_tile_size.at((unsigned)data_t::WEIGHT) == received_tile_size.at((unsigned)data_t::WEIGHT) &&
+        send_tile_size.at((unsigned)data_t::WEIGHT) != 0) {
             if(component_idx_curr != 0) {
             // Change access count to lower level access count
             // UPPER READ = LOWER WRITE
             accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                                    data_type_t::WEIGHT, operation_type_t::READ,
-                                                    direction_type_t::UPPER);
+                                                    data_t::WEIGHT, operation_t::READ,
+                                                    direction_t::UPPER);
             }
         }
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::WEIGHT) != bypass.end()) {
+    if(find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) {
         std::vector<unsigned> upper_level_tile_access_count
-                        = accelerator->get_tile_access_count(component_idx_curr, operation_type_t::READ,
-                                                             direction_type_t::UPPER);
-        access_count = upper_level_tile_access_count.at((unsigned)data_type_t::WEIGHT);
+                        = accelerator->get_tile_access_count(component_idx_curr, operation_t::READ,
+                                                             direction_t::UPPER);
+        access_count = upper_level_tile_access_count.at((unsigned)data_t::WEIGHT);
         // Set current level's access count to zero
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_type_t::WEIGHT, 
-                                              operation_type_t::READ, direction_type_t::UPPER);
+        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::WEIGHT, 
+                                              operation_t::READ, direction_t::UPPER);
         // Weight data fully loaded it's upper level at once
         if(access_count == scheduling_table.get_correlation_product(idx_,
-                                                                    correlation_type_t::OI)) {
+                                                                    correlation_t::OI)) {
             access_count = 1;
             // Change it's upper level receive count
             accelerator->update_tile_access_count(component_idx_upper, access_count,
-                                                  data_type_t::WEIGHT, operation_type_t::WRITE,
-                                                  direction_type_t::LOWER);
+                                                  data_t::WEIGHT, operation_t::WRITE,
+                                                  direction_t::LOWER);
         }
     }
     accelerator->update_tile_access_count(component_idx_lower, access_count, 
-                                            data_type_t::WEIGHT, operation_type_t::READ,
-                                            direction_type_t::UPPER);
+                                            data_t::WEIGHT, operation_t::READ,
+                                            direction_t::UPPER);
     return;
 }
 void analyzer_t::update_component_output_access_count(unsigned idx_,
@@ -461,106 +464,106 @@ void analyzer_t::update_component_output_access_count(unsigned idx_,
     component_idx_curr = scheduling_table.get_component_index(idx_);
     component_idx_lower = scheduling_table.get_component_index(lower_level_idx);
     component_idx_upper = scheduling_table.get_component_index(upper_level_idx);
-    std::vector<data_type_t> bypass;
+    std::vector<data_t> bypass;
     std::vector<unsigned> upper_level_tile_access_count;
 
     // If the component connected to MAC
     if(component_idx_curr == 0) {
-        write_access_count = scheduling_table.get_correlation_product(-1, correlation_type_t::IWO)
-                           * scheduling_table.get_correlation_product(-1, correlation_type_t::WO)
-                           * scheduling_table.get_correlation_product(-1, correlation_type_t::OI)
-                           * (scheduling_table.get_correlation_product(-1, correlation_type_t::IW) - 1);
-        read_access_count = scheduling_table.get_correlation_product(-1, correlation_type_t::IWO)
-                           * scheduling_table.get_correlation_product(-1, correlation_type_t::WO)
-                           * scheduling_table.get_correlation_product(-1, correlation_type_t::OI)
-                           * scheduling_table.get_correlation_product(-1, correlation_type_t::IW);
+        write_access_count = scheduling_table.get_correlation_product(-1, correlation_t::IWO)
+                           * scheduling_table.get_correlation_product(-1, correlation_t::WO)
+                           * scheduling_table.get_correlation_product(-1, correlation_t::OI)
+                           * (scheduling_table.get_correlation_product(-1, correlation_t::IW) - 1);
+        read_access_count = scheduling_table.get_correlation_product(-1, correlation_t::IWO)
+                           * scheduling_table.get_correlation_product(-1, correlation_t::WO)
+                           * scheduling_table.get_correlation_product(-1, correlation_t::OI)
+                           * scheduling_table.get_correlation_product(-1, correlation_t::IW);
         accelerator->update_tile_access_count(component_idx_curr, write_access_count, 
-                                              data_type_t::OUTPUT, operation_type_t::READ,
-                                              direction_type_t::UPPER);
+                                              data_t::OUTPUT, operation_t::READ,
+                                              direction_t::UPPER);
         accelerator->update_tile_access_count(component_idx_curr, read_access_count, 
-                                              data_type_t::OUTPUT, operation_type_t::WRITE,
-                                              direction_type_t::UPPER);
+                                              data_t::OUTPUT, operation_t::WRITE,
+                                              direction_t::UPPER);
     }
     // Update read and write access count 
-    write_access_count = scheduling_table.get_correlation_product(idx_, correlation_type_t::IWO)
-                      * scheduling_table.get_correlation_product(idx_, correlation_type_t::WO)
-                      * scheduling_table.get_correlation_product(idx_, correlation_type_t::OI)
-                      * (scheduling_table.get_correlation_product(idx_, correlation_type_t::IW) - 1);
+    write_access_count = scheduling_table.get_correlation_product(idx_, correlation_t::IWO)
+                      * scheduling_table.get_correlation_product(idx_, correlation_t::WO)
+                      * scheduling_table.get_correlation_product(idx_, correlation_t::OI)
+                      * (scheduling_table.get_correlation_product(idx_, correlation_t::IW) - 1);
     read_access_count = value_;
     // Get dataflow
     dataflow = accelerator->get_dataflow(component_idx_curr);
     if(dataflow == dataflow_t::OS) { 
-        write_access_count = scheduling_table.get_correlation_product(idx_, correlation_type_t::IWO)
-                          * scheduling_table.get_correlation_product(idx_, correlation_type_t::WO)
-                          * scheduling_table.get_correlation_product(idx_, correlation_type_t::OI)
-                          * (scheduling_table.get_correlation_product(lower_level_idx, correlation_type_t::IW) - 1);
-        read_access_count /= update_irrelevant_mapping_value(idx_, data_type_t::OUTPUT); 
+        write_access_count = scheduling_table.get_correlation_product(idx_, correlation_t::IWO)
+                          * scheduling_table.get_correlation_product(idx_, correlation_t::WO)
+                          * scheduling_table.get_correlation_product(idx_, correlation_t::OI)
+                          * (scheduling_table.get_correlation_product(lower_level_idx, correlation_t::IW) - 1);
+        read_access_count /= update_irrelevant_mapping_value(idx_, data_t::OUTPUT); 
     }
     // Bypass adjustment
     // if the upper level component bypasses the weight data
     if(component_idx_curr != UINT_MAX) {
         bypass = accelerator->get_bypass(component_idx_curr);
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::OUTPUT) != bypass.end()) { 
+    if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) { 
         write_access_count = 0; read_access_count = 0; 
     }
     // Update component tile access count
     accelerator->update_tile_access_count(component_idx_curr, write_access_count, 
-                                          data_type_t::OUTPUT, operation_type_t::WRITE,
-                                          direction_type_t::LOWER);
+                                          data_t::OUTPUT, operation_t::WRITE,
+                                          direction_t::LOWER);
     accelerator->update_tile_access_count(component_idx_curr, read_access_count, 
-                                          data_type_t::OUTPUT, operation_type_t::READ,
-                                          direction_type_t::LOWER);
+                                          data_t::OUTPUT, operation_t::READ,
+                                          direction_t::LOWER);
     // 2. Read once adjustment
     if(dataflow != dataflow_t::NONE) {
     std::vector<unsigned> send_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_type_t::UPPER);
+            = accelerator->get_allocated_size(component_idx_curr, direction_t::UPPER);
     std::vector<unsigned> received_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_type_t::LOWER);
-    if(send_tile_size.at((unsigned)data_type_t::OUTPUT) == received_tile_size.at((unsigned)data_type_t::OUTPUT) &&
-       send_tile_size.at((unsigned)data_type_t::OUTPUT) != 0) {
+            = accelerator->get_allocated_size(component_idx_curr, direction_t::LOWER);
+    if(send_tile_size.at((unsigned)data_t::OUTPUT) == received_tile_size.at((unsigned)data_t::OUTPUT) &&
+       send_tile_size.at((unsigned)data_t::OUTPUT) != 0) {
         if(component_idx_curr != 0 && 
            component_idx_curr != accelerator->get_num_components()) {
         // Change access count to upper level access count
         accelerator->update_tile_access_count(component_idx_upper, read_access_count, 
-                                                data_type_t::OUTPUT, operation_type_t::READ,
-                                                direction_type_t::LOWER);
+                                                data_t::OUTPUT, operation_t::READ,
+                                                direction_t::LOWER);
         accelerator->update_tile_access_count(component_idx_upper, write_access_count, 
-                                                data_type_t::OUTPUT, operation_type_t::WRITE,
-                                                direction_type_t::LOWER);
+                                                data_t::OUTPUT, operation_t::WRITE,
+                                                direction_t::LOWER);
         // Change access count to lower level access count
         accelerator->update_tile_access_count(component_idx_curr, write_access_count, 
-                                                data_type_t::OUTPUT, operation_type_t::READ,
-                                                direction_type_t::UPPER);
+                                                data_t::OUTPUT, operation_t::READ,
+                                                direction_t::UPPER);
         accelerator->update_tile_access_count(component_idx_curr, read_access_count, 
-                                                data_type_t::OUTPUT, operation_type_t::WRITE,
-                                                direction_type_t::UPPER);
+                                                data_t::OUTPUT, operation_t::WRITE,
+                                                direction_t::UPPER);
         }
     }
     }
-    if(find(bypass.begin(), bypass.end(), data_type_t::OUTPUT) != bypass.end()) {
-        upper_level_tile_access_count = accelerator->get_tile_access_count(component_idx_curr, operation_type_t::READ,
-                                                                           direction_type_t::UPPER);
-        write_access_count = upper_level_tile_access_count.at((unsigned)data_type_t::OUTPUT);
+    if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) {
+        upper_level_tile_access_count = accelerator->get_tile_access_count(component_idx_curr, operation_t::READ,
+                                                                           direction_t::UPPER);
+        write_access_count = upper_level_tile_access_count.at((unsigned)data_t::OUTPUT);
         
-        upper_level_tile_access_count = accelerator->get_tile_access_count(component_idx_curr, operation_type_t::WRITE,
-                                                                           direction_type_t::UPPER);
-        read_access_count  = upper_level_tile_access_count.at((unsigned)data_type_t::OUTPUT);
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_type_t::OUTPUT, 
-                                              operation_type_t::READ, direction_type_t::UPPER);
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_type_t::OUTPUT, 
-                                              operation_type_t::WRITE, direction_type_t::UPPER);
+        upper_level_tile_access_count = accelerator->get_tile_access_count(component_idx_curr, operation_t::WRITE,
+                                                                           direction_t::UPPER);
+        read_access_count  = upper_level_tile_access_count.at((unsigned)data_t::OUTPUT);
+        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::OUTPUT, 
+                                              operation_t::READ, direction_t::UPPER);
+        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::OUTPUT, 
+                                              operation_t::WRITE, direction_t::UPPER);
     }
     accelerator->update_tile_access_count(component_idx_lower, write_access_count, 
-                                        data_type_t::OUTPUT, operation_type_t::READ,
-                                        direction_type_t::UPPER);
+                                        data_t::OUTPUT, operation_t::READ,
+                                        direction_t::UPPER);
     accelerator->update_tile_access_count(component_idx_lower, read_access_count, 
-                                            data_type_t::OUTPUT, operation_type_t::WRITE,
-                                            direction_type_t::UPPER);
+                                            data_t::OUTPUT, operation_t::WRITE,
+                                            direction_t::UPPER);
     return;
 }
 unsigned analyzer_t::update_irrelevant_mapping_value(unsigned row_idx_,
-                                                      data_type_t stationary_data_) {
+                                                      data_t stationary_data_) {
     unsigned irrelevant_mapping_value = 1;
     unsigned one_level_below = 0; 
     // Find temporal component which exists at a level below the buffer
@@ -573,17 +576,17 @@ unsigned analyzer_t::update_irrelevant_mapping_value(unsigned row_idx_,
     assert(one_level_below != 0);
     // Product all irrelevant mapping values with stationary data
     switch(stationary_data_) {
-    case data_type_t::INPUT:
+    case data_t::INPUT:
         irrelevant_mapping_value 
             = scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::K);
         break;
-    case data_type_t::WEIGHT:
+    case data_t::WEIGHT:
         irrelevant_mapping_value 
             = scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::B)
             * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::P)
             * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::Q);
         break;
-    case data_type_t::OUTPUT:
+    case data_t::OUTPUT:
         irrelevant_mapping_value 
             = scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::C)
             * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::R)
@@ -633,7 +636,7 @@ void analyzer_t::estimate_cost() {
     return;
 }
 void analyzer_t::estimate_cross_layer_reuse(scheduling_table_t prev_table_,
-                                            metric_type_t      metric_) {
+                                            metric_t      metric_) {
 
     /* 
      * NOTE, Accelerator doesn't have to write back OUTPUT data to DRAM
@@ -649,21 +652,21 @@ void analyzer_t::estimate_cross_layer_reuse(scheduling_table_t prev_table_,
  
     std::vector<float> unit_energy = accelerator->get_component_energy(dram_idx);
     std::vector<float> unit_cycle  = accelerator->get_component_cycle(dram_idx);
-    float  input_access_energy = unit_energy.at((unsigned)data_type_t::INPUT);
-    float output_access_energy = unit_energy.at((unsigned)data_type_t::INPUT);
-    float   input_access_cycle = unit_cycle.at((unsigned)data_type_t::INPUT);
-    float  output_access_cycle = unit_cycle.at((unsigned)data_type_t::INPUT);
+    float  input_access_energy = unit_energy.at((unsigned)data_t::INPUT);
+    float output_access_energy = unit_energy.at((unsigned)data_t::INPUT);
+    float   input_access_cycle = unit_cycle.at((unsigned)data_t::INPUT);
+    float  output_access_cycle = unit_cycle.at((unsigned)data_t::INPUT);
 	// Compute overlapped tile size
 	overlapped_size = compute_overlapped_size(prev_table_);
 	// Compute the amount of reduced cost
-	if(metric_ == metric_type_t::ENERGY) {
+	if(metric_ == metric_t::ENERGY) {
         // Energy
         reduced_cost += overlapped_size
                      * (input_access_energy + output_access_energy);
         // Change the cost of target scheduling_option
 	    total_energy -= reduced_cost;
 	}
-	else if(metric_ == metric_type_t::CYCLE) {
+	else if(metric_ == metric_t::CYCLE) {
 		reduced_cost = ceil(overlapped_size / bandwidth)
                      * (input_access_cycle + output_access_cycle); 
 	    total_cycle -= reduced_cost;
@@ -723,21 +726,21 @@ void analyzer_t::update_cycle() {
         if(scheduling_table.get_component_type(row_idx) == component_type_t::TEMPORAL) {
             component_idx = scheduling_table.get_component_index(row_idx);
             // Compute energy consumption for each component 
-            for (unsigned op_type = 0; op_type < (unsigned)operation_type_t::SIZE; op_type++) {
+            for (unsigned op_type = 0; op_type < (unsigned)operation_t::SIZE; op_type++) {
                 // Get tile size and access count and unit access energy 
-                tile_size = accelerator->get_allocated_size(component_idx, direction_type_t::UPPER);
+                tile_size = accelerator->get_allocated_size(component_idx, direction_t::UPPER);
                 access_count = accelerator->get_tile_access_count(component_idx, 
-                                                                    (operation_type_t)op_type, 
-                                                                    direction_type_t::UPPER);
+                                                                    (operation_t)op_type, 
+                                                                    direction_t::UPPER);
                 unit_cycle = accelerator->get_component_cycle(component_idx);
                 bandwidth  = accelerator->get_bandwidth(component_idx);
                 // If bandwidth is undefined, default bandwidth is equal to precision
                 if(bandwidth == 1) { bandwidth = precision; }
                 // Calculate cycle 
-                for (unsigned i = 0; i < (unsigned)data_type_t::SIZE; i++) {
-                    assert(tile_size.size() == (unsigned)data_type_t::SIZE
-                        && access_count.size() == (unsigned)data_type_t::SIZE
-                        && unit_cycle.size() == (unsigned)data_type_t::SIZE);
+                for (unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+                    assert(tile_size.size() == (unsigned)data_t::SIZE
+                        && access_count.size() == (unsigned)data_t::SIZE
+                        && unit_cycle.size() == (unsigned)data_t::SIZE);
                     // Buffer type is unified
                     if(accelerator->get_size(component_idx).size()==1) {
                         buffer_cycle += std::ceil((float)tile_size.at(i) / (float)bandwidth) 
@@ -813,19 +816,19 @@ void analyzer_t::update_energy() {
             buffer_energy = 0.0;
             component_idx = scheduling_table.get_component_index(row_idx);
             // Compute energy consumption for each component 
-            for (unsigned dir_type = 0; dir_type < (unsigned)direction_type_t::SIZE; dir_type++) {
-                for (unsigned op_type = 0; op_type < (unsigned)operation_type_t::SIZE; op_type++) {
+            for (unsigned dir_type = 0; dir_type < (unsigned)direction_t::SIZE; dir_type++) {
+                for (unsigned op_type = 0; op_type < (unsigned)operation_t::SIZE; op_type++) {
                     // Get tile size and access count and unit access energy 
-                    tile_size = accelerator->get_allocated_size(component_idx, (direction_type_t)dir_type);
+                    tile_size = accelerator->get_allocated_size(component_idx, (direction_t)dir_type);
                     access_count = accelerator->get_tile_access_count(component_idx, 
-                                                                      (operation_type_t)op_type, 
-                                                                      (direction_type_t)dir_type);
+                                                                      (operation_t)op_type, 
+                                                                      (direction_t)dir_type);
                     unit_energy = accelerator->get_component_energy(component_idx);
                     // Calculate energy consumption
-                    for (unsigned i = 0; i < (unsigned)data_type_t::SIZE; i++) {
-                        assert(tile_size.size() == (unsigned)data_type_t::SIZE
-                           && access_count.size() == (unsigned)data_type_t::SIZE
-                           && unit_energy.size() == (unsigned)data_type_t::SIZE);
+                    for (unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+                        assert(tile_size.size() == (unsigned)data_t::SIZE
+                           && access_count.size() == (unsigned)data_t::SIZE
+                           && unit_energy.size() == (unsigned)data_t::SIZE);
                         buffer_energy += (float)tile_size.at(i) * (float)access_count.at(i) * unit_energy.at(i);
                     }
                 }
@@ -905,13 +908,13 @@ void analyzer_t::reset() {
     return;
 }
 
-float analyzer_t::get_total_cost(metric_type_t  metric_) {
+float analyzer_t::get_total_cost(metric_t  metric_) {
     float rtn = 0;
     switch(metric_) {
-        case metric_type_t::ENERGY:
+        case metric_t::ENERGY:
             rtn = total_energy;
             break;
-        case metric_type_t::CYCLE:
+        case metric_t::CYCLE:
             rtn = total_cycle;
             break;
         default:
@@ -920,33 +923,33 @@ float analyzer_t::get_total_cost(metric_type_t  metric_) {
     }
     return rtn;
 }
-float analyzer_t::get_target_level_cost(unsigned idx_, metric_type_t metric_) {
+float analyzer_t::get_target_level_cost(unsigned idx_, metric_t metric_) {
     float rtn = 0;
     // Set Scheduling table row index
     unsigned lower_idx = idx_;
     unsigned upper_idx = scheduling_table.get_above_buffer_pos(idx_);
-    if(metric_ == metric_type_t::ENERGY) {
+    if(metric_ == metric_t::ENERGY) {
         // Compute energy consumption when lower level buffer transfers
         // data tile to upper level buffer
         rtn += get_energy_consumption(lower_idx, 
-                                      direction_type_t::UPPER);
+                                      direction_t::UPPER);
         // Compute energy consumption when upper level buffer transfers
         // data tile to lower level buffer
         rtn += get_energy_consumption(upper_idx, 
-                                      direction_type_t::LOWER);
+                                      direction_t::LOWER);
         // If upper idx is the top temporal level component
         if(upper_idx == 0) {
             rtn += get_energy_consumption(upper_idx, 
-                                          direction_type_t::UPPER);
+                                          direction_t::UPPER);
         }
     }
-    else if(metric_ == metric_type_t::CYCLE) {
+    else if(metric_ == metric_t::CYCLE) {
         rtn += get_cycle_consumption(lower_idx, 
-                                     direction_type_t::UPPER);
+                                     direction_t::UPPER);
         // If upper idx is the top temporal level component
         if(upper_idx == 0) {
             rtn += get_cycle_consumption(upper_idx, 
-                                         direction_type_t::UPPER);
+                                         direction_t::UPPER);
         }
         // MAC cycle
         rtn += scheduling_table.get_num_mac_operations()
@@ -978,31 +981,31 @@ unsigned analyzer_t::get_num_active_chips() {
     }
     return rtn;
 }
-unsigned analyzer_t::get_tile_size(unsigned idx_, data_type_t data_type_) {
+unsigned analyzer_t::get_tile_size(unsigned idx_, data_t data_type_) {
     unsigned rtn;
     std::vector<unsigned> tile_size;
     unsigned component_idx = scheduling_table.get_component_index(idx_);
     // Get tile size 
     tile_size = accelerator->get_allocated_size(component_idx, 
-                                                direction_type_t::UPPER);
-    assert(tile_size.size() == (unsigned)data_type_t::SIZE);
+                                                direction_t::UPPER);
+    assert(tile_size.size() == (unsigned)data_t::SIZE);
     rtn = tile_size.at((unsigned)data_type_);
     return rtn;
 }
-unsigned analyzer_t::get_access_count(unsigned idx_, data_type_t data_type_) {
+unsigned analyzer_t::get_access_count(unsigned idx_, data_t data_type_) {
     unsigned rtn;
     std::vector<unsigned> access_count;
     unsigned component_idx = scheduling_table.get_component_index(idx_);
     // Get access count and unit access energy 
     access_count = accelerator->get_tile_access_count(component_idx,
-                                                      operation_type_t::READ,
-                                                      direction_type_t::UPPER);
-    assert(access_count.size() == (unsigned)data_type_t::SIZE);
+                                                      operation_t::READ,
+                                                      direction_t::UPPER);
+    assert(access_count.size() == (unsigned)data_t::SIZE);
     rtn = access_count.at((unsigned)data_type_);
     return rtn;
 }
 float analyzer_t::get_energy_consumption(unsigned idx_,
-                                         direction_type_t direction_) {
+                                         direction_t direction_) {
     float rtn = 0.0;
     
     std::vector<unsigned> tile_size(3,0);
@@ -1012,15 +1015,15 @@ float analyzer_t::get_energy_consumption(unsigned idx_,
     const unsigned dim_y = (unsigned)dimension_t::DIM_Y;
 
     unsigned component_idx = scheduling_table.get_component_index(idx_);
-    for (unsigned op_type = 0; op_type < (unsigned)operation_type_t::SIZE; op_type++) {
+    for (unsigned op_type = 0; op_type < (unsigned)operation_t::SIZE; op_type++) {
         // Get tile size and access count and unit access energy 
         tile_size = accelerator->get_allocated_size(component_idx, direction_);
         access_count = accelerator->get_tile_access_count(component_idx, 
-                                                         (operation_type_t)op_type, 
+                                                         (operation_t)op_type, 
                                                           direction_);
         unit_energy = accelerator->get_component_energy(component_idx);
         // Calculate energy consumption
-        for (unsigned i = 0; i < (unsigned)data_type_t::SIZE; i++) {
+        for (unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
             rtn += (float)tile_size.at(i) * (float)access_count.at(i) 
                  * unit_energy.at(i);
         }
@@ -1040,7 +1043,7 @@ float analyzer_t::get_energy_consumption(unsigned idx_,
     return rtn;
 }
 float analyzer_t::get_cycle_consumption(unsigned idx_,
-                                        direction_type_t direction_) {
+                                        direction_t direction_) {
     float rtn = 0.0;
 
     std::vector<unsigned> tile_size(3,0);
@@ -1049,19 +1052,19 @@ float analyzer_t::get_cycle_consumption(unsigned idx_,
     unsigned bandwidth = 1;
 
     unsigned component_idx = scheduling_table.get_component_index(idx_);
-    for (unsigned op_type = 0; op_type < (unsigned)operation_type_t::SIZE; op_type++) {
+    for (unsigned op_type = 0; op_type < (unsigned)operation_t::SIZE; op_type++) {
         // Get tile size and access count and unit access energy 
         tile_size = accelerator->get_allocated_size(component_idx, direction_);
         access_count = accelerator->get_tile_access_count(component_idx, 
-                                                         (operation_type_t)op_type, 
+                                                         (operation_t)op_type, 
                                                           direction_);
         unit_cycle = accelerator->get_component_cycle(component_idx);
         bandwidth  = accelerator->get_bandwidth(component_idx);
         // Calculate cycle count
-        for (unsigned i = 0; i < (unsigned)data_type_t::SIZE; i++) {
-            assert(tile_size.size() == (unsigned)data_type_t::SIZE
-                && access_count.size() == (unsigned)data_type_t::SIZE
-                && unit_cycle.size() == (unsigned)data_type_t::SIZE);
+        for (unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+            assert(tile_size.size() == (unsigned)data_t::SIZE
+                && access_count.size() == (unsigned)data_t::SIZE
+                && unit_cycle.size() == (unsigned)data_t::SIZE);
             // Buffer type is unified
             if(accelerator->get_size(component_idx).size()==1) {
                 rtn += std::ceil((float)tile_size.at(i) / (float)bandwidth) 

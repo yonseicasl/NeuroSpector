@@ -50,7 +50,7 @@ void temporal_component_t::init(section_config_t section_config_) {
 std::string temporal_component_t::get_name() const {
     return name;
 }
-std::vector<data_type_t> temporal_component_t::get_bypass() const {
+std::vector<data_t> temporal_component_t::get_bypass() const {
     return bypass;
 }
 unsigned temporal_component_t::get_bandwidth() const {
@@ -65,17 +65,17 @@ std::vector<float> temporal_component_t::get_size() const {
     return size;
 }
 // Get allocated data size in buffer
-std::vector<unsigned> temporal_component_t::get_allocated_size(direction_type_t direction_) const { 
+std::vector<unsigned> temporal_component_t::get_allocated_size(direction_t direction_) const { 
     return allocated_size.at(direction_);
 }
 std::vector<unsigned> temporal_component_t::get_active_components() const { 
     return active_components;
 }
-std::vector<unsigned> temporal_component_t::get_tile_access_count(operation_type_t operation_,
-                                                                  direction_type_t direction_) const {
+std::vector<unsigned> temporal_component_t::get_tile_access_count(operation_t operation_,
+                                                                  direction_t direction_) const {
     std::vector<unsigned> rtn;
-    if(direction_ == direction_type_t::UPPER) { rtn = access_count_to_upper.at(operation_); }
-    else if(direction_ == direction_type_t::LOWER) { rtn = access_count_to_lower.at(operation_); }
+    if(direction_ == direction_t::UPPER) { rtn = access_count_to_upper.at(operation_); }
+    else if(direction_ == direction_t::LOWER) { rtn = access_count_to_lower.at(operation_); }
     else { std::cerr << "Error invalid direction type" << std::endl; exit(0); }
     return rtn; 
 }
@@ -96,21 +96,21 @@ std::vector<float> temporal_component_t::get_unit_cycle() const {
     return unit_cycle;
 }
 // Set component bypass
-std::vector<data_type_t> temporal_component_t::set_bypass(std::string value_) const {
+std::vector<data_t> temporal_component_t::set_bypass(std::string value_) const {
     std::vector<std::string> splited_value;
-    std::vector<data_type_t> rtn;
+    std::vector<data_t> rtn;
     
     // Get bypass configuration
     splited_value = split(value_, ',');
     for(unsigned i = 0; i < splited_value.size(); i++) {
         if(splited_value.at(i) == "input") { 
-            rtn.push_back(data_type_t::INPUT); 
+            rtn.push_back(data_t::INPUT); 
         }
         else if(splited_value.at(i) == "weight") { 
-            rtn.push_back(data_type_t::WEIGHT); 
+            rtn.push_back(data_t::WEIGHT); 
         }
         else if(splited_value.at(i) == "output") { 
-            rtn.push_back(data_type_t::OUTPUT); 
+            rtn.push_back(data_t::OUTPUT); 
         }
         else {
             std::cerr << "Error: invalid bypass configuration " 
@@ -118,7 +118,7 @@ std::vector<data_type_t> temporal_component_t::set_bypass(std::string value_) co
             exit(0);
         }
     }
-    if(rtn.size() == 0) rtn.push_back(data_type_t::SIZE);
+    if(rtn.size() == 0) rtn.push_back(data_t::SIZE);
     return rtn;
 }
 // Set component size
@@ -139,20 +139,20 @@ void temporal_component_t::update_dataflow(dataflow_t dataflow_) {
     return;
 }
 // Update allocated tile size of component
-void temporal_component_t::update_allocated_tile_size(unsigned size_, data_type_t data_type_,
-                                                      direction_type_t direction_) {
+void temporal_component_t::update_allocated_tile_size(unsigned size_, data_t data_type_,
+                                                      direction_t direction_) {
     allocated_size.at(direction_).at((unsigned)data_type_) = size_;
     return;
 }
 // Update tile access count of component
-void temporal_component_t::update_tile_access_count(unsigned size_, data_type_t data_type_,
-                                                    operation_type_t operation_,
-                                                    direction_type_t direction_) {
+void temporal_component_t::update_tile_access_count(unsigned size_, data_t data_type_,
+                                                    operation_t operation_,
+                                                    direction_t direction_) {
 
-    if(direction_ == direction_type_t::UPPER) { 
+    if(direction_ == direction_t::UPPER) { 
         access_count_to_upper.at(operation_).at((unsigned)data_type_) = size_; 
     }
-    else if(direction_ == direction_type_t::LOWER) { 
+    else if(direction_ == direction_t::LOWER) { 
         access_count_to_lower.at(operation_).at((unsigned)data_type_) = size_; 
     }
     else { std::cerr << "Error invalid direction type" << std::endl; exit(0); }
@@ -203,32 +203,32 @@ void temporal_component_t::print_spec() {
 void temporal_component_t::print_stats() {
     std::string data_type[4] = {"input", "weight", "output", "NONE"};
     std::cout << "- [Tile Size] (exchange with upper level)\n";
-    for(unsigned i = 0; i < allocated_size.at(direction_type_t::UPPER).size(); i++) { 
+    for(unsigned i = 0; i < allocated_size.at(direction_t::UPPER).size(); i++) { 
         std::cout << "-- " << data_type[i] << " = "
-                  << allocated_size.at(direction_type_t::UPPER).at(i) << "\n";
+                  << allocated_size.at(direction_t::UPPER).at(i) << "\n";
     }
     std::cout << "  [Access Counts] (exchange with upper level)\n"; 
-    for(unsigned i = 0; i < access_count_to_upper.at(operation_type_t::READ).size(); i++) { 
+    for(unsigned i = 0; i < access_count_to_upper.at(operation_t::READ).size(); i++) { 
         std::cout << "-- " << data_type[i] << "(read) = "
-                  << access_count_to_upper.at(operation_type_t::READ).at(i) << "\n";
+                  << access_count_to_upper.at(operation_t::READ).at(i) << "\n";
     }
-    for(unsigned i = 0; i < access_count_to_upper.at(operation_type_t::WRITE).size(); i++) { 
+    for(unsigned i = 0; i < access_count_to_upper.at(operation_t::WRITE).size(); i++) { 
         std:: cout << "-- " << data_type[i] << "(write) = "
-                   << access_count_to_upper.at(operation_type_t::WRITE).at(i) << "\n";
+                   << access_count_to_upper.at(operation_t::WRITE).at(i) << "\n";
     }
     std::cout << "- [Tile Size] (exchange with lower level)\n";
-    for(unsigned i = 0; i < allocated_size.at(direction_type_t::LOWER).size(); i++) { 
+    for(unsigned i = 0; i < allocated_size.at(direction_t::LOWER).size(); i++) { 
         std:: cout << "-- " << data_type[i] << " = "
-                   << allocated_size.at(direction_type_t::LOWER).at(i) << "\n";
+                   << allocated_size.at(direction_t::LOWER).at(i) << "\n";
     }
     std::cout << "- [Access Counts] (exchange with lower level)\n"; 
-    for(unsigned i = 0; i < access_count_to_lower.at(operation_type_t::READ).size(); i++) { 
+    for(unsigned i = 0; i < access_count_to_lower.at(operation_t::READ).size(); i++) { 
         std::cout << "-- " << data_type[i] << "(read) = "
-                  << access_count_to_lower.at(operation_type_t::READ).at(i) << "\n";
+                  << access_count_to_lower.at(operation_t::READ).at(i) << "\n";
     }
-    for(unsigned i = 0; i < access_count_to_lower.at(operation_type_t::WRITE).size(); i++) { 
+    for(unsigned i = 0; i < access_count_to_lower.at(operation_t::WRITE).size(); i++) { 
         std:: cout << "-- " << data_type[i] << "(write) = "
-                   << access_count_to_lower.at(operation_type_t::WRITE).at(i) << "\n";
+                   << access_count_to_lower.at(operation_t::WRITE).at(i) << "\n";
     }
     return;
 }

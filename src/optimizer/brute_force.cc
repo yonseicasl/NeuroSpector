@@ -12,11 +12,11 @@ brute_force_t::brute_force_t(const std::string& accelerator_pth_,
                          const std::string& metric_,
                          const std::string& thread_)
     : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
-      metric(metric_type_t::ENERGY),
+      metric(metric_t::ENERGY),
       num_threads(1) {
           std::cerr << "[message] construct brute_force class" << std::endl;
           // Init metric
-          metric = (metric_type_t)get_enum_type(metric_str, metric_);
+          metric = (metric_t)get_enum_type(metric_str, metric_);
           // Init num threads
           if(!thread_.empty()) { num_threads = stoi(thread_); }       
 }

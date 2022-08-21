@@ -72,7 +72,7 @@ std::string accelerator_t::get_name(const unsigned idx_) {
     assert(idx_ < components.size());
     return components.at(idx_)->get_name();
 }
-std::vector<data_type_t> accelerator_t::get_bypass(const unsigned idx_) {
+std::vector<data_t> accelerator_t::get_bypass(const unsigned idx_) {
     assert(idx_ < components.size());
     return components.at(idx_)->get_bypass();
 }
@@ -95,12 +95,12 @@ std::vector<float> accelerator_t::get_size(const unsigned idx_) {
     assert(idx_ < components.size());
     return components.at(idx_)->get_size();
 }
-std::vector<unsigned> accelerator_t::get_allocated_size(const unsigned idx_, direction_type_t direction_) {
+std::vector<unsigned> accelerator_t::get_allocated_size(const unsigned idx_, direction_t direction_) {
     assert(idx_ < components.size());
     return components.at(idx_)->get_allocated_size(direction_);
 }
 std::vector<unsigned> accelerator_t::get_tile_access_count(const unsigned idx_, 
-                                                           operation_type_t operation_, direction_type_t direction_) {
+                                                           operation_t operation_, direction_t direction_) {
     assert(idx_ < components.size());
     return components.at(idx_)->get_tile_access_count(operation_, direction_);
 }
@@ -192,17 +192,17 @@ void accelerator_t::update_dataflow(unsigned idx_, dataflow_t dataflow_) {
 }
 // Update allocated tile size
 void accelerator_t::update_allocated_tile_size(unsigned dst_, unsigned size_, 
-                                               data_type_t data_type_, 
-                                               direction_type_t direction_) {
+                                               data_t data_type_, 
+                                               direction_t direction_) {
     assert(dst_ < components.size());
     components.at(dst_)->update_allocated_tile_size(size_, data_type_, direction_);
     return;
 }
 // Update tile access count
 void accelerator_t::update_tile_access_count(unsigned dst_, unsigned size_, 
-                                             data_type_t data_type_,
-                                             operation_type_t operation_,
-                                             direction_type_t direction_) {
+                                             data_t data_type_,
+                                             operation_t operation_,
+                                             direction_t direction_) {
     assert(dst_ < components.size());
     components.at(dst_)->update_tile_access_count(size_, data_type_, operation_, direction_);
     return;

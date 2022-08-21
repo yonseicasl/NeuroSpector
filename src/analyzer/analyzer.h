@@ -29,33 +29,33 @@ public:
     void estimate_cost();
     // Estimate the amount of data reuse between adjacent layers
     void estimate_cross_layer_reuse(scheduling_table_t prev_table_,
-                                    metric_type_t      metric_);
+                                    metric_t      metric_);
     // Print out analysis result
     void print_results();
     // Reset analyzer variables
     void reset();
     // Get accelerator's target cost (Energy or Cycle)
-    float get_total_cost(metric_type_t metric_);
+    float get_total_cost(metric_t metric_);
     // Get the cost of targeted level 
-    float get_target_level_cost(unsigned idx_, metric_type_t metric_);
+    float get_target_level_cost(unsigned idx_, metric_t metric_);
     // Get factorzation degrees of targeted level
     unsigned get_target_level_factorization(unsigned idx_);
     // Get Num. active chips
     unsigned get_num_active_chips();
     // Get tile size of the row of scheduling table 
-    unsigned get_tile_size(unsigned idx_, data_type_t data_type_);
+    unsigned get_tile_size(unsigned idx_, data_t data_type_);
     // Get tile-granular access count of the row of scheduling table 
-    unsigned get_access_count(unsigned idx_, data_type_t data_type_);
+    unsigned get_access_count(unsigned idx_, data_t data_type_);
 
 private:
     // Check hardware constraints
     bool check_hardware_constraints() const;
-    // Check parameter constraints
-    bool check_network_constraints() const;
     // Check active components doesn't exceed physical # components or not
     bool check_spatial_validity(unsigned idx_) const;
     // Check allocated tile size fit in buffer capacity or not
     bool check_temporal_validity(unsigned idx_) const;
+    // Check parameter constraints
+    bool check_network_constraints() const;
     // Update tile size to receive from adjacent buffer (or memory)
     void update_tile_size_to_receive();
     // Update tile size to send to adjacent buffer (or memory)
@@ -74,15 +74,15 @@ private:
     // Update input tile size to receive (or send)
     void update_component_input_tile_size(unsigned idx_, 
                                           std::vector<unsigned> values_,
-                                          direction_type_t direction_);
+                                          direction_t direction_);
     // Update weight tile size to receive (or send)
     void update_component_weight_tile_size(unsigned idx_, 
                                           std::vector<unsigned> values_,
-                                          direction_type_t direction_);
+                                          direction_t direction_);
     // Update output tile size to receive (or send)
     void update_component_output_tile_size(unsigned idx_, 
                                           std::vector<unsigned> values_,
-                                          direction_type_t direction_);
+                                          direction_t direction_);
     // Update tile-granular input access count
     void update_component_input_access_count(unsigned idx_, 
                                              unsigned value_);
@@ -94,15 +94,15 @@ private:
                                               unsigned value_);
     // Get energy of component level
     float get_energy_consumption(unsigned component_idx_,
-                                 direction_type_t direction_);
+                                 direction_t direction_);
     // Get cycle of target component level
     float get_cycle_consumption(unsigned component_idx_,
-                                direction_type_t direction_);
+                                direction_t direction_);
     // Get factorziation degrees in target component level
     unsigned get_factorization_degrees(unsigned idx_);
     
     unsigned update_irrelevant_mapping_value(unsigned row_idx_,
-                                             data_type_t stationary_data_);
+                                             data_t stationary_data_);
     
     unsigned compute_overlapped_size(scheduling_table_t prev_table_); 
 

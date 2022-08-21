@@ -163,11 +163,11 @@ unsigned scheduling_table_t::get_num_rows() const {
 }
 // Get product of corrleation parameters
 unsigned scheduling_table_t::get_correlation_product(int idx_, 
-                                                      correlation_type_t correlation_) {
+                                                      correlation_t correlation_) {
     unsigned rtn = 1;
     std::vector<parameter_t> param_list;
     switch(correlation_) {
-        case correlation_type_t::WO:
+        case correlation_t::WO:
             param_list.push_back(parameter_t::K);
             for(auto it = param_list.begin(); it != param_list.end(); ++it) {
                 // i from one level below a buffer downwards to DRAM
@@ -177,7 +177,7 @@ unsigned scheduling_table_t::get_correlation_product(int idx_,
                 }
             }
             break;
-        case correlation_type_t::OI:
+        case correlation_t::OI:
             param_list.push_back(parameter_t::B);
             param_list.push_back(parameter_t::P);
             param_list.push_back(parameter_t::Q);
@@ -189,7 +189,7 @@ unsigned scheduling_table_t::get_correlation_product(int idx_,
                 }
             }
             break;
-        case correlation_type_t::IW:
+        case correlation_t::IW:
             param_list.push_back(parameter_t::C);
             param_list.push_back(parameter_t::R);
             param_list.push_back(parameter_t::S);
@@ -201,7 +201,7 @@ unsigned scheduling_table_t::get_correlation_product(int idx_,
                 }
             }
             break;
-        case correlation_type_t::IWO:
+        case correlation_t::IWO:
             param_list.push_back(parameter_t::G);
             for(auto it = param_list.begin(); it != param_list.end(); ++it) {
                 // i from one level below a buffer downwards to DRAM

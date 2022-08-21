@@ -9,14 +9,14 @@ component_t::component_t()
      dataflow(dataflow_t::NONE),
      unit_energy(3, 0.0),
      unit_cycle(3, 0.0) {
-        std::vector<unsigned> tile_size((unsigned)data_type_t::SIZE, 0);
-        std::vector<unsigned> access_count((unsigned)data_type_t::SIZE, 0);
-        allocated_size.insert(std::pair<direction_type_t, std::vector<unsigned>>(direction_type_t::UPPER, tile_size));
-        allocated_size.insert(std::pair<direction_type_t, std::vector<unsigned>>(direction_type_t::LOWER, tile_size));
-        access_count_to_upper.insert(std::pair<operation_type_t, std::vector<unsigned>>(operation_type_t::READ, access_count));
-        access_count_to_upper.insert(std::pair<operation_type_t, std::vector<unsigned>>(operation_type_t::WRITE, access_count));
-        access_count_to_lower.insert(std::pair<operation_type_t, std::vector<unsigned>>(operation_type_t::READ, access_count));
-        access_count_to_lower.insert(std::pair<operation_type_t, std::vector<unsigned>>(operation_type_t::WRITE, access_count));
+        std::vector<unsigned> tile_size((unsigned)data_t::SIZE, 0);
+        std::vector<unsigned> access_count((unsigned)data_t::SIZE, 0);
+        allocated_size.insert(std::pair<direction_t, std::vector<unsigned>>(direction_t::UPPER, tile_size));
+        allocated_size.insert(std::pair<direction_t, std::vector<unsigned>>(direction_t::LOWER, tile_size));
+        access_count_to_upper.insert(std::pair<operation_t, std::vector<unsigned>>(operation_t::READ, access_count));
+        access_count_to_upper.insert(std::pair<operation_t, std::vector<unsigned>>(operation_t::WRITE, access_count));
+        access_count_to_lower.insert(std::pair<operation_t, std::vector<unsigned>>(operation_t::READ, access_count));
+        access_count_to_lower.insert(std::pair<operation_t, std::vector<unsigned>>(operation_t::WRITE, access_count));
         
      }
 component_t::~component_t() {}
@@ -37,15 +37,15 @@ std::vector<float> component_t::get_size() const {
     return size; 
 }
 // Get allocated size (buffer size or # spatially arranged)
-std::vector<unsigned> component_t::get_allocated_size(direction_type_t direction_) const { 
+std::vector<unsigned> component_t::get_allocated_size(direction_t direction_) const { 
     return allocated_size.at(direction_); 
 }
 // Get allocated size (buffer size or # spatially arranged)
-std::vector<unsigned> component_t::get_tile_access_count(operation_type_t operation_, 
-                                                         direction_type_t direction_) const { 
+std::vector<unsigned> component_t::get_tile_access_count(operation_t operation_, 
+                                                         direction_t direction_) const { 
     std::vector<unsigned> rtn;
-    if(direction_ == direction_type_t::UPPER) { rtn = access_count_to_upper.at(operation_); }
-    else if(direction_ == direction_type_t::LOWER) { rtn = access_count_to_lower.at(operation_); }
+    if(direction_ == direction_t::UPPER) { rtn = access_count_to_upper.at(operation_); }
+    else if(direction_ == direction_t::LOWER) { rtn = access_count_to_lower.at(operation_); }
     else { std::cerr << "Error invalid direction type" << std::endl; exit(0); }
     return rtn; 
 }
@@ -53,7 +53,7 @@ std::vector<unsigned> component_t::get_active_components() const {
     return active_components; 
 }
 // Get bypass
-std::vector<data_type_t> component_t::get_bypass() const {
+std::vector<data_t> component_t::get_bypass() const {
     return bypass;
 }
 // Get bypass
@@ -82,15 +82,15 @@ void component_t::update_dataflow(dataflow_t dataflow_) {
 }
 // Update allocated tile size of component
 void component_t::update_allocated_tile_size(unsigned size_,
-                                             data_type_t data_type_,
-                                             direction_type_t direction_) {
+                                             data_t data_type_,
+                                             direction_t direction_) {
     return;
 }
 // Update tile access count of component
 void component_t::update_tile_access_count(unsigned size_, 
-                                           data_type_t data_type,
-                                           operation_type_t operation_,
-                                           direction_type_t direction_) {
+                                           data_t data_type,
+                                           operation_t operation_,
+                                           direction_t direction_) {
     return;
 }
 // Update total number of active components

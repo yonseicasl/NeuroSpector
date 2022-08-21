@@ -35,7 +35,7 @@ private:
              mapping_space_t& mapping_space_,
              std::mutex& m_);
 
-    metric_type_t metric;    // Optimization metric
+    metric_t metric;    // Optimization metric
     unsigned num_threads;    // Num. threads to be used
     
     // Best scheduling option for all dataflow

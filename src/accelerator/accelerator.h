@@ -14,17 +14,17 @@ public:
 
     std::string get_name(const unsigned idx_);
     unsigned get_bandwidth(const unsigned idx_);
-    std::vector<data_type_t> get_bypass(const unsigned idx_); 
+    std::vector<data_t> get_bypass(const unsigned idx_); 
     dataflow_t get_dataflow(const unsigned idx_);
     component_type_t get_type(const unsigned idx_);
     unsigned get_precision();
 
     std::vector<float>    get_size(const unsigned idx_);
     std::vector<unsigned> get_allocated_size(const unsigned idx_, 
-                                             direction_type_t direction_);
+                                             direction_t direction_);
     std::vector<unsigned> get_tile_access_count(const unsigned idx_, 
-                                                operation_type_t operation,
-                                                direction_type_t direction_);
+                                                operation_t operation,
+                                                direction_t direction_);
     unsigned              get_active_MACs(); 
     std::vector<unsigned> get_active_components(const unsigned idx_);
     unsigned              get_total_num_MACs();
@@ -40,12 +40,12 @@ public:
 
     void update_dataflow(unsigned idx_, dataflow_t dataflow_);
     void update_allocated_tile_size(unsigned dst_, unsigned size_, 
-                                    data_type_t data_type_,
-                                    direction_type_t direction_);
+                                    data_t data_type_,
+                                    direction_t direction_);
     void update_tile_access_count(unsigned dst_, unsigned size_, 
-                                  data_type_t data_type,
-                                  operation_type_t operation_,
-                                  direction_type_t direction_);
+                                  data_t data_type,
+                                  operation_t operation_,
+                                  direction_t direction_);
     void update_active_components(unsigned dst_, 
                                   std::vector<unsigned> size_); 
     void update_accelerator_energy(float energy_);

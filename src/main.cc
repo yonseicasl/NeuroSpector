@@ -50,8 +50,8 @@ int main(int argc, char **argv) {
     clock_t start, finish;
     // Search start
     start = time(nullptr);
-    run_type_t run_type_enum = run_type == "optimizer" 
-                             ? run_type_t::OPTIMIZER : run_type_t::ANALYZER;
+    run_t run_type_enum = run_type == "optimizer" 
+                             ? run_t::OPTIMIZER : run_t::ANALYZER;
     std::vector<unsigned> list_layer;
     if(!mc_partitioning.empty()) {
         std::clog << "\nMulti. Chip. P   = " << mc_partitioning;
@@ -63,7 +63,7 @@ int main(int argc, char **argv) {
     std::clog << std::endl;
 
     switch(run_type_enum) {
-        case run_type_t::OPTIMIZER:
+        case run_t::OPTIMIZER:
             if(optimizer_type.compare("bottom-up") == 0) {
                 bottom_up_t *optimizer = new bottom_up_t(accelerator, dataflow, 
                                                         network, layer, metric,
@@ -94,7 +94,7 @@ int main(int argc, char **argv) {
                           << std::endl;
             }
             break;
-        case run_type_t::ANALYZER:
+        case run_t::ANALYZER:
             if(!scheduling_table.empty()) {
                 std::clog << "Scheduling table = " << scheduling_table << std::endl;
                 analyzer_t *analyzer = new analyzer_t(accelerator, network,
