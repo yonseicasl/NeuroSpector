@@ -24,7 +24,7 @@ NeuroSpector is implemented in C++ codes. To build NeuroSpector, type `make` in 
 ### Optimizer
 NeuroSpector has two different execution modes, `optimizer` and `analyzer`. The `optimizer` mode triggers a scheduling optimization algorithm to find an optimal scheduling scheme (i.e., dataflow and mapping) for the given accelerator and neural layer configurations. The following run command executes NeuroSpector in the `optimizer` mode.
 
-	$ ./NeuroSpector --run_type=optimizer 
+	$ ./neurospector --run_type=optimizer 
 			 --accelerator=<accelerator input> 
 			 --network=<DNN input> 
 			 --dataflow=<'fixed' or 'flexible'> 
@@ -34,7 +34,7 @@ NeuroSpector has two different execution modes, `optimizer` and `analyzer`. The 
 
 For example, the following command triggers NeuroSpector to find the most energy-efficient scheduling schemes for ResNet-50 layers on Eyeriss with fixed dataflows specified in the accelerator configuration file (i.e., `eyeriss.cfg`), using the NeuroSpector's signature optimization strategy named `bottom-up`.
 
-	$ ./NeuroSpector --run_type=optimizer\
+	$ ./neurospector --run_type=optimizer\
 			 --accelerator=configs/accelerators/eyeriss.cfg\
 			 --network=configs/networks/resnet50.cfg\
 			 --dataflow=fixed\
@@ -44,7 +44,7 @@ For example, the following command triggers NeuroSpector to find the most energy
 ### Analyzer
 The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs of an accelerator using a scheduling scheme provided in the `--scheduling_table` option of a run command. A combinatorial case of dataflow and mapping in an accelerator is represented via the notion of scheduling table in NeuroSpector. The following command invokes NeuroSpector to calculate the cost metrics of Eyeriss for ResNet-50 layers based on the given scheduling option.
 
-	$ ./NeuroSpector --run_type=analyzer\
+	$ ./neurospector --run_type=analyzer\
 			 --accelerator=configs/accelerators/eyeriss.cfg\
 			 --network=configs/networks/resnet50.cfg\
 			 --scheduling_table=configs/scheduling_table/eyeriss_sample.cfg
