@@ -22,7 +22,7 @@ NeuroSpector is implemented in C++ codes. To build NeuroSpector, type `make` in 
 
 ## Run
 ### Optimizer
-NeuroSpector has two different execution modes, `optimizer` and `analyzer`. The `optimizer` mode triggers a scheduling optimization algorithm to find an optimal scheduling scheme (i.e., dataflow and mapping) for the given accelerator and neural layer configurations. The following run command executes NeuroSpector in the `analyzer` mode.
+NeuroSpector has two different execution modes, `optimizer` and `analyzer`. The `optimizer` mode triggers a scheduling optimization algorithm to find an optimal scheduling scheme (i.e., dataflow and mapping) for the given accelerator and neural layer configurations. The following run command executes NeuroSpector in the `optimizer` mode.
 
 	$ ./NeuroSpector --run_type=optimizer 
 			 --accelerator=<accelerator input> 
