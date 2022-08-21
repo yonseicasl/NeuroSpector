@@ -24,17 +24,20 @@ analyzer_t::analyzer_t(accelerator_t *accelerator_,
      network(network_) {
 }
 analyzer_t::~analyzer_t() { }
-
+// Run analyzer 
 void analyzer_t::run() {
     update_active_components();
     update_tile_size_to_receive();
     update_tile_size_to_send();
     update_access_count();
-
+    // Check scheduling table's validity
     check_validity();
+    // Estimate accelerator cost
     estimate_cost();
+    // Print out analysis results
     print_results();
 }
+// Initialize analyzer to evaluate a given scheduling table
 void analyzer_t::init(scheduling_table_t scheduling_table_) {
     // Copy scheduling table
     scheduling_table = scheduling_table_;
@@ -114,7 +117,6 @@ bool analyzer_t::check_network_constraints() const {
     bool rtn = true;
     return rtn;
 }
-
 // Update tile size to receive from adjacent buffer (or memory)
 void analyzer_t::update_tile_size_to_receive() {
     for(unsigned i = 0; i < scheduling_table.get_num_rows(); i++) {
@@ -184,26 +186,21 @@ void analyzer_t::update_component_input_tile_size(unsigned idx_,
     // Bypass adjustment
     above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
     // if the upper level component bypasses the input data
-    if(above_component_idx != UINT_MAX) {
-        bypass = accelerator->get_bypass(above_component_idx);
+    if(direction_ == direction_t::UPPER) {
+        if (above_component_idx != UINT_MAX) {
+            bypass = accelerator->get_bypass(above_component_idx);
+        }
+        if (find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) {
+            std::vector<unsigned> upper_level_tile_size 
+                        = accelerator->get_allocated_size(above_component_idx, direction_t::UPPER);
+            // then change tile size to be sended to that of upper level components.
+            tile_size = upper_level_tile_size.at((unsigned)data_t::INPUT);
+            // And then change upper level tile size to be sended and received to zero.
+            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::INPUT, direction_t::UPPER);
+            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::INPUT, direction_t::LOWER);
+        }
     }
-    if(find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) {
-        std::vector<unsigned> upper_level_tile_size 
-                        = accelerator->get_allocated_size(above_component_idx, 
-                                                          direction_t::UPPER);
-        // then change tile size to be sended to that of upper level components. 
-        tile_size = upper_level_tile_size.at((unsigned)data_t::INPUT);
-        // And then change upper level tile size to be sended and received to zero.
-        accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_t::INPUT,
-                                                direction_t::UPPER);
-        accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_t::INPUT,
-                                                direction_t::LOWER);
-    }
-    accelerator->update_allocated_tile_size(component_idx, tile_size, 
-                                            data_t::INPUT,
-                                            direction_);
+    accelerator->update_allocated_tile_size(component_idx, tile_size, data_t::INPUT, direction_);
     return;
 }
 void analyzer_t::update_component_weight_tile_size(unsigned idx_,
@@ -229,22 +226,15 @@ void analyzer_t::update_component_weight_tile_size(unsigned idx_,
         }
         if (find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) {
             std::vector<unsigned> upper_level_tile_size 
-                        = accelerator->get_allocated_size(above_component_idx, 
-                                                          direction_t::UPPER);
+                        = accelerator->get_allocated_size(above_component_idx, direction_t::UPPER);
             // then change tile size to be sended to that of upper level components.
             tile_size = upper_level_tile_size.at((unsigned)data_t::WEIGHT);
             // And then change upper level tile size to be sended and received to zero.
-            accelerator->update_allocated_tile_size(above_component_idx, 0,
-                                                    data_t::WEIGHT,
-                                                    direction_t::UPPER);
-            accelerator->update_allocated_tile_size(above_component_idx, 0,
-                                                    data_t::WEIGHT,
-                                                    direction_t::LOWER);
+            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::WEIGHT, direction_t::UPPER);
+            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::WEIGHT, direction_t::LOWER);
         }
     }
-    accelerator->update_allocated_tile_size(component_idx, tile_size, 
-                                            data_t::WEIGHT,
-                                            direction_);
+    accelerator->update_allocated_tile_size(component_idx, tile_size, data_t::WEIGHT, direction_);
     return;
 }
 void analyzer_t::update_component_output_tile_size(unsigned idx_,
@@ -264,26 +254,21 @@ void analyzer_t::update_component_output_tile_size(unsigned idx_,
     // Bypass adjustment
     above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
     // if the upper level component bypasses the output data
-    if(above_component_idx != UINT_MAX) {
-        bypass = accelerator->get_bypass(above_component_idx);
+    if(direction_ == direction_t::UPPER) {
+        if(above_component_idx != UINT_MAX) {
+            bypass = accelerator->get_bypass(above_component_idx);
+        }
+        if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) {
+            std::vector<unsigned> upper_level_tile_size 
+                            = accelerator->get_allocated_size(above_component_idx, direction_t::UPPER);
+            // then change tile size to be sended to that of upper level components. 
+            tile_size = upper_level_tile_size.at((unsigned)data_t::OUTPUT);
+            // And then change upper level tile size to be sended and received to zero.
+            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::OUTPUT, direction_t::UPPER);
+            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::OUTPUT, direction_t::LOWER);
+        }
     }
-    if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) {
-        std::vector<unsigned> upper_level_tile_size 
-                        = accelerator->get_allocated_size(above_component_idx, 
-                                                          direction_t::UPPER);
-        // then change tile size to be sended to that of upper level components. 
-        tile_size = upper_level_tile_size.at((unsigned)data_t::OUTPUT);
-        // And then change upper level tile size to be sended and received to zero.
-        accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_t::OUTPUT,
-                                                direction_t::UPPER);
-        accelerator->update_allocated_tile_size(above_component_idx, 0, 
-                                                data_t::OUTPUT,
-                                                direction_t::LOWER);
-    }
-    accelerator->update_allocated_tile_size(component_idx, tile_size, 
-                                            data_t::OUTPUT,
-                                            direction_);
+    accelerator->update_allocated_tile_size(component_idx, tile_size, data_t::OUTPUT, direction_);
     return;
 }
 /* Section 3. Compute access counts */
@@ -308,6 +293,7 @@ void analyzer_t::update_access_count() {
     }
     return;
 }
+// Update tile-granular input access count
 void analyzer_t::update_component_input_access_count(unsigned idx_,
                                                      unsigned value_) {
     access_count = value_;
@@ -376,6 +362,7 @@ void analyzer_t::update_component_input_access_count(unsigned idx_,
                                             direction_t::UPPER);
     return;
 }
+// Update tile-granular weight access count
 void analyzer_t::update_component_weight_access_count(unsigned idx_,
                                                       unsigned value_) {
     access_count = value_;
@@ -456,6 +443,7 @@ void analyzer_t::update_component_weight_access_count(unsigned idx_,
                                             direction_t::UPPER);
     return;
 }
+// Update tile-granular output access count
 void analyzer_t::update_component_output_access_count(unsigned idx_,
                                                       unsigned value_) {
     unsigned lower_level_idx    = scheduling_table.get_below_buffer_pos(idx_);
