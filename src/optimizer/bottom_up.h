@@ -25,10 +25,12 @@ public:
     void run(const std::vector<unsigned> indices_);  
     // Run bottom-up search for a layer
     void run(const unsigned idx_);
-    // Print results
-    void print_results();
 
 private:
+    // Print results
+    void print_results();
+    // Print multi-chip partitioning results
+    void print_mcp_results();
     // Reset all variables
     void reset(); 
     // Optimize for a given dataflow combination
@@ -45,13 +47,14 @@ private:
     // Find optimal scheudling option based on primary strategy 
     void optimize_with_primary_strategy(unsigned end_pos_,
                                         analyzer_t& analyzer_,
-                                        float& best_cost_,
+                                        float& lowest_cost_,
                                         scheduling_table_t& curr_table_,
                                         scheduling_table_t& pm_table_);
     // Find optimal scheudling option based on supplementary strategy 
     void optimize_with_supplementary_strategy(unsigned begin_pos_,
                                               unsigned end_pos_,
                                               analyzer_t& analyzer_,
+                                              float& lowest_cost_,
                                               unsigned& best_opportunity_,
                                               scheduling_table_t& curr_table_,
                                               scheduling_table_t& sp_table_);
@@ -59,6 +62,7 @@ private:
     void multi_chip_partitioning(std::vector<scheduling_table_t>& tables_);
     // Collect all possible partitioning cases for a layer
     std::vector<PartitioningInfo> collect_partition_comb(scheduling_table_t table_); 
+    float best_cost_of_multiple_layers; 
 
     metric_type_t metric;                               // Optimization metric
     bool     is_cross_layer_opt;                        // Optimize for network-level or not

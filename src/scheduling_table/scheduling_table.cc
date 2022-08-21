@@ -216,6 +216,30 @@ unsigned scheduling_table_t::get_correlation_product(int idx_,
     }
     return rtn;
 }
+// Get product of dataflow irrelevant parameters 
+unsigned scheduling_table_t::get_dataflow_irrelevant_params_product(int idx_) {
+    unsigned rtn = 1;
+    unsigned upper_level_idx = get_above_buffer_pos(idx_);
+    dataflow_t dataflow = accelerator->get_dataflow(get_component_index(upper_level_idx));
+    switch(dataflow) {
+        case dataflow_t::IS:
+            rtn *= get_mapping_value(idx_, (unsigned)parameter_t::K);
+            break;
+        case dataflow_t::WS:
+            rtn *= get_mapping_value(idx_, (unsigned)parameter_t::B)
+                 * get_mapping_value(idx_, (unsigned)parameter_t::P)
+                 * get_mapping_value(idx_, (unsigned)parameter_t::Q);
+            break;
+        case dataflow_t::OS:
+            rtn *= get_mapping_value(idx_, (unsigned)parameter_t::C)
+                 * get_mapping_value(idx_, (unsigned)parameter_t::R)
+                 * get_mapping_value(idx_, (unsigned)parameter_t::S);
+            break;
+        default:
+            break;
+    }
+    return rtn;
+}
 // Get target component name
 std::string scheduling_table_t::get_component_name(unsigned idx_) const {
     return row_names.at(idx_);

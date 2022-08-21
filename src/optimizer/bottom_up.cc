@@ -12,6 +12,7 @@ bottom_up_t::bottom_up_t(const std::string& accelerator_pth_,
                          const std::string& metric_,
                          const std::string& cl_optimization_)
     : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
+      best_cost_of_multiple_layers(FLT_MAX),
       metric(metric_type_t::ENERGY) {
           std::cerr << "[message] construct bottom_up class" << std::endl;
           // Init metric
@@ -52,13 +53,18 @@ void bottom_up_t::run(const std::vector<unsigned> indices_) {
     // Optimize per-layer scheduling
     unsigned idx = 0;
     for(auto it = scheduling_tables.begin();
-				it != scheduling_tables.end();
-				++it) {
+			 it != scheduling_tables.end();
+			 ++it) {
+        // Load the incomplete scheduling table
 		*scheduling_table = *it;
+        // Fill out rest rows of scheduling table
 		run(indices_.at(idx) - 1);
+        // Store the completed scheduling table
 		*it = *scheduling_table;
         idx++;
-	} 
+	}
+    // Print out multi-chip partitioning results
+    print_mcp_results();
 }
 // Run bottom-up search for a layer
 void bottom_up_t::run(const unsigned idx_) {
@@ -95,11 +101,29 @@ void bottom_up_t::print_results() {
     std::cout << std::endl;
     analyzer.init(global_best_scheduling_option.scheduling_table);
     analyzer.estimate_cost();
+    // If cross layer optimization is activated
     if(is_cross_layer_opt && !list_of_scheduling_table.empty()) {
         analyzer.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
     }
     analyzer.print_stats(); 
     analyzer.reset();
+}
+// Print multi-chip partitioning results
+void bottom_up_t::print_mcp_results() {
+    float total_cost = 0.0f;
+    analyzer_t analyzer(accelerator, network);
+    // Analyze multiple scheduling tables
+    for(auto it = list_of_scheduling_table.begin();
+             it != list_of_scheduling_table.end();
+             ++it) {
+        analyzer.init(*it);
+        analyzer.estimate_cost();
+        total_cost += analyzer.get_total_cost(metric);
+        analyzer.reset();
+    }
+    std::cout << "[message] Multip chip partitioning result : "
+              << total_cost - best_cost_of_multiple_layers
+              << std::endl;
 }
 // Reset all variables
 void bottom_up_t::reset() {
@@ -136,12 +160,6 @@ void bottom_up_t::engine() {
         // Change the targeted levels
         end_pos   = begin_pos;
         begin_pos = scheduling_table->get_above_buffer_pos(end_pos);
-        // VERBOSE DEBUGGER
-        std::cerr << "[message] Targeted levels : "
-                  << scheduling_table->get_component_name(end_pos)
-                  << " to "
-                  << scheduling_table->get_component_name(begin_pos)
-                  << std::endl;
         // Candiates are concurrently explored
         for(unsigned tid = 0; tid < scheduling_candidates.size(); tid++) {
             output_candidates.resize(scheduling_candidates.size());
@@ -215,9 +233,10 @@ void bottom_up_t::search(unsigned tid_,
                          StrategyContainer& scheduling_candidates_,
                          std::vector<StrategyContainer>& output_candidates_,
                          std::mutex& m_) {
-    float    lowest_cost          = FLT_MAX;
+    float    cost_pm        = FLT_MAX;
+    float    cost_sp        = FLT_MAX;
     unsigned largest_facto_degree = 0;
-    unsigned spatial_pos = begin_pos_ + 1; // TODO
+    unsigned spatial_pos = begin_pos_ + 1; 
     std::vector<std::vector<unsigned>> mapping_values_set;
 
     accelerator_t m_accelerator = accelerator_t(*accelerator);
@@ -261,16 +280,16 @@ void bottom_up_t::search(unsigned tid_,
             if(!analyzer.check_validity()) continue;
             // Consider scheduling option based on primary strategy
             optimize_with_primary_strategy(end_pos_,
-                                        analyzer, lowest_cost,
+                                        analyzer, cost_pm,
                                         scheduling_table_curr,
                                         scheduling_table_pm);
             // If the target optimization set is the top-most set,
             // NeuroSpector doesn't have to consider supplementary strategy.
             if(begin_pos_ == 0) continue;
             // Consider scheduling option supplementary strategy
-            optimize_with_supplementary_strategy(begin_pos_,
-                                                end_pos_,
+            optimize_with_supplementary_strategy(begin_pos_, end_pos_,
                                                 analyzer,
+                                                cost_sp,
                                                 largest_facto_degree,
                                                 scheduling_table_curr,
                                                 scheduling_table_sp);
@@ -280,14 +299,15 @@ void bottom_up_t::search(unsigned tid_,
     }
     // Update Output candidates
     StrategyContainer candidate;
-    // Update strategy
+    // Update PM strategy
     candidate.strategy = scheduling_candidates_.strategy;
     candidate.strategy.push_back(strategy_type_t::PM);
-    // Update scheduling table
+    // Update PM scheduling table
     candidate.scheduling_table = scheduling_table_pm;
     output_candidates_.push_back(candidate);
-    // Check redundency
+    // Check redundency of SP scheduling table
     if(scheduling_table_pm != scheduling_table_sp && begin_pos_ != 0) {
+        // If not, add SP scheduling table
         candidate.strategy = scheduling_candidates_.strategy;
         candidate.strategy.push_back(strategy_type_t::SP);
         candidate.scheduling_table = scheduling_table_sp;
@@ -329,14 +349,10 @@ void bottom_up_t::optimize_with_primary_strategy(unsigned end_pos_,
         // Compare access count
         if(iter_curr < iter_pm) { pm_table_ = curr_table_; }
         // If their access counts are the same, choose the option to send
-        // larger data tile which is affect by upper-level dataflow
+        // larger stationary-related data tile. 
         else if (iter_curr == iter_pm) {
-            iter_curr = row_curr.at((unsigned)parameter_t::C)
-                      * row_curr.at((unsigned)parameter_t::R)
-                      * row_curr.at((unsigned)parameter_t::S);
-            iter_pm   = row_pm.at((unsigned)parameter_t::C)
-                      * row_pm.at((unsigned)parameter_t::R)
-                      * row_pm.at((unsigned)parameter_t::S);
+            iter_curr = curr_table_.get_dataflow_irrelevant_params_product(end_pos_);
+            iter_pm = pm_table_.get_dataflow_irrelevant_params_product(end_pos_);
             if(iter_curr > iter_pm) { pm_table_ = curr_table_; }
         }
     }
@@ -346,39 +362,24 @@ void bottom_up_t::optimize_with_primary_strategy(unsigned end_pos_,
 void bottom_up_t::optimize_with_supplementary_strategy(unsigned begin_pos_,
                                                        unsigned end_pos_,
                                                    analyzer_t& analyzer_,
+                                                   float& lowest_cost_,
                                                    unsigned& largest_facto_degree_,
                                                    scheduling_table_t& curr_table_,
                                                    scheduling_table_t& sp_table_) {
     unsigned curr_facto_degree = 0;
+    float    curr_cost = 0.0;
     curr_facto_degree = analyzer_.get_target_level_factorization(begin_pos_);
+    curr_cost         = analyzer_.get_target_level_cost(end_pos_, metric);
     if(curr_facto_degree > largest_facto_degree_) {
         largest_facto_degree_ = curr_facto_degree;
         sp_table_ = curr_table_;
     }
     else if (curr_facto_degree == largest_facto_degree_) {
-        float cost_curr, cost_sp;
-        accelerator_t m_accelerator = accelerator_t(*accelerator);
-        analyzer_t analyzer(&m_accelerator, network);
-        // Get current scheduling table's cost
-        analyzer.init(curr_table_);
-        analyzer.estimate_cost();
-        cost_curr = analyzer.get_target_level_cost(end_pos_, metric);
-        // If current working set is DRAM-GLB and cross-layer optimization is ON
-        if(end_pos_ == curr_table_.get_num_rows() - 1 && is_cross_layer_opt 
-           && !list_of_scheduling_table.empty()) {
-            analyzer_.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
-        }
-        analyzer.reset();
-        // Get supplementary strategy's scheduling table's cost
-        analyzer.init(sp_table_);
-        analyzer.estimate_cost();
-        if(end_pos_ == curr_table_.get_num_rows() - 1 && is_cross_layer_opt 
-           && !list_of_scheduling_table.empty()) {
-            analyzer_.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
-        }
-        cost_sp = analyzer.get_target_level_cost(end_pos_, metric);
         // Compare cost of scheduling options
-        if(cost_curr < cost_sp) { sp_table_ = curr_table_; }
+        if(curr_cost < lowest_cost_) { 
+            lowest_cost_ = curr_cost;
+            sp_table_ = curr_table_; 
+        }
     }
     return;
 }
@@ -392,7 +393,7 @@ void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& table
     unsigned num_total_cases = 1;
     unsigned num_total_activated_chips = 0;
     float    cost_of_multiple_layers = 0;
-    float    best_cost_of_multiple_layers = FLT_MAX;
+    best_cost_of_multiple_layers = FLT_MAX;
     std::vector<unsigned> indices;
 
     // Collects all possible partitioning cases and costs for each case
@@ -490,6 +491,7 @@ void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& table
         cost_of_multiple_layers = 0;
         minimum_tile_size = UINT_MAX;
     }
+    std::clog << best_cost_of_multiple_layers << std::endl;
     for(unsigned i = 0; i < opt_partition_comb.size(); i++) {
         tables_.at(i) = opt_partition_comb.at(i).scheduling_table;
     }

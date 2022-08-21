@@ -91,6 +91,13 @@ void parser_t::argparse(int argc_, char** argv_,
         else if(str.find("--layer") != std::string::npos
              || str.find("-l") != std::string::npos) {
             str = str.erase(0, str.find(delimiter) + delimiter.length());
+            // Check the targeted layer is valid 
+            for(char const &c : str) {
+                if(std::isdigit(c) == 0) { 
+                    std::cerr << "Error: invalid target layer; " << str << std::endl;
+                    exit(0);
+                }
+            }
             str_argv_.insert({"layer",lowercase(str)});
         }
         else if(str.find("--thread") != std::string::npos
@@ -109,7 +116,6 @@ void parser_t::argparse(int argc_, char** argv_,
         else if(str.find("--metric") != std::string::npos
              || str.find("-m") != std::string::npos) {
             str = str.erase(0, str.find(delimiter) + delimiter.length());
-            std::cerr <<str << std::endl;
             str_argv_.insert({"metric",lowercase(str)});
         }
     }

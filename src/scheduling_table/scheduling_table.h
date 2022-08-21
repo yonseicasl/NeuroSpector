@@ -27,6 +27,7 @@ public:
     unsigned get_num_rows() const;                                  // Get # rows of scheduling table
     unsigned get_correlation_product(int idx_, 
                                      correlation_type_t correlation_);
+    unsigned get_dataflow_irrelevant_params_product(int idx_);    // Get product of dataflow irrelevant parameters 
     std::string get_component_name(unsigned idx_) const;            // Get target component name 
     component_type_t get_component_type(unsigned idx_) const;       // Get reuse type of target component 
     unsigned get_component_index(unsigned idx_) const;              // Get accelerator index of component

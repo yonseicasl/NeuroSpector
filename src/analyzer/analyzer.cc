@@ -632,6 +632,7 @@ void analyzer_t::estimate_cost() {
     update_static_energy(); 
     return;
 }
+// Estimate saved cost by reusing output data of prev. layer as input data
 void analyzer_t::estimate_cross_layer_reuse(scheduling_table_t prev_table_,
                                             metric_type_t      metric_) {
 
