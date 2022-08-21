@@ -33,7 +33,7 @@ void analyzer_t::run() {
 
     check_validity();
     estimate_cost();
-    print_stats();
+    print_results();
 }
 void analyzer_t::init(scheduling_table_t scheduling_table_) {
     // Copy scheduling table
@@ -632,7 +632,6 @@ void analyzer_t::estimate_cost() {
     update_static_energy(); 
     return;
 }
-// Estimate saved cost by reusing output data of prev. layer as input data
 void analyzer_t::estimate_cross_layer_reuse(scheduling_table_t prev_table_,
                                             metric_type_t      metric_) {
 
@@ -851,7 +850,7 @@ void analyzer_t::update_energy() {
     }
 }
 /* End Section 5 */
-void analyzer_t::print_stats() {
+void analyzer_t::print_results() {
     std::cout << "====  Analyze Results ====" << std::endl;
     scheduling_table.print_stats();
     accelerator->print_stats();
@@ -959,7 +958,7 @@ float analyzer_t::get_target_level_cost(unsigned idx_, metric_type_t metric_) {
 unsigned analyzer_t::get_target_level_factorization(unsigned idx_) {
     return get_factorization_degrees(idx_);
 }
-unsigned analyzer_t::get_active_chips() {
+unsigned analyzer_t::get_num_active_chips() {
     unsigned rtn = 1;
     unsigned component_idx = 0;
     const unsigned dim_x = (unsigned)dimension_t::DIM_X;

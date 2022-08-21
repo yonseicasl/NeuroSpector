@@ -105,7 +105,7 @@ void bottom_up_t::print_results() {
     if(is_cross_layer_opt && !list_of_scheduling_table.empty()) {
         analyzer.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
     }
-    analyzer.print_stats(); 
+    analyzer.print_results(); 
     analyzer.reset();
 }
 // Print multi-chip partitioning results
@@ -529,7 +529,7 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         if(!analyzer.check_validity()) continue;
         analyzer.estimate_cost();
         // Get num_activated_chips 
-        num_activated_chips = analyzer.get_active_chips();
+        num_activated_chips = analyzer.get_num_active_chips();
         // Generate partition_caseoral 
         PartitioningInfo partition_case; 
         // Get cost between DRAM and Global buffers

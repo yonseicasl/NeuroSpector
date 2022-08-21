@@ -56,7 +56,7 @@ void brute_force_t::print_results() {
     analyzer_t analyzer(accelerator, network);
     analyzer.init(global_best_scheduling_option);
     analyzer.estimate_cost();
-    analyzer.print_stats();
+    analyzer.print_results();
 }
 void brute_force_t::reset() {
     // Reset all variables
