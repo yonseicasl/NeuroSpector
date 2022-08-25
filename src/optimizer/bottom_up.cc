@@ -233,6 +233,7 @@ void bottom_up_t::search(unsigned tid_,
                          StrategyContainer& scheduling_candidates_,
                          std::vector<StrategyContainer>& output_candidates_,
                          std::mutex& m_) {
+    float    cost_curr      = FLT_MAX;
     float    cost_pm        = FLT_MAX;
     float    cost_sp        = FLT_MAX;
     unsigned largest_facto_degree = 0;
@@ -278,9 +279,11 @@ void bottom_up_t::search(unsigned tid_,
             analyzer.reset();
             analyzer.init(scheduling_table_curr);
             if(!analyzer.check_validity()) continue;
+            analyzer.estimate_cost();
             // Consider scheduling option based on primary strategy
+            cost_curr = analyzer.get_target_level_cost(end_pos_, metric);
             optimize_with_primary_strategy(end_pos_,
-                                        analyzer, cost_pm,
+                                        analyzer, cost_curr, cost_pm,
                                         scheduling_table_curr,
                                         scheduling_table_pm);
             // If the target optimization set is the top-most set,
@@ -289,6 +292,7 @@ void bottom_up_t::search(unsigned tid_,
             // Consider scheduling option supplementary strategy
             optimize_with_supplementary_strategy(begin_pos_, end_pos_,
                                                 analyzer,
+                                                cost_curr,
                                                 cost_sp,
                                                 largest_facto_degree,
                                                 scheduling_table_curr,
@@ -319,11 +323,11 @@ void bottom_up_t::search(unsigned tid_,
 // Find optimal scheudling option based on primary strategy (PM)
 void bottom_up_t::optimize_with_primary_strategy(unsigned end_pos_,
                                                  analyzer_t& analyzer_,
+                                                 float& curr_cost_,
                                                  float& lowest_cost_,
                                                  scheduling_table_t& curr_table_,
                                                  scheduling_table_t& pm_table_) {
-    float curr_cost = 0.0;
-    curr_cost = analyzer_.get_target_level_cost(end_pos_, metric);
+    float curr_cost = curr_cost_;
     // If current working set is DRAM-GLB and cross-layer optimization is ON
     if(end_pos_ == curr_table_.get_num_rows() - 1 && is_cross_layer_opt 
        && !list_of_scheduling_table.empty()) {
@@ -362,14 +366,14 @@ void bottom_up_t::optimize_with_primary_strategy(unsigned end_pos_,
 void bottom_up_t::optimize_with_supplementary_strategy(unsigned begin_pos_,
                                                        unsigned end_pos_,
                                                    analyzer_t& analyzer_,
+                                                   float& curr_cost_,
                                                    float& lowest_cost_,
                                                    unsigned& largest_facto_degree_,
                                                    scheduling_table_t& curr_table_,
                                                    scheduling_table_t& sp_table_) {
     unsigned curr_facto_degree = 0;
-    float    curr_cost = 0.0;
+    float    curr_cost = curr_cost_;
     curr_facto_degree = analyzer_.get_target_level_factorization(begin_pos_);
-    curr_cost         = analyzer_.get_target_level_cost(end_pos_, metric);
     if(curr_facto_degree > largest_facto_degree_) {
         largest_facto_degree_ = curr_facto_degree;
         sp_table_ = curr_table_;
@@ -538,7 +542,9 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         partition_case.input_tile_size = analyzer.get_tile_size(dram_pos, 
                                                       data_t::INPUT);
         // Get tile-granular access count of input in DRAM 
-        partition_case.input_access_count = analyzer.get_access_count(dram_pos, 
+        unsigned dram_component_idx = scheduling_table->get_component_index(dram_pos);
+        partition_case.input_access_count = analyzer.get_access_count(dram_component_idx, 
+                                                            operation_t::READ,
                                                             data_t::INPUT);
         partition_case.num_assigned_chips = num_activated_chips;
         partition_case.scheduling_table = table_;

@@ -49,6 +49,7 @@ scheduling_table_t::scheduling_table_t(const scheduling_table_t &scheduling_tabl
      mapping_values(scheduling_table_.mapping_values), 
      row_names(scheduling_table_.row_names), 
      row_types(scheduling_table_.row_types),
+     row_dataflows(scheduling_table_.row_dataflows),
      row_index(scheduling_table_.row_index) {
 }
 // Initialize scheduling table
@@ -73,6 +74,10 @@ void scheduling_table_t::init_table_rows() {
             // std::clog << "Add New virtual component" << std::endl;
             i--;
             add_virtual_component(component_type);
+            // If component type is spatial add one more component level to reflect Dim-Y
+            if(component_type == component_type_t::SPATIAL) {
+                add_virtual_component(component_type);
+            }
         }
         else {
             // Add spatial level
@@ -82,18 +87,20 @@ void scheduling_table_t::init_table_rows() {
                     add_virtual_component(component_type, i); 
                 }
                 else {
-                    row_names.push_back(accelerator->get_name(i) + "(X)");
-                    row_types.push_back(component_type_t::SPATIAL);
-                    row_index.push_back(i);
+                    row_names.emplace_back(accelerator->get_name(i) + "(X)");
+                    row_types.emplace_back(component_type_t::SPATIAL);
+                    row_dataflows.emplace_back(dataflow_t::NONE);
+                    row_index.emplace_back(i);
                     num_table_rows++;
                 }
                 if(accelerator->get_size(i).at(1) == 1) { 
                     add_virtual_component(component_type, i); 
                 }
                 else {
-                    row_names.push_back(accelerator->get_name(i) + "(Y)");
-                    row_types.push_back(component_type_t::SPATIAL);
-                    row_index.push_back(i);
+                    row_names.emplace_back(accelerator->get_name(i) + "(Y)");
+                    row_types.emplace_back(component_type_t::SPATIAL);
+                    row_dataflows.emplace_back(dataflow_t::NONE);
+                    row_index.emplace_back(i);
                     num_table_rows++;
                 }
             }
@@ -103,9 +110,10 @@ void scheduling_table_t::init_table_rows() {
                     add_virtual_component(component_type); 
                 }
                 else {
-                    row_names.push_back(accelerator->get_name(i));
-                    row_types.push_back(component_type_t::TEMPORAL);
-                    row_index.push_back(i);
+                    row_names.emplace_back(accelerator->get_name(i));
+                    row_types.emplace_back(component_type_t::TEMPORAL);
+                    row_dataflows.emplace_back(accelerator->get_dataflow(i));
+                    row_index.emplace_back(i);
                     num_table_rows++;
                 }
             }
@@ -130,20 +138,22 @@ void scheduling_table_t::init_mapping_values() {
     fill(mapping_values.begin(), mapping_values.end(), 1);
 }
 // Get buffer index one level above
-unsigned scheduling_table_t::get_above_buffer_pos(unsigned pos_) const {
+const unsigned scheduling_table_t::get_above_buffer_pos(unsigned pos_) const {
     unsigned rtn = pos_;
     for(int i = (int)rtn-1; i >= 0; i--) {
         rtn--;
-        if(row_types.at(i) == component_type_t::TEMPORAL) { break; }
+        if(row_types.at(i) == component_type_t::TEMPORAL 
+        && row_index.at(i) != UINT_MAX) { break; }
     }
     return rtn;
 }
 // Get buffer index one level below
-unsigned scheduling_table_t::get_below_buffer_pos(unsigned pos_) const {
+const unsigned scheduling_table_t::get_below_buffer_pos(unsigned pos_) const {
     unsigned rtn = pos_;
     for(unsigned i = pos_+1; i < get_num_rows(); i++) {
         rtn++;
-        if(get_component_type(i) == component_type_t::TEMPORAL) { break; }
+        if(get_component_type(i) == component_type_t::TEMPORAL
+        && row_index.at(i) != UINT_MAX) { break; }
     }
     return rtn;
 }
@@ -168,44 +178,44 @@ unsigned scheduling_table_t::get_correlation_product(int idx_,
     std::vector<parameter_t> param_list;
     switch(correlation_) {
         case correlation_t::WO:
-            param_list.push_back(parameter_t::K);
+            param_list.emplace_back(parameter_t::K);
             for(auto it = param_list.begin(); it != param_list.end(); ++it) {
                 // i from one level below a buffer downwards to DRAM
-                for(int row_idx = (idx_+1); row_idx < (int)get_num_rows(); row_idx++) {
+                for(int row_idx = idx_; row_idx < (int)get_num_rows(); row_idx++) {
                     if(get_component_type(row_idx) == component_type_t::SPATIAL) { continue; }
                     rtn *= get_mapping_value(row_idx, (unsigned)*it);
                 }
             }
             break;
         case correlation_t::OI:
-            param_list.push_back(parameter_t::B);
-            param_list.push_back(parameter_t::P);
-            param_list.push_back(parameter_t::Q);
+            param_list.emplace_back(parameter_t::B);
+            param_list.emplace_back(parameter_t::P);
+            param_list.emplace_back(parameter_t::Q);
             for(auto it = param_list.begin(); it != param_list.end(); ++it) {
                 // i from one level below a buffer downwards to DRAM
-                for(int row_idx = (idx_+1); row_idx < (int)get_num_rows(); row_idx++) {
+                for(int row_idx = idx_; row_idx < (int)get_num_rows(); row_idx++) {
                     if(get_component_type(row_idx) == component_type_t::SPATIAL) { continue; }
                     rtn *= get_mapping_value(row_idx, (unsigned)*it);
                 }
             }
             break;
         case correlation_t::IW:
-            param_list.push_back(parameter_t::C);
-            param_list.push_back(parameter_t::R);
-            param_list.push_back(parameter_t::S);
+            param_list.emplace_back(parameter_t::C);
+            param_list.emplace_back(parameter_t::R);
+            param_list.emplace_back(parameter_t::S);
             for(auto it = param_list.begin(); it != param_list.end(); ++it) {
                 // i from one level below a buffer downwards to DRAM
-                for(int row_idx = (idx_+1); row_idx < (int)get_num_rows(); row_idx++) {
+                for(int row_idx = idx_; row_idx < (int)get_num_rows(); row_idx++) {
                     if(get_component_type(row_idx) == component_type_t::SPATIAL) { continue; }
                     rtn *= get_mapping_value(row_idx, (unsigned)*it);
                 }
             }
             break;
         case correlation_t::IWO:
-            param_list.push_back(parameter_t::G);
+            param_list.emplace_back(parameter_t::G);
             for(auto it = param_list.begin(); it != param_list.end(); ++it) {
                 // i from one level below a buffer downwards to DRAM
-                for(int row_idx = (idx_+1); row_idx < (int)get_num_rows(); row_idx++) {
+                for(int row_idx = idx_; row_idx < (int)get_num_rows(); row_idx++) {
                     if(get_component_type(row_idx) == component_type_t::SPATIAL) { continue; }
                     rtn *= get_mapping_value(row_idx, (unsigned)*it);
                 }
@@ -240,6 +250,9 @@ unsigned scheduling_table_t::get_dataflow_irrelevant_params_product(int idx_) {
     }
     return rtn;
 }
+dataflow_t scheduling_table_t::get_dataflow(unsigned idx_) const {
+    return row_dataflows.at(idx_);
+}
 // Get target component name
 std::string scheduling_table_t::get_component_name(unsigned idx_) const {
     return row_names.at(idx_);
@@ -256,7 +269,7 @@ std::vector<unsigned> scheduling_table_t::get_row_values(unsigned idx_) const {
     std::vector<unsigned> rtn;
     unsigned row = idx_;
     for(unsigned col = 0; col < num_table_cols; col++) {
-        rtn.push_back(get_mapping_value(row, col));
+        rtn.emplace_back(get_mapping_value(row, col));
     }
     assert(rtn.size() == num_table_cols);
     return rtn;
@@ -282,17 +295,19 @@ float scheduling_table_t::get_num_mac_operations() {
 }
 // Add virtual component
 void scheduling_table_t::add_virtual_component(component_type_t component_type_) {
-    row_names.push_back("virtual");
-    row_types.push_back(component_type_);
-    row_index.push_back(UINT_MAX);
+    row_names.emplace_back("virtual");
+    row_types.emplace_back(component_type_);
+    row_dataflows.emplace_back(dataflow_t::NONE);
+    row_index.emplace_back(UINT_MAX);
     num_table_rows++;
 }
 // Add virtual component
 void scheduling_table_t::add_virtual_component(component_type_t component_type_,
                                                unsigned component_idx_) {
-    row_names.push_back("virtual");
-    row_types.push_back(component_type_);
-    row_index.push_back(component_idx_);
+    row_names.emplace_back("virtual");
+    row_types.emplace_back(component_type_);
+    row_dataflows.emplace_back(dataflow_t::NONE);
+    row_index.emplace_back(component_idx_);
     num_table_rows++;
 }
 // Check the component is virtual
@@ -381,9 +396,9 @@ void scheduling_table_t::print_stats() {
                           << " |";
             }
             // Print dataflow
-            if(accelerator->get_type(get_component_index(row)) == component_type_t::TEMPORAL) {
+            if(get_component_type(row) == component_type_t::TEMPORAL) {
                 std::cout << std::setw(5) 
-                          << dataflow_type[(unsigned)accelerator->get_dataflow(get_component_index(row))]
+                          << dataflow_type[(unsigned)get_dataflow(row)]
                           << " |";
             }
             else { std::cout << std::setw(5) << "-" << " |"; }
@@ -460,8 +475,40 @@ void scheduling_table_t::fill_out_mapping_values(const parser_t parser_) {
 unsigned scheduling_table_t::get_column_wise_product(parameter_t param_, 
                                           unsigned begin_, unsigned end_) {
     unsigned rtn = 1;
-    for(unsigned row_idx = begin_; row_idx < end_+1; ++row_idx) {
+    for(unsigned row_idx = begin_; row_idx < end_+1; row_idx++) {
         rtn *= get_mapping_value(row_idx, (unsigned)param_);
+    }
+    return rtn;
+}
+std::vector<unsigned> scheduling_table_t::get_row_wise_product(int begin_, 
+                                                               int end_) {
+    std::vector<unsigned> rtn;
+    unsigned tmp = 1;
+    for(unsigned col_idx = 0; col_idx < (unsigned)parameter_t::SIZE; col_idx++) {
+        for(int row_idx = begin_; row_idx <= end_; row_idx++) {
+            tmp *= get_mapping_value(row_idx, col_idx);
+        }
+        rtn.emplace_back(tmp);
+        tmp = 1;
+    }
+
+    return rtn;
+}
+unsigned scheduling_table_t::get_row_product(int pos_) {
+    unsigned rtn = 1;
+    for(unsigned col_idx = 0; col_idx < (unsigned)parameter_t::SIZE; col_idx++) {
+            rtn *= get_mapping_value(pos_, col_idx);
+    }
+    return rtn;
+}
+unsigned scheduling_table_t::get_temporal_row_wise_product(int begin_, 
+                                                            int end_) {
+    unsigned rtn = 1;
+    for(unsigned col_idx = 0; col_idx < (unsigned)parameter_t::SIZE; col_idx++) {
+        for(int row_idx = begin_; row_idx <= end_; row_idx++) {
+            if(row_types.at(row_idx) == component_type_t::SPATIAL) continue;
+            rtn *= get_mapping_value(row_idx, col_idx);
+        }
     }
     return rtn;
 }

@@ -48,7 +48,9 @@ enum class metric_t:unsigned {
 enum class strategy_t:unsigned {
     PM, SP, SIZE
 };
-
+enum class buffer_t : unsigned {
+    LB, GB, DRAM, SIZE
+};
 // Two dimension of spatial level
 enum class dimension_t : unsigned {
     DIM_X, DIM_Y, SIZE

@@ -21,13 +21,14 @@ public:
     void init_mapping_values();                                     // Init. Mapping values
     void print_stats();                                             // Print scheduling table
 
-    unsigned get_above_buffer_pos(unsigned pos_) const;             // Get buffer index one level above 
-    unsigned get_below_buffer_pos(unsigned pos_) const;             // Get lower temporal level's index
+    const unsigned get_above_buffer_pos(unsigned pos_) const;       // Get buffer index one level above 
+    const unsigned get_below_buffer_pos(unsigned pos_) const;       // Get lower temporal level's index
     unsigned get_above_spatial_level_pos(unsigned pos_) const;      // Get upper spatial-X level index
     unsigned get_num_rows() const;                                  // Get # rows of scheduling table
     unsigned get_correlation_product(int idx_, 
                                      correlation_t correlation_);
-    unsigned get_dataflow_irrelevant_params_product(int idx_);    // Get product of dataflow irrelevant parameters 
+    unsigned get_dataflow_irrelevant_params_product(int idx_);      // Get product of dataflow irrelevant parameters 
+    dataflow_t  get_dataflow(unsigned idx_) const;                  // Get dataflow of target component
     std::string get_component_name(unsigned idx_) const;            // Get target component name 
     component_type_t get_component_type(unsigned idx_) const;       // Get reuse type of target component 
     unsigned get_component_index(unsigned idx_) const;              // Get accelerator index of component
@@ -50,6 +51,9 @@ public:
     void fill_out_mapping_values(const parser_t parser_);
     unsigned get_column_wise_product(parameter_t param_, 
                                      unsigned begin_, unsigned end_);
+    std::vector<unsigned> get_row_wise_product(int begin_, int end_);
+    unsigned get_temporal_row_wise_product(int begin_, int end_);
+    unsigned get_row_product(int idx_);
     
     bool operator!=(const scheduling_table_t& scheduling_table_);
 
@@ -72,6 +76,7 @@ private:
     std::vector<unsigned> mapping_values;                           // Mapping_values
     std::vector<std::string> row_names;                             // row's names
     std::vector<component_type_t> row_types;                        // row's types 
+    std::vector<dataflow_t>  row_dataflows;                         // row's dataflow 
     std::vector<unsigned>    row_index;                             // row's determined
 };
 

@@ -91,6 +91,201 @@ component_type_t accelerator_t::get_type(const unsigned idx_) {
 unsigned accelerator_t::get_precision() {
     return precision;
 }
+unsigned accelerator_t::get_mac_array_size(dimension_t dim_) {
+    unsigned rtn = 1;
+    unsigned idx = 0; // index that mac array exist
+    std::vector<float> arr_size;
+    // Access to MAC array spatial component
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == "MAC_ARRAY") { break; }
+    }
+    // If mac array is undefined, return 1
+    if(idx == get_num_components()) {
+        rtn = 1;
+    }
+    else {
+        arr_size = components.at(idx)->get_size();
+        rtn = arr_size.at((unsigned)dim_);
+    }
+    return rtn;
+}
+unsigned accelerator_t::get_pe_array_size(dimension_t dim_) {
+    unsigned rtn = 1;
+    unsigned idx = 0; // index that mac array exist
+    std::vector<float> arr_size;
+    // Access to PE array spatial component
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == "PE_ARRAY") { break; }
+    }
+    // If PE array is undefined, return 1
+    if(idx == get_num_components()) {
+        rtn = 1;
+    }
+    else {
+        arr_size = components.at(idx)->get_size();
+        rtn = arr_size.at((unsigned)dim_);
+    }
+    return rtn;
+}
+unsigned accelerator_t::get_multi_chips_size(dimension_t dim_) {
+    unsigned rtn = 1;
+    unsigned idx = 0; // index that multi chips exist
+    std::vector<float> arr_size;
+    // Access to multi chips spatial component
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == "MULTI_CHIPS") { break; }
+    }
+    // If mutli chips is undefined, return 1
+    if(idx == get_num_components()) {
+        rtn = 1;
+    }
+    else {
+        arr_size = components.at(idx)->get_size();
+        rtn = arr_size.at((unsigned)dim_);
+    }
+    return rtn;
+}
+
+// TODO fill out below functions
+std::vector<float> accelerator_t::get_size(buffer_t buffer_) {
+    std::vector<float> rtn;
+    std::string target_buffer;
+    unsigned idx = 0;
+    switch(buffer_) {
+        case buffer_t::LB:
+            target_buffer = "LOCAL_BUFFER";
+            break;
+        case buffer_t::GB:
+            target_buffer = "GLOBAL_BUFFER";
+            break;
+        case buffer_t::DRAM:
+            target_buffer = "DRAM";
+            break;
+        default:
+            std::cerr << "Invalid buffer type in get_size()" << std::endl;
+            exit(0);
+    }
+    // Sweep to find target buffer
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == target_buffer) { break; }
+    }
+    if(idx != get_num_components()) {
+        rtn = components.at(idx)->get_size();
+    }
+    return rtn;
+}
+std::vector<float> accelerator_t::get_energy(buffer_t buffer_) {
+    std::vector<float> rtn((unsigned)data_t::SIZE,0);
+    std::string target_buffer;
+    unsigned idx = 0;
+    switch(buffer_) {
+        case buffer_t::LB:
+            target_buffer = "LOCAL_BUFFER";
+            break;
+        case buffer_t::GB:
+            target_buffer = "GLOBAL_BUFFER";
+            break;
+        case buffer_t::DRAM:
+            target_buffer = "DRAM";
+            break;
+        default:
+            std::cerr << "Invalid buffer type in get_size()" << std::endl;
+            exit(0);
+    }
+    // Sweep to find target buffer
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == target_buffer) { break; }
+    }
+    if(idx != get_num_components()) {
+        rtn = components.at(idx)->get_unit_energy();
+    }
+    return rtn;
+}
+std::vector<float> accelerator_t::get_static(buffer_t buffer_) {
+    std::vector<float> rtn((unsigned)data_t::SIZE,0);
+    std::string target_buffer;
+    unsigned idx = 0;
+    switch(buffer_) {
+        case buffer_t::LB:
+            target_buffer = "LOCAL_BUFFER";
+            break;
+        case buffer_t::GB:
+            target_buffer = "GLOBAL_BUFFER";
+            break;
+        case buffer_t::DRAM:
+            target_buffer = "DRAM";
+            break;
+        default:
+            std::cerr << "Invalid buffer type in get_size()" << std::endl;
+            exit(0);
+    }
+    // Sweep to find target buffer
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == target_buffer) { break; }
+    }
+    if(idx != get_num_components()) {
+        rtn = components.at(idx)->get_unit_static_power();
+    }
+    return rtn;
+}
+std::vector<float> accelerator_t::get_cycle(buffer_t buffer_) {
+    std::vector<float> rtn((unsigned)data_t::SIZE,0);
+    std::string target_buffer;
+    unsigned idx = 0;
+    switch(buffer_) {
+        case buffer_t::LB:
+            target_buffer = "LOCAL_BUFFER";
+            break;
+        case buffer_t::GB:
+            target_buffer = "GLOBAL_BUFFER";
+            break;
+        case buffer_t::DRAM:
+            target_buffer = "DRAM";
+            break;
+        default:
+            std::cerr << "Invalid buffer type in get_size()" << std::endl;
+            exit(0);
+    }
+    // Sweep to find target buffer
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == target_buffer) { break; }
+    }
+    if(idx != get_num_components()) {
+        rtn = components.at(idx)->get_unit_cycle();
+    }
+    return rtn;
+}
+float accelerator_t::get_bandwidth(buffer_t buffer_) {
+    float rtn = 1;
+    std::string target_buffer;
+    unsigned idx = 0;
+    switch(buffer_) {
+        case buffer_t::LB:
+            target_buffer = "LOCAL_BUFFER";
+            break;
+        case buffer_t::GB:
+            target_buffer = "GLOBAL_BUFFER";
+            break;
+        case buffer_t::DRAM:
+            target_buffer = "DRAM";
+            break;
+        default:
+            std::cerr << "Invalid buffer type in get_size()" << std::endl;
+            exit(0);
+    }
+    // Sweep to find target buffer
+    for(idx = 0; idx < get_num_components(); idx++) {
+        if(components.at(idx)->get_name() == target_buffer) { break; }
+    }
+    if(idx != get_num_components()) {
+        rtn = components.at(idx)->get_bandwidth();
+    }
+    return rtn;
+}
+
+bool accelerator_t::is_upper_most_component(const unsigned idx_) {
+    return idx_ == 0;
+}
 std::vector<float> accelerator_t::get_size(const unsigned idx_) {
     assert(idx_ < components.size());
     return components.at(idx_)->get_size();

@@ -1,3 +1,4 @@
+#include <cassert>
 #include <climits>
 #include <cmath>
 #include <iomanip>
@@ -16,22 +17,39 @@ analyzer_t::analyzer_t(const std::string& accelerator_pth_,
         scheduling_table = scheduling_table_t(accelerator, 
                                               network,
                                               scheduling_table_pth_);
+        init_mac_array();
+        init_local_buffer();
+        init_pe_array();
+        init_global_buffer();
+        init_multi_chips();
+        init_dram();
 
+        dram_idx = scheduling_table.get_num_rows() - 1;
+        gb_idx = scheduling_table.get_above_buffer_pos(dram_idx);
+        lb_idx = scheduling_table.get_above_buffer_pos(gb_idx);
 }
 analyzer_t::analyzer_t(accelerator_t *accelerator_,
                        network_t    *network_)
     :accelerator(accelerator_),
      network(network_) {
+        init_mac_array();
+        init_local_buffer();
+        init_pe_array();
+        init_global_buffer();
+        init_multi_chips();
+        init_dram();
 }
 analyzer_t::~analyzer_t() { }
 // Run analyzer 
 void analyzer_t::run() {
+    update_tile_size();
     update_active_components();
-    update_tile_size_to_receive();
-    update_tile_size_to_send();
-    update_access_count();
     // Check scheduling table's validity
-    check_validity();
+    if(!check_validity()) {
+        std::cerr << "Invalid scheduling table" << std::endl;
+        exit(0);
+    }
+    update_access_count();
     // Estimate accelerator cost
     estimate_cost();
     // Print out analysis results
@@ -41,14 +59,16 @@ void analyzer_t::run() {
 void analyzer_t::init(scheduling_table_t scheduling_table_) {
     // Copy scheduling table
     scheduling_table = scheduling_table_;
-    update_active_components();
-    update_tile_size_to_receive();
-    update_tile_size_to_send();
+    dram_idx = scheduling_table.get_num_rows() - 1;
+    gb_idx = scheduling_table.get_above_buffer_pos(dram_idx);
+    lb_idx = scheduling_table.get_above_buffer_pos(gb_idx);
+    update_tile_size();
     update_access_count();
+    update_active_components();
     return;
 }
 // Check scheduling table's validity
-bool analyzer_t::check_validity() const {
+bool analyzer_t::check_validity() {
     bool rtn = true;
     // Traverse all rows and check hardware constraints. 
     rtn *= check_hardware_constraints();
@@ -57,528 +77,306 @@ bool analyzer_t::check_validity() const {
     return rtn;
 }
 // Check hardware constraints
-bool analyzer_t::check_hardware_constraints() const {
+bool analyzer_t::check_hardware_constraints() {
     bool rtn = true;
-    // Traverse accelerator components and check the size validity
-    for(unsigned i = 0; i < accelerator->get_num_components(); i++) {
-        if(accelerator->get_name(i) == "virtual") continue;
-        if(accelerator->get_type(i) == component_type_t::SPATIAL) {
-            rtn *= check_spatial_validity(i);
-        }
-        else if(accelerator->get_type(i) == component_type_t::TEMPORAL) {
-            rtn *= check_temporal_validity(i);
+    unsigned shared_tile_size = 0;
+    if(scheduling_table.get_above_buffer_pos(lb_idx) != lb_idx) {
+        if(scheduling_table.get_row_product(0) != 1) { return false; }
+    }
+    // Check MAC array validity
+    if(macs_actived.dim_x > macs_capacity.dim_x 
+    || macs_actived.dim_y > macs_capacity.dim_y) {
+        rtn *= false;
+    }
+
+    // Check Local Buffer validity
+    if(is_lb_shared) {
+        shared_tile_size  = lb_bypass.input  ?  0 : lb_tile_size_alloc.input ;
+        shared_tile_size += lb_bypass.weight ?  0 : lb_tile_size_alloc.weight;
+        shared_tile_size += lb_bypass.output ?  0 : lb_tile_size_alloc.output;
+        if(shared_tile_size > lb_capacity.shared ) {
+            rtn *= false;
         }
     }
-    return rtn;
-}
-// Check active components doesn't exceed physical # components or not
-bool analyzer_t::check_spatial_validity(unsigned idx_) const {
-    bool rtn = true;
-    std::vector<float>    capacity = accelerator->get_size(idx_);
-    std::vector<unsigned> allocated_size = accelerator->get_active_components(idx_);
-    assert(capacity.size() == allocated_size.size());
-    for(unsigned i = 0; i < capacity.size(); i++) {
-        rtn *= (float)allocated_size.at(i) <= capacity.at(i);
+    else {
+        rtn *= lb_tile_size_alloc.input  < lb_capacity.input;
+        rtn *= lb_tile_size_alloc.weight < lb_capacity.weight;
+        rtn *= lb_tile_size_alloc.output < lb_capacity.output;
     }
-    return rtn;
-}
-// Check allocated tile size fit in buffer capacity or not
-bool analyzer_t::check_temporal_validity(unsigned idx_) const {
-    bool rtn = true;
-    unsigned size = 0;
-    std::vector<float>    capacity = accelerator->get_size(idx_);
-    std::vector<unsigned> allocated_size = accelerator->get_allocated_size(idx_, direction_t::LOWER);
-    std::vector<data_t> bypass   = accelerator->get_bypass(idx_);
-    // Shared buffer
-    if(capacity.size() == 1) {
-        for(unsigned i = 0; i < allocated_size.size(); i++) {
-            // Bypass check
-            if(find(bypass.begin(), bypass.end(), (data_t)i) != bypass.end()) { 
-                continue; 
-            }
-            size += allocated_size.at(i);
-        }
-        rtn = (float)size <= (capacity.at(0) * BYTE) / accelerator->get_precision();
+    // Check PE array validity
+    if(pes_actived.dim_x > pes_capacity.dim_x 
+    || pes_actived.dim_y > pes_capacity.dim_y) {
+        rtn *= false;
     }
-    // Separated buffer
-    else if(capacity.size() == 3) {
-        for(unsigned i = 0; i < allocated_size.size(); i++) {
-            // Bypass check
-            if(find(bypass.begin(), bypass.end(), (data_t)i) != bypass.end()) { 
-                continue; 
-            }
-            rtn *= (float)allocated_size.at(i) <= (capacity.at(i) * BYTE) / accelerator->get_precision();
+    // Check Global Buffer validity
+    if(is_gb_shared) {
+        shared_tile_size  = gb_bypass.input  ? 0 : gb_tile_size_alloc.input;
+        shared_tile_size += gb_bypass.weight ? 0 : gb_tile_size_alloc.weight;
+        shared_tile_size += gb_bypass.output ? 0 : gb_tile_size_alloc.output;
+        if(shared_tile_size > gb_capacity.shared ) {
+            rtn *= false;
         }
+    }
+    else {
+        rtn *= gb_tile_size_alloc.input  < gb_capacity.input;
+        rtn *= gb_tile_size_alloc.weight < gb_capacity.weight;
+        rtn *= gb_tile_size_alloc.output < gb_capacity.output;
+    }
+    // Check Multi chips validity
+    if(chips_actived.dim_x > chips_capacity.dim_x 
+    || chips_actived.dim_y > chips_capacity.dim_y) {
+        rtn *= false;
     }
     return rtn;
 }
 // Check parameter constraints
-bool analyzer_t::check_network_constraints() const {
+bool analyzer_t::check_network_constraints() {
     bool rtn = true;
     return rtn;
 }
-// Update tile size to receive from adjacent buffer (or memory)
-void analyzer_t::update_tile_size_to_receive() {
-    for(unsigned i = 0; i < scheduling_table.get_num_rows(); i++) {
-        if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL
-        && scheduling_table.get_component_name(i) != "virtual") {
-            std::vector<unsigned> values((unsigned)parameter_t::SIZE, 1);
-            // Update tile size 
-            for(unsigned param_idx = 0; param_idx < (unsigned)parameter_t::SIZE; param_idx++) {
-                for(unsigned row_idx = 0; row_idx < i+1; row_idx++) {
-                    values.at(param_idx) 
-                        *= scheduling_table.get_mapping_value(row_idx, param_idx);
-                }
-            }
-            update_component_input_tile_size(i, values, direction_t::LOWER);
-            update_component_weight_tile_size(i, values, direction_t::LOWER);
-            update_component_output_tile_size(i, values, direction_t::LOWER);
-            std::fill(values.begin(), values.end(), 1); // Reset vector
-        }
-    }
-    return;
-}
-// Update tile size to send to adjacent buffer (or memory)
-void analyzer_t::update_tile_size_to_send() {
-    for(unsigned i = 0; i < scheduling_table.get_num_rows(); i++) {
-        if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL
-        && scheduling_table.get_component_name(i) != "virtual") {
-            std::vector<unsigned> values((unsigned)parameter_t::SIZE, 1);
-            // Update tile size
-            for(unsigned param_idx = 0; param_idx < (unsigned)parameter_t::SIZE; param_idx++) {
-                for(int row_idx = i - 1; row_idx >= 0; row_idx--) {
-                    values.at(param_idx) 
-                        *= scheduling_table.get_mapping_value(row_idx, param_idx);
-                }
-            }
-            update_component_input_tile_size(i, values, direction_t::UPPER);
-            update_component_weight_tile_size(i, values, direction_t::UPPER);
-            update_component_output_tile_size(i, values, direction_t::UPPER);
-            std::fill(values.begin(), values.end(), 1); // Reset vector
-        }
-    }
-    return;
-}
-// Update input tile size to receive (or send)
-void analyzer_t::update_component_input_tile_size(unsigned idx_, 
-                                                  std::vector<unsigned> values_,
-                                                  direction_t direction_) {
-    unsigned tile_size = 1;
-    unsigned component_idx = 1;
-    unsigned above_component_idx = 1;
-    std::vector<data_t> bypass;
+// Update tile size 
+void analyzer_t::update_tile_size() {
+    // Update   LB tile size
+    lb_tile_size_send.input     =  update_input_tile_size(buffer_t::LB, direction_t::UPPER);
+    lb_tile_size_send.weight    = update_weight_tile_size(buffer_t::LB, direction_t::UPPER);
+    lb_tile_size_send.output    = update_output_tile_size(buffer_t::LB, direction_t::UPPER);
+    lb_tile_size_alloc.input    =  update_input_tile_size(buffer_t::LB, direction_t::LOWER);
+    lb_tile_size_alloc.weight   = update_weight_tile_size(buffer_t::LB, direction_t::LOWER);
+    lb_tile_size_alloc.output   = update_output_tile_size(buffer_t::LB, direction_t::LOWER);
+    
+    // Update   GB tile size
+    gb_tile_size_send.input     =  update_input_tile_size(buffer_t::GB, direction_t::UPPER);
+    gb_tile_size_send.weight    = update_weight_tile_size(buffer_t::GB, direction_t::UPPER);
+    gb_tile_size_send.output    = update_output_tile_size(buffer_t::GB, direction_t::UPPER);
+    gb_tile_size_alloc.input    =  update_input_tile_size(buffer_t::GB, direction_t::LOWER);
+    gb_tile_size_alloc.weight   = update_weight_tile_size(buffer_t::GB, direction_t::LOWER);
+    gb_tile_size_alloc.output   = update_output_tile_size(buffer_t::GB, direction_t::LOWER);
 
+    // Update DRAM tile size
+    dram_tile_size_send.input   =  update_input_tile_size(buffer_t::DRAM, direction_t::UPPER);
+    dram_tile_size_send.weight  = update_weight_tile_size(buffer_t::DRAM, direction_t::UPPER);
+    dram_tile_size_send.output  = update_output_tile_size(buffer_t::DRAM, direction_t::UPPER);
+    dram_tile_size_alloc.input  =  update_input_tile_size(buffer_t::DRAM, direction_t::LOWER);
+    dram_tile_size_alloc.weight = update_weight_tile_size(buffer_t::DRAM, direction_t::LOWER);
+    dram_tile_size_alloc.output = update_output_tile_size(buffer_t::DRAM, direction_t::LOWER);
+
+    return;
+}
+// Update input tile size to allocate (or send)
+unsigned analyzer_t::update_input_tile_size(buffer_t buffer_,
+                                            direction_t direction_) {
+    unsigned tile_size = 1;
+    unsigned buffer_idx = 0;
+    switch (buffer_) {
+    case buffer_t::LB:
+        buffer_idx = lb_idx;
+        break;
+    case buffer_t::GB:
+        buffer_idx = gb_idx;
+        break;
+    case buffer_t::DRAM:
+        buffer_idx = dram_idx;
+        break;
+    default:
+        break;
+    }
+    if(direction_ == direction_t::UPPER) { buffer_idx--; }
+    std::vector<unsigned> values = scheduling_table.get_row_wise_product(0, buffer_idx);
     // Compute input height & width
     unsigned input_height = 1;
     unsigned input_width  = 1;
     unsigned layer_idx = scheduling_table.get_layer_index();
     unsigned stride = network->get_stride(layer_idx);
-    input_height = (values_.at((unsigned)parameter_t::P) - 1) * stride 
-                 + values_.at((unsigned)parameter_t::R);
-    input_width  = (values_.at((unsigned)parameter_t::Q) - 1) * stride 
-                 + values_.at((unsigned)parameter_t::S);
+    input_height = (values.at((unsigned)parameter_t::P) - 1) * stride 
+                 + values.at((unsigned)parameter_t::R);
+    input_width  = (values.at((unsigned)parameter_t::Q) - 1) * stride 
+                 + values.at((unsigned)parameter_t::S);
     // Compute input tile size
-    tile_size *= values_.at((unsigned)parameter_t::B) 
-               * values_.at((unsigned)parameter_t::C)
-               * values_.at((unsigned)parameter_t::G)
+    tile_size *= values.at((unsigned)parameter_t::B) 
+               * values.at((unsigned)parameter_t::C)
+               * values.at((unsigned)parameter_t::G)
                * input_height * input_width;
-    component_idx = scheduling_table.get_component_index(idx_);
-    // Bypass adjustment
-    above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
-    // if the upper level component bypasses the input data
-    if(direction_ == direction_t::UPPER) {
-        if (above_component_idx != UINT_MAX) {
-            bypass = accelerator->get_bypass(above_component_idx);
-        }
-        if (find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) {
-            std::vector<unsigned> upper_level_tile_size 
-                        = accelerator->get_allocated_size(above_component_idx, direction_t::UPPER);
-            // then change tile size to be sended to that of upper level components.
-            tile_size = upper_level_tile_size.at((unsigned)data_t::INPUT);
-            // And then change upper level tile size to be sended and received to zero.
-            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::INPUT, direction_t::UPPER);
-            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::INPUT, direction_t::LOWER);
-        }
-    }
-    accelerator->update_allocated_tile_size(component_idx, tile_size, data_t::INPUT, direction_);
-    return;
+    return tile_size;
 }
-void analyzer_t::update_component_weight_tile_size(unsigned idx_,
-                                                   std::vector<unsigned> values_,
-                                                   direction_t direction_) {
+// Update weight tile size to allocate (or send)
+unsigned analyzer_t::update_weight_tile_size(buffer_t buffer_,
+                                             direction_t direction_) {
     unsigned tile_size = 1;
-    unsigned component_idx = 1;
-    unsigned above_component_idx = 1;
-    std::vector<data_t> bypass;
+    unsigned buffer_idx = 0;
+    switch (buffer_) {
+    case buffer_t::LB:
+        buffer_idx = lb_idx;
+        break;
+    case buffer_t::GB:
+        buffer_idx = gb_idx;
+        break;
+    case buffer_t::DRAM:
+        buffer_idx = dram_idx;
+        break;
+    default:
+        break;
+    }
+    if(direction_ == direction_t::UPPER) { buffer_idx--; }
+    std::vector<unsigned> values = scheduling_table.get_row_wise_product(0, buffer_idx);
     // Compute weight tile size
-    tile_size *= values_.at((unsigned)parameter_t::K) 
-               * values_.at((unsigned)parameter_t::C)
-               * values_.at((unsigned)parameter_t::R) 
-               * values_.at((unsigned)parameter_t::S)
-               * values_.at((unsigned)parameter_t::G);
-    component_idx = scheduling_table.get_component_index(idx_);
-    // Bypass adjustment
-    above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
-    // if the upper level component bypasses the weight data
-    if(direction_ == direction_t::UPPER) {
-        if(above_component_idx != UINT_MAX) {
-            bypass = accelerator->get_bypass(above_component_idx);
-        }
-        if (find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) {
-            std::vector<unsigned> upper_level_tile_size 
-                        = accelerator->get_allocated_size(above_component_idx, direction_t::UPPER);
-            // then change tile size to be sended to that of upper level components.
-            tile_size = upper_level_tile_size.at((unsigned)data_t::WEIGHT);
-            // And then change upper level tile size to be sended and received to zero.
-            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::WEIGHT, direction_t::UPPER);
-            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::WEIGHT, direction_t::LOWER);
-        }
-    }
-    accelerator->update_allocated_tile_size(component_idx, tile_size, data_t::WEIGHT, direction_);
-    return;
+    tile_size *= values.at((unsigned)parameter_t::K) 
+               * values.at((unsigned)parameter_t::C)
+               * values.at((unsigned)parameter_t::R) 
+               * values.at((unsigned)parameter_t::S)
+               * values.at((unsigned)parameter_t::G);
+    return tile_size;
 }
-void analyzer_t::update_component_output_tile_size(unsigned idx_,
-                                                   std::vector<unsigned> values_,
-                                                   direction_t direction_) {
-    unsigned     tile_size = 1;
-    unsigned component_idx = 1;
-    unsigned above_component_idx = 1;
-    std::vector<data_t> bypass;
+// Update output tile size to allocate (or send)
+unsigned analyzer_t::update_output_tile_size(buffer_t buffer_,
+                                             direction_t direction_) {
+    unsigned tile_size = 1;
+    unsigned buffer_idx = 0;
+    switch (buffer_) {
+    case buffer_t::LB:
+        buffer_idx = lb_idx;
+        break;
+    case buffer_t::GB:
+        buffer_idx = gb_idx;
+        break;
+    case buffer_t::DRAM:
+        buffer_idx = dram_idx;
+        break;
+    default:
+        break;
+    }
+    if(direction_ == direction_t::UPPER) { buffer_idx--; }
+    std::vector<unsigned> values = scheduling_table.get_row_wise_product(0, buffer_idx);
     // Compute output tile size/ab
-    tile_size *= values_.at((unsigned)parameter_t::K) 
-               * values_.at((unsigned)parameter_t::B)
-               * values_.at((unsigned)parameter_t::P) 
-               * values_.at((unsigned)parameter_t::Q)
-               * values_.at((unsigned)parameter_t::G);
-    component_idx = scheduling_table.get_component_index(idx_);
-    // Bypass adjustment
-    above_component_idx = scheduling_table.get_component_index(scheduling_table.get_above_buffer_pos(idx_));
-    // if the upper level component bypasses the output data
-    if(direction_ == direction_t::UPPER) {
-        if(above_component_idx != UINT_MAX) {
-            bypass = accelerator->get_bypass(above_component_idx);
-        }
-        if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) {
-            std::vector<unsigned> upper_level_tile_size 
-                            = accelerator->get_allocated_size(above_component_idx, direction_t::UPPER);
-            // then change tile size to be sended to that of upper level components. 
-            tile_size = upper_level_tile_size.at((unsigned)data_t::OUTPUT);
-            // And then change upper level tile size to be sended and received to zero.
-            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::OUTPUT, direction_t::UPPER);
-            accelerator->update_allocated_tile_size(above_component_idx, 0, data_t::OUTPUT, direction_t::LOWER);
-        }
-    }
-    accelerator->update_allocated_tile_size(component_idx, tile_size, data_t::OUTPUT, direction_);
-    return;
+    tile_size *= values.at((unsigned)parameter_t::K) 
+               * values.at((unsigned)parameter_t::B)
+               * values.at((unsigned)parameter_t::P) 
+               * values.at((unsigned)parameter_t::Q)
+               * values.at((unsigned)parameter_t::G);
+    return tile_size;
 }
-/* Section 3. Compute access counts */
+// Update tile access count
 void analyzer_t::update_access_count() {
-    for(unsigned i = 0; i < scheduling_table.get_num_rows()-1; i++) {
-        if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL
-        && scheduling_table.get_component_name(i) != "virtual" ) {
-            unsigned tile_access_count = 1;
-            // Get baseline tile access count
-            for(unsigned param_idx = 0; param_idx < (unsigned)parameter_t::SIZE; param_idx++) {
-                // i from one level below a buffer downwards to DRAM
-                for(int row_idx = (i+1); row_idx < (int)scheduling_table.get_num_rows(); row_idx++) {
-                    if(scheduling_table.get_component_type(row_idx) == component_type_t::SPATIAL) { continue; }
-                    tile_access_count *= scheduling_table.get_mapping_value(row_idx, param_idx);
-                }
-            }
-            // Get tile access count for each data type
-            update_component_input_access_count(i, tile_access_count);
-            update_component_weight_access_count(i, tile_access_count);
-            update_component_output_access_count(i, tile_access_count);
-        }
+    unsigned value = scheduling_table.get_temporal_row_wise_product(lb_idx, dram_idx);
+    dataflow = dataflow_t::NONE;
+    // Update local buffer access count
+    lb_access_count.input_rd  = update_input_access_count(lb_idx, value);
+    lb_access_count.weight_rd = update_weight_access_count(lb_idx, value);
+    lb_access_count.output_rd = update_output_access_count(lb_idx, value, operation_t::READ);
+    lb_access_count.output_wt = update_output_access_count(lb_idx, value, operation_t::WRITE);
+    
+    // Update global buffer access count
+    value = scheduling_table.get_temporal_row_wise_product(gb_idx, dram_idx);
+    dataflow = scheduling_table.get_dataflow(lb_idx);
+    gb_access_count.input_rd  = update_input_access_count(gb_idx, value);
+    gb_access_count.weight_rd = update_weight_access_count(gb_idx, value);
+    gb_access_count.output_rd = update_output_access_count(gb_idx, value, operation_t::READ);
+    gb_access_count.output_wt = update_output_access_count(gb_idx, value, operation_t::WRITE);
+
+    // Update dram access count
+    dataflow = scheduling_table.get_dataflow(gb_idx);
+    value = scheduling_table.get_temporal_row_wise_product(dram_idx, dram_idx);
+    dram_access_count.input_rd  = update_input_access_count(dram_idx, value); 
+    dram_access_count.weight_rd = update_weight_access_count(dram_idx, value);
+    dram_access_count.output_rd = update_output_access_count(dram_idx, value, operation_t::READ);
+    dram_access_count.output_wt = update_output_access_count(dram_idx, value, operation_t::WRITE);
+
+    // Read once adjustment
+    if(dram_tile_size_alloc.input  == dram_tile_size_send.input)  {
+        dram_access_count.input_rd  = 1;
+    }
+    if(dram_tile_size_alloc.weight == dram_tile_size_send.weight) {
+        dram_access_count.weight_rd = 1;
+    }
+    if(dram_tile_size_alloc.output == dram_tile_size_send.output) {
+        dram_access_count.output_rd = 0;
+        dram_access_count.output_wt = 1;
+    }
+    if(gb_tile_size_alloc.input  == gb_tile_size_send.input)  {
+        gb_access_count.input_rd = dram_access_count.input_rd;
+    }
+    if(gb_tile_size_alloc.weight == gb_tile_size_send.weight) {
+        gb_access_count.weight_rd = dram_access_count.weight_rd;
+    }
+    if(gb_tile_size_alloc.output == gb_tile_size_send.output) {
+        gb_access_count.output_rd = dram_access_count.output_rd;
+        gb_access_count.output_wt = dram_access_count.output_wt;
     }
     return;
 }
 // Update tile-granular input access count
-void analyzer_t::update_component_input_access_count(unsigned idx_,
-                                                     unsigned value_) {
-    access_count = value_;
-    unsigned lower_level_idx = scheduling_table.get_below_buffer_pos(idx_);
-    unsigned upper_level_idx = scheduling_table.get_above_buffer_pos(idx_);
-    dataflow_t dataflow = dataflow_t::NONE;
-    component_idx_curr = scheduling_table.get_component_index(idx_);
-    component_idx_lower = scheduling_table.get_component_index(lower_level_idx);
-    component_idx_upper = scheduling_table.get_component_index(upper_level_idx);
-    std::vector<data_t> bypass;
-
-    if(component_idx_curr == 0) {
-        unsigned tile_access_count = 1;
-        for(unsigned param_idx = 0; param_idx < (unsigned)parameter_t::SIZE; param_idx++) {
-            for(int row_idx = 0; row_idx < (int)scheduling_table.get_num_rows(); row_idx++) {
-                if(scheduling_table.get_component_type(row_idx) == component_type_t::TEMPORAL) { 
-                    tile_access_count *= scheduling_table.get_mapping_value(row_idx, param_idx);
-                }
-            }
-        }
-        accelerator->update_tile_access_count(component_idx_curr, tile_access_count, 
-                                              data_t::INPUT, operation_t::READ,
-                                              direction_t::UPPER);
+unsigned analyzer_t::update_input_access_count(unsigned idx_,
+                                               unsigned value_) {
+    unsigned access_count = value_;
+    // Dataflow adjustment 
+    if(dataflow == dataflow_t::IS) {
+        access_count /= update_irrelevant_mapping_value(idx_, data_t::INPUT);
     }
-    // Get dataflow
-    dataflow = accelerator->get_dataflow(component_idx_curr);
-    if(dataflow == dataflow_t::IS) { 
-        access_count /= update_irrelevant_mapping_value(idx_, data_t::INPUT); 
-    }
-    // Bypass adjustment
-    // if the upper level component bypasses the weight data
-    if(component_idx_curr != UINT_MAX) {
-        bypass = accelerator->get_bypass(component_idx_curr);
-    }
-    if(find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) { 
-        access_count = 0; 
-    }
-    accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                          data_t::INPUT, operation_t::WRITE,
-                                          direction_t::LOWER);
-
-    std::vector<unsigned> send_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_t::UPPER);
-    std::vector<unsigned> received_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_t::LOWER);
-    if(send_tile_size.at((unsigned)data_t::INPUT) == received_tile_size.at((unsigned)data_t::INPUT) &&
-       send_tile_size.at((unsigned)data_t::INPUT) != 0) {
-        if(component_idx_curr != 0) {
-        // Change access count to lower level access count
-        accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                              data_t::INPUT, operation_t::READ,
-                                              direction_t::UPPER);
-        }
-    }
-
-    if(find(bypass.begin(), bypass.end(), data_t::INPUT) != bypass.end()) {
-        std::vector<unsigned> upper_level_tile_access_count
-                        = accelerator->get_tile_access_count(component_idx_curr, operation_t::READ,
-                                                             direction_t::UPPER);
-        access_count = upper_level_tile_access_count.at((unsigned)data_t::INPUT);
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::INPUT, 
-                                              operation_t::READ, direction_t::UPPER);
-    }
-    accelerator->update_tile_access_count(component_idx_lower, access_count, 
-                                            data_t::INPUT, operation_t::READ,
-                                            direction_t::UPPER);
-    return;
+    return access_count;
 }
 // Update tile-granular weight access count
-void analyzer_t::update_component_weight_access_count(unsigned idx_,
-                                                      unsigned value_) {
-    access_count = value_;
-    unsigned lower_level_idx = scheduling_table.get_below_buffer_pos(idx_);
-    unsigned upper_level_idx = scheduling_table.get_above_buffer_pos(idx_);
-    dataflow_t dataflow = dataflow_t::NONE;
-    component_idx_curr = scheduling_table.get_component_index(idx_);
-    component_idx_lower = scheduling_table.get_component_index(lower_level_idx);
-    component_idx_upper = scheduling_table.get_component_index(upper_level_idx);
-    std::vector<data_t> bypass;
-
-    // If the component connected to MAC
-    if(component_idx_curr == 0) {
-        unsigned tile_access_count = 1;
-        for(unsigned param_idx = 0; param_idx < (unsigned)parameter_t::SIZE; param_idx++) {
-            for(int row_idx = 0; row_idx < (int)scheduling_table.get_num_rows(); row_idx++) {
-                if(scheduling_table.get_component_type(row_idx) == component_type_t::TEMPORAL) { 
-                    tile_access_count *= scheduling_table.get_mapping_value(row_idx, param_idx);
-                }
-            }
-        }
-        accelerator->update_tile_access_count(component_idx_curr, tile_access_count, 
-                                              data_t::WEIGHT, operation_t::READ,
-                                              direction_t::UPPER);
+unsigned analyzer_t::update_weight_access_count(unsigned idx_,
+                                                unsigned value_) {
+    unsigned access_count = value_;
+    // Dataflow adjustment 
+    if(dataflow == dataflow_t::WS) {
+        access_count /= update_irrelevant_mapping_value(idx_, data_t::WEIGHT);
     }
-    // Dataflow adjustment
-    dataflow = accelerator->get_dataflow(component_idx_curr);
-    if(dataflow == dataflow_t::WS) { 
-        access_count /= update_irrelevant_mapping_value(idx_, data_t::WEIGHT); 
-    }
-    // Bypass adjustment
-    // if the current level component bypasses the weight data
-    if(component_idx_curr != UINT_MAX) {
-        bypass = accelerator->get_bypass(component_idx_curr);
-    }
-    if(find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) { access_count = 0; }
-    // Update component tile access count
-    accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                          data_t::WEIGHT, operation_t::WRITE,
-                                          direction_t::LOWER);
-    // Read once adjustment
-    if(dataflow != dataflow_t::NONE) {
-        std::vector<unsigned> send_tile_size 
-                = accelerator->get_allocated_size(component_idx_curr, direction_t::UPPER);
-        std::vector<unsigned> received_tile_size 
-                = accelerator->get_allocated_size(component_idx_curr, direction_t::LOWER);
-        if(send_tile_size.at((unsigned)data_t::WEIGHT) == received_tile_size.at((unsigned)data_t::WEIGHT) &&
-        send_tile_size.at((unsigned)data_t::WEIGHT) != 0) {
-            if(component_idx_curr != 0) {
-            // Change access count to lower level access count
-            // UPPER READ = LOWER WRITE
-            accelerator->update_tile_access_count(component_idx_curr, access_count, 
-                                                    data_t::WEIGHT, operation_t::READ,
-                                                    direction_t::UPPER);
-            }
-        }
-    }
-    if(find(bypass.begin(), bypass.end(), data_t::WEIGHT) != bypass.end()) {
-        std::vector<unsigned> upper_level_tile_access_count
-                        = accelerator->get_tile_access_count(component_idx_curr, operation_t::READ,
-                                                             direction_t::UPPER);
-        access_count = upper_level_tile_access_count.at((unsigned)data_t::WEIGHT);
-        // Set current level's access count to zero
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::WEIGHT, 
-                                              operation_t::READ, direction_t::UPPER);
-        // Weight data fully loaded it's upper level at once
-        if(access_count == scheduling_table.get_correlation_product(idx_,
-                                                                    correlation_t::OI)) {
-            access_count = 1;
-            // Change it's upper level receive count
-            accelerator->update_tile_access_count(component_idx_upper, access_count,
-                                                  data_t::WEIGHT, operation_t::WRITE,
-                                                  direction_t::LOWER);
-        }
-    }
-    accelerator->update_tile_access_count(component_idx_lower, access_count, 
-                                            data_t::WEIGHT, operation_t::READ,
-                                            direction_t::UPPER);
-    return;
+    // weight_access_count.emplace_back(access_count);
+    return access_count;
 }
 // Update tile-granular output access count
-void analyzer_t::update_component_output_access_count(unsigned idx_,
-                                                      unsigned value_) {
+unsigned analyzer_t::update_output_access_count(unsigned idx_,
+                                                unsigned value_,
+                                                operation_t oper_) {
     unsigned lower_level_idx    = scheduling_table.get_below_buffer_pos(idx_);
-    unsigned upper_level_idx = scheduling_table.get_above_buffer_pos(idx_);
-    dataflow_t dataflow = dataflow_t::NONE;
-    component_idx_curr = scheduling_table.get_component_index(idx_);
-    component_idx_lower = scheduling_table.get_component_index(lower_level_idx);
-    component_idx_upper = scheduling_table.get_component_index(upper_level_idx);
-    std::vector<data_t> bypass;
-    std::vector<unsigned> upper_level_tile_access_count;
+    unsigned access_count = 1;
 
-    // If the component connected to MAC
-    if(component_idx_curr == 0) {
-        write_access_count = scheduling_table.get_correlation_product(-1, correlation_t::IWO)
-                           * scheduling_table.get_correlation_product(-1, correlation_t::WO)
-                           * scheduling_table.get_correlation_product(-1, correlation_t::OI)
-                           * (scheduling_table.get_correlation_product(-1, correlation_t::IW) - 1);
-        read_access_count = scheduling_table.get_correlation_product(-1, correlation_t::IWO)
-                           * scheduling_table.get_correlation_product(-1, correlation_t::WO)
-                           * scheduling_table.get_correlation_product(-1, correlation_t::OI)
-                           * scheduling_table.get_correlation_product(-1, correlation_t::IW);
-        accelerator->update_tile_access_count(component_idx_curr, write_access_count, 
-                                              data_t::OUTPUT, operation_t::READ,
-                                              direction_t::UPPER);
-        accelerator->update_tile_access_count(component_idx_curr, read_access_count, 
-                                              data_t::OUTPUT, operation_t::WRITE,
-                                              direction_t::UPPER);
+    switch(oper_) {
+        case operation_t::READ:
+            access_count = scheduling_table.get_correlation_product(idx_, correlation_t::IWO)
+                         * scheduling_table.get_correlation_product(idx_, correlation_t::WO)
+                         * scheduling_table.get_correlation_product(idx_, correlation_t::OI)
+                         * (scheduling_table.get_correlation_product(idx_, correlation_t::IW) - 1);
+            if(dataflow == dataflow_t::OS) {
+                access_count = scheduling_table.get_correlation_product(idx_, correlation_t::IWO)
+                             * scheduling_table.get_correlation_product(idx_, correlation_t::WO)
+                             * scheduling_table.get_correlation_product(idx_, correlation_t::OI)
+                             * (scheduling_table.get_correlation_product(lower_level_idx, correlation_t::IW) - 1);
+                if(idx_ == dram_idx) access_count = 0;
+            }
+            break;
+        case operation_t::WRITE:
+            access_count = value_;
+            if(dataflow == dataflow_t::OS) {
+                write_access_count /= update_irrelevant_mapping_value(idx_, data_t::OUTPUT); 
+            }
+            break;
+        default:
+            break;
     }
-    // Update read and write access count 
-    write_access_count = scheduling_table.get_correlation_product(idx_, correlation_t::IWO)
-                      * scheduling_table.get_correlation_product(idx_, correlation_t::WO)
-                      * scheduling_table.get_correlation_product(idx_, correlation_t::OI)
-                      * (scheduling_table.get_correlation_product(idx_, correlation_t::IW) - 1);
-    read_access_count = value_;
-    // Get dataflow
-    dataflow = accelerator->get_dataflow(component_idx_curr);
-    if(dataflow == dataflow_t::OS) { 
-        write_access_count = scheduling_table.get_correlation_product(idx_, correlation_t::IWO)
-                          * scheduling_table.get_correlation_product(idx_, correlation_t::WO)
-                          * scheduling_table.get_correlation_product(idx_, correlation_t::OI)
-                          * (scheduling_table.get_correlation_product(lower_level_idx, correlation_t::IW) - 1);
-        read_access_count /= update_irrelevant_mapping_value(idx_, data_t::OUTPUT); 
-    }
-    // Bypass adjustment
-    // if the upper level component bypasses the weight data
-    if(component_idx_curr != UINT_MAX) {
-        bypass = accelerator->get_bypass(component_idx_curr);
-    }
-    if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) { 
-        write_access_count = 0; read_access_count = 0; 
-    }
-    // Update component tile access count
-    accelerator->update_tile_access_count(component_idx_curr, write_access_count, 
-                                          data_t::OUTPUT, operation_t::WRITE,
-                                          direction_t::LOWER);
-    accelerator->update_tile_access_count(component_idx_curr, read_access_count, 
-                                          data_t::OUTPUT, operation_t::READ,
-                                          direction_t::LOWER);
-    // 2. Read once adjustment
-    if(dataflow != dataflow_t::NONE) {
-    std::vector<unsigned> send_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_t::UPPER);
-    std::vector<unsigned> received_tile_size 
-            = accelerator->get_allocated_size(component_idx_curr, direction_t::LOWER);
-    if(send_tile_size.at((unsigned)data_t::OUTPUT) == received_tile_size.at((unsigned)data_t::OUTPUT) &&
-       send_tile_size.at((unsigned)data_t::OUTPUT) != 0) {
-        if(component_idx_curr != 0 && 
-           component_idx_curr != accelerator->get_num_components()) {
-        // Change access count to upper level access count
-        accelerator->update_tile_access_count(component_idx_upper, read_access_count, 
-                                                data_t::OUTPUT, operation_t::READ,
-                                                direction_t::LOWER);
-        accelerator->update_tile_access_count(component_idx_upper, write_access_count, 
-                                                data_t::OUTPUT, operation_t::WRITE,
-                                                direction_t::LOWER);
-        // Change access count to lower level access count
-        accelerator->update_tile_access_count(component_idx_curr, write_access_count, 
-                                                data_t::OUTPUT, operation_t::READ,
-                                                direction_t::UPPER);
-        accelerator->update_tile_access_count(component_idx_curr, read_access_count, 
-                                                data_t::OUTPUT, operation_t::WRITE,
-                                                direction_t::UPPER);
-        }
-    }
-    }
-    if(find(bypass.begin(), bypass.end(), data_t::OUTPUT) != bypass.end()) {
-        upper_level_tile_access_count = accelerator->get_tile_access_count(component_idx_curr, operation_t::READ,
-                                                                           direction_t::UPPER);
-        write_access_count = upper_level_tile_access_count.at((unsigned)data_t::OUTPUT);
-        
-        upper_level_tile_access_count = accelerator->get_tile_access_count(component_idx_curr, operation_t::WRITE,
-                                                                           direction_t::UPPER);
-        read_access_count  = upper_level_tile_access_count.at((unsigned)data_t::OUTPUT);
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::OUTPUT, 
-                                              operation_t::READ, direction_t::UPPER);
-        accelerator->update_tile_access_count(component_idx_curr, 0, data_t::OUTPUT, 
-                                              operation_t::WRITE, direction_t::UPPER);
-    }
-    accelerator->update_tile_access_count(component_idx_lower, write_access_count, 
-                                        data_t::OUTPUT, operation_t::READ,
-                                        direction_t::UPPER);
-    accelerator->update_tile_access_count(component_idx_lower, read_access_count, 
-                                            data_t::OUTPUT, operation_t::WRITE,
-                                            direction_t::UPPER);
-    return;
+    return access_count;
 }
 unsigned analyzer_t::update_irrelevant_mapping_value(unsigned row_idx_,
                                                       data_t stationary_data_) {
     unsigned irrelevant_mapping_value = 1;
-    unsigned one_level_below = 0; 
-    // Find temporal component which exists at a level below the buffer
-    for(unsigned i = row_idx_ + 1; i < scheduling_table.get_num_rows(); i++) {
-        if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL) {
-            one_level_below = i;
-            break;
-        }
-    }
-    assert(one_level_below != 0);
+    
     // Product all irrelevant mapping values with stationary data
     switch(stationary_data_) {
     case data_t::INPUT:
         irrelevant_mapping_value 
-            = scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::K);
+            = scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::K);
         break;
     case data_t::WEIGHT:
         irrelevant_mapping_value 
-            = scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::B)
-            * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::P)
-            * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::Q);
+            = scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::B)
+            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::P)
+            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::Q);
         break;
     case data_t::OUTPUT:
         irrelevant_mapping_value 
-            = scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::C)
-            * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::R)
-            * scheduling_table.get_mapping_value(one_level_below, (unsigned)parameter_t::S);
+            = scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::C)
+            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::R)
+            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::S);
         break;
     default:
         std::cerr << "Error in irrelevant loop calculation" << std::endl;
@@ -586,41 +384,45 @@ unsigned analyzer_t::update_irrelevant_mapping_value(unsigned row_idx_,
     }
     return irrelevant_mapping_value;
 }
-/* Section 4. Compute the number of active components */
+// Update num. activated components
 void analyzer_t::update_active_components() {
-    std::vector<unsigned> num_active_components;
-    unsigned         value = 1;
-    unsigned component_idx = 1;
-
-    for(unsigned row_idx = 0; row_idx < scheduling_table.get_num_rows(); row_idx++) {
-        if(scheduling_table.get_component_type(row_idx) == component_type_t::SPATIAL) {
-            for(unsigned param_idx = 0; param_idx < (unsigned)parameter_t::SIZE; param_idx++) {
-                value *= scheduling_table.get_mapping_value(row_idx, param_idx);
-            }
-            num_active_components.push_back(value);
-            value = 1;
-        }
-        // Collects # active_components info. for both X,Y dimension
-        if(num_active_components.size() == 2) {
-            // Determine accelerator component index.
-            component_idx = scheduling_table.get_component_index(row_idx);
-            // If component idx is valid
-            if(component_idx != UINT_MAX) {
-                accelerator->update_active_components(component_idx, num_active_components);
-            }
-            num_active_components.clear();
-        }
+    // Get num active MACs 
+    if(macs_capacity.dim_x * macs_capacity.dim_y == 1) {
+        macs_actived.dim_x = 1;
+        macs_actived.dim_y = 1;
     }
+    else {
+        macs_actived.dim_x = scheduling_table.get_row_product(lb_idx -2);
+        macs_actived.dim_y = scheduling_table.get_row_product(lb_idx -1);
+    }
+    num_active_macs  = macs_actived.dim_x * macs_actived.dim_y;
+    // Get num active PEs
+    if(pes_capacity.dim_x * pes_capacity.dim_y == 1) {
+        pes_actived.dim_x = 1;
+        pes_actived.dim_y = 1;
+    }
+    else {
+        pes_actived.dim_x = scheduling_table.get_row_product(gb_idx -2);
+        pes_actived.dim_y = scheduling_table.get_row_product(gb_idx -1);
+    }
+    num_active_pes   = pes_actived.dim_x * pes_actived.dim_y;
+
+    // Get num active Chips
+    if(chips_capacity.dim_x * chips_capacity.dim_y == 1) {
+        chips_actived.dim_x = 1;
+        chips_actived.dim_y = 1;
+    }
+    else {
+        chips_actived.dim_x = scheduling_table.get_row_product(dram_idx -2);
+        chips_actived.dim_y = scheduling_table.get_row_product(dram_idx -1);
+    }
+    num_active_chips = chips_actived.dim_x * chips_actived.dim_y;
     return;
 }
-/* End Section 4 */
-
-/* Section 5. Compute energy cost of accelerator */
+// Estimate accelerator's cost for a given scheduling table
 void analyzer_t::estimate_cost() {
-    // Estimate scheduling table's energy, cycle
     update_cycle(); 
     update_energy(); 
-    update_static_energy(); 
     return;
 }
 void analyzer_t::estimate_cross_layer_reuse(scheduling_table_t prev_table_,
@@ -695,204 +497,220 @@ unsigned analyzer_t::compute_overlapped_size(scheduling_table_t prev_table_) {
 
     return overlapped_b * overlapped_h * overlapped_w * overlapped_c;
 }
-
+float max(float cost_i_, float cost_w_, float cost_o_) {
+    float rtn = 0.0f;
+    if(cost_i_ > cost_w_) {
+        rtn = cost_i_;
+    }
+    else { rtn = cost_w_; }
+    if(cost_o_ > rtn) {
+        rtn = cost_o_;
+    }
+    return rtn;
+}
+// Update accelerator's cycle
 void analyzer_t::update_cycle() {
-    unsigned component_idx = 0;
-    float mac_cycle = 0.0;
-    float buffer_cycle = 0.0;
-    std::vector<unsigned> tile_size(3,0);
-    std::vector<unsigned> access_count(3,0);
-    std::vector<float> unit_cycle(3,0);
-    unsigned bandwidth = 1;
-    unsigned precision = accelerator->get_precision();
-    // Accumulate MAC unit cost
+    float cycle_i = 0.0f;
+    float cycle_w = 0.0f;
+    float cycle_o = 0.0f;
+    // Get MAC cycle
     mac_cycle = scheduling_table.get_num_mac_operations()
-              / accelerator->get_active_MACs();
-    components_cycle.push_back(mac_cycle);
-    // Accumulate each buffer (or memory) cost
-    for(unsigned row_idx = 0; row_idx < scheduling_table.get_num_rows(); row_idx++) {
-        if(scheduling_table.get_component_type(row_idx) == component_type_t::TEMPORAL) {
-            component_idx = scheduling_table.get_component_index(row_idx);
-            // Compute energy consumption for each component 
-            for (unsigned op_type = 0; op_type < (unsigned)operation_t::SIZE; op_type++) {
-                // Get tile size and access count and unit access energy 
-                tile_size = accelerator->get_allocated_size(component_idx, direction_t::UPPER);
-                access_count = accelerator->get_tile_access_count(component_idx, 
-                                                                    (operation_t)op_type, 
-                                                                    direction_t::UPPER);
-                unit_cycle = accelerator->get_component_cycle(component_idx);
-                bandwidth  = accelerator->get_bandwidth(component_idx);
-                // If bandwidth is undefined, default bandwidth is equal to precision
-                if(bandwidth == 1) { bandwidth = precision; }
-                // Calculate cycle 
-                for (unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
-                    assert(tile_size.size() == (unsigned)data_t::SIZE
-                        && access_count.size() == (unsigned)data_t::SIZE
-                        && unit_cycle.size() == (unsigned)data_t::SIZE);
-                    // Buffer type is unified
-                    if(accelerator->get_size(component_idx).size()==1) {
-                        buffer_cycle += std::ceil((float)tile_size.at(i) / (float)bandwidth) 
-                                      * (float)access_count.at(i) * unit_cycle.at(i);
-                    }
-                    // Buffer type is seperated
-                    else {
-                        unsigned data_transfer_cycle = std::ceil((float)tile_size.at(i) 
-                                                     / ((float)bandwidth / (float)precision))
-                                                     * (float)access_count.at(i) * unit_cycle.at(i);
-                        if(data_transfer_cycle > buffer_cycle) {
-                            buffer_cycle = data_transfer_cycle;
-                        }
-                    }
-                }
-            }
-            accelerator->update_accelerator_energy(buffer_cycle);
-            components_cycle.push_back(buffer_cycle);
-            buffer_cycle = 0.0;
-        }
+              / (num_active_macs * num_active_pes * num_active_chips);
+    //  Get local buffer cycle
+    cycle_i = std::ceil(lb_tile_size_send.input * lb_access_count.input_rd
+            / lb_bandwidth)
+            * lb_unit_cycle.input;
+    cycle_w = std::ceil(lb_tile_size_send.weight * lb_access_count.weight_rd
+            / lb_bandwidth)
+            * lb_unit_cycle.weight;
+    cycle_o = std::ceil(lb_tile_size_send.output 
+            * (lb_access_count.output_rd + lb_access_count.output_wt) / lb_bandwidth)
+            * lb_unit_cycle.output;
+    if(is_lb_shared) {
+        local_buffer_cycle = cycle_i + cycle_w + cycle_o;
     }
-    // Update total cycle 
-    for(unsigned i = 0; i < components_cycle.size(); i++) {
-        total_cycle += components_cycle.at(i);
+    else {
+        local_buffer_cycle = max(cycle_i, cycle_w, cycle_o);
     }
-}
-void analyzer_t::update_static_energy() {
-    // Total static energy (pJ) 
-    // = Unit static power (mW) x clock time (ns) x total cycle count
-    ///
-    float mac_static_energy = 0.0;
-    float buffer_static_energy = 0.0;
-    unsigned component_idx = 0;
-    mac_static_energy = accelerator->get_mac_static_power()
-                      * accelerator->get_clock_time()
-                      * accelerator->get_total_num_MACs()
-                      * total_cycle;
-    components_static_energy.push_back(mac_static_energy);
-    total_static_energy += mac_static_energy;
-    for(unsigned row_idx = 0; row_idx < scheduling_table.get_num_rows(); row_idx++) {
-        buffer_static_energy = 0.0;
-        component_idx = scheduling_table.get_component_index(row_idx);
-        if(scheduling_table.get_component_type(row_idx) == component_type_t::TEMPORAL) {
-            buffer_static_energy = accelerator->get_component_static_power(component_idx)
-                                 * accelerator->get_clock_time()
-                                 * accelerator->get_total_num_components(component_idx)
-                                 * total_cycle;
-            components_static_energy.push_back(buffer_static_energy);
-            total_static_energy += buffer_static_energy;
-        }
+    // Get global buffer cycle
+    cycle_i = std::ceil(gb_tile_size_send.input * gb_access_count.input_rd
+            / gb_bandwidth)
+            * gb_unit_cycle.input;
+    cycle_w = std::ceil(gb_tile_size_send.weight * gb_access_count.weight_rd
+            / gb_bandwidth)
+            * gb_unit_cycle.weight;
+    cycle_o = std::ceil(gb_tile_size_send.output 
+            * (gb_access_count.output_rd + gb_access_count.output_wt) / gb_bandwidth)
+            * gb_unit_cycle.output;
+    if(is_gb_shared) {
+        global_buffer_cycle = cycle_i + cycle_w + cycle_o;
     }
-    return;
-}
-void analyzer_t::update_energy() {
-    unsigned component_idx = 0;
-    float mac_energy = 0.0;
-    float buffer_energy = 0.0;
-    std::vector<unsigned> tile_size(3,0);
-    std::vector<unsigned> access_count(3,0);
-    std::vector<float> unit_energy(3,0);
+    else {
+        global_buffer_cycle = max(cycle_i, cycle_w, cycle_o);
+    }
+    // Get dram cycle
+    cycle_i = std::ceil(dram_tile_size_send.input * dram_access_count.input_rd 
+            / dram_bandwidth)
+            * dram_unit_cycle.input;
+    cycle_w = std::ceil(dram_tile_size_send.weight * dram_access_count.weight_rd 
+            / dram_bandwidth)
+            * dram_unit_cycle.weight;
+    cycle_o = std::ceil(dram_tile_size_send.output 
+            * (dram_access_count.output_rd + dram_access_count.output_wt) / dram_bandwidth)
+            * dram_unit_cycle.output;
+    dram_cycle = cycle_i + cycle_w + cycle_o;
 
-    const unsigned dim_x = (unsigned)dimension_t::DIM_X;
-    const unsigned dim_y = (unsigned)dimension_t::DIM_Y;
+    // Update total cycle 
+    total_cycle = mac_cycle + local_buffer_cycle + global_buffer_cycle + dram_cycle;
+}
+// Update accelerator's energy 
+void analyzer_t::update_energy() {
     // Accumulate MAC unit cost
     mac_energy = scheduling_table.get_num_mac_operations()
                * accelerator->get_mac_energy();
-    accelerator->update_accelerator_energy(mac_energy);
-    components_energy.push_back(mac_energy);
-    total_energy += mac_energy;
-    // Accumulate each buffer (or memory) cost
-    for(unsigned row_idx = 0; row_idx < scheduling_table.get_num_rows(); row_idx++) {
-        if(scheduling_table.get_component_type(row_idx) == component_type_t::TEMPORAL) {
-            buffer_energy = 0.0;
-            component_idx = scheduling_table.get_component_index(row_idx);
-            // Compute energy consumption for each component 
-            for (unsigned dir_type = 0; dir_type < (unsigned)direction_t::SIZE; dir_type++) {
-                for (unsigned op_type = 0; op_type < (unsigned)operation_t::SIZE; op_type++) {
-                    // Get tile size and access count and unit access energy 
-                    tile_size = accelerator->get_allocated_size(component_idx, (direction_t)dir_type);
-                    access_count = accelerator->get_tile_access_count(component_idx, 
-                                                                      (operation_t)op_type, 
-                                                                      (direction_t)dir_type);
-                    unit_energy = accelerator->get_component_energy(component_idx);
-                    // Calculate energy consumption
-                    for (unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
-                        assert(tile_size.size() == (unsigned)data_t::SIZE
-                           && access_count.size() == (unsigned)data_t::SIZE
-                           && unit_energy.size() == (unsigned)data_t::SIZE);
-                        buffer_energy += (float)tile_size.at(i) * (float)access_count.at(i) * unit_energy.at(i);
-                    }
-                }
-            }
-            // Consider energy consumption of all active components
-            for(unsigned i = row_idx + 1; i < scheduling_table.get_num_rows(); i++) {
-                if(scheduling_table.get_component_type(i) == component_type_t::SPATIAL) {
-                    component_idx = scheduling_table.get_component_index(i);
-                    // If component is virtual component
-                    if(component_idx == UINT_MAX) { buffer_energy *= 1; }
-                    else {
-                        buffer_energy *= accelerator->get_active_components(component_idx).at(dim_x)
-                                       * accelerator->get_active_components(component_idx).at(dim_y);
-                    }
-                    i++; // Skip Y
-                }
-            }
-            accelerator->update_accelerator_energy(buffer_energy);
-            components_energy.push_back(buffer_energy);
-            total_energy += buffer_energy;
-        }
-    }
+    // Get local buffer energy
+    lb_energy_upper  = lb_tile_size_send.input  * lb_access_count.input_rd  
+                     * lb_unit_energy.input;
+    lb_energy_upper += lb_tile_size_send.weight * lb_access_count.weight_rd 
+                     * lb_unit_energy.weight;
+    lb_energy_upper += lb_tile_size_send.output 
+                     * (lb_access_count.output_rd + lb_access_count.output_wt) 
+                     * lb_unit_energy.output;
+    lb_energy_upper *= num_active_pes * num_active_chips;
+
+    lb_energy_lower  = lb_tile_size_alloc.input  * gb_access_count.input_rd  
+                     * lb_unit_energy.input;
+    lb_energy_lower += lb_tile_size_alloc.weight * gb_access_count.weight_rd 
+                     * lb_unit_energy.weight;
+    lb_energy_lower += lb_tile_size_alloc.output 
+                     * (gb_access_count.output_rd + gb_access_count.output_wt) 
+                     * lb_unit_energy.output;
+    lb_energy_lower *= num_active_pes * num_active_chips;
+
+    local_buffer_energy = lb_energy_upper + lb_energy_lower;
+    // Get global buffer energy
+    gb_energy_upper  = gb_tile_size_send.input  * gb_access_count.input_rd  
+                     * gb_unit_energy.input;
+    gb_energy_upper += gb_tile_size_send.weight * gb_access_count.weight_rd 
+                     * gb_unit_energy.weight;
+    gb_energy_upper += gb_tile_size_send.output 
+                     * (gb_access_count.output_rd + gb_access_count.output_wt) 
+                     * gb_unit_energy.output;
+    gb_energy_upper *= num_active_chips;
+    gb_energy_lower  = gb_tile_size_alloc.input  * dram_access_count.input_rd  
+                     * gb_unit_energy.input;
+    gb_energy_lower += gb_tile_size_alloc.weight * dram_access_count.weight_rd 
+                     * gb_unit_energy.weight;
+    gb_energy_lower += gb_tile_size_alloc.output 
+                     * (dram_access_count.output_rd + dram_access_count.output_wt) 
+                     * gb_unit_energy.output;
+    gb_energy_lower *= num_active_chips;
+    global_buffer_energy = gb_energy_upper + gb_energy_lower;
+    // Get dram energy
+    dram_energy      = dram_tile_size_send.input  * dram_access_count.input_rd  
+                     * dram_unit_energy.input;
+    dram_energy     += dram_tile_size_send.weight * dram_access_count.weight_rd 
+                     * dram_unit_energy.weight;
+    dram_energy     += dram_tile_size_send.output 
+                     * (dram_access_count.output_rd + dram_access_count.output_wt) 
+                     * dram_unit_energy.output;
+    // Calcue total energy
+    total_energy = mac_energy + local_buffer_energy + global_buffer_energy + dram_energy;
+    
+    // /**
+    //  * @brief Total static energy (pJ) 
+    //  * = Unit static power (mW) x clock time (ns) x total cycle count
+    //  */
+    mac_static = accelerator->get_mac_static_power()
+                * accelerator->get_clock_time()
+                * accelerator->get_total_num_MACs()
+                * total_cycle;
+    local_buffer_static  = (lb_unit_static.input + lb_unit_static.weight +lb_unit_static.output)
+                         * accelerator->get_clock_time()
+                         * pes_capacity.dim_x * pes_capacity.dim_y
+                         * chips_capacity.dim_x * chips_capacity.dim_y
+                         * total_cycle;
+    global_buffer_static = (gb_unit_static.input + gb_unit_static.weight +gb_unit_static.output)
+                         * accelerator->get_clock_time()
+                         * chips_capacity.dim_x * chips_capacity.dim_y
+                         * total_cycle;
+    dram_static          = (dram_unit_static.input + dram_unit_static.weight + dram_unit_static.output)
+                         * accelerator->get_clock_time()
+                         * total_cycle;
+    total_static_energy  = mac_static + local_buffer_static + global_buffer_static + dram_static;
 }
-/* End Section 5 */
+// Print out analysis result
 void analyzer_t::print_results() {
-    std::cout << "====  Analyze Results ====" << std::endl;
+    std::cout << "[Scheduling Table]"<< std::endl;
     scheduling_table.print_stats();
-    accelerator->print_stats();
-    std::cout << "====    Energy/Cycle  ====" << std::endl;
-    // Print component's name
-    std::cout << " Components,";
-    std::cout << std::setw(13) << "MAC" << ",";
-    for(unsigned i = 0; i < scheduling_table.get_num_rows(); i++) {
-        if(scheduling_table.get_component_type(i) == component_type_t::TEMPORAL) {
-            unsigned component_idx = scheduling_table.get_component_index(i);
-            std::cout << std::setw(13) << accelerator->get_name(component_idx) << ",";
-        }
-    }
-    std::cout << std::setw(13) << "Total" << std::endl;
-    // Print components' energy
-    std::cout << "Energy (pJ),";
-    for(unsigned i = 0; i < components_energy.size(); i++) {
-        std::cout << std::setw(13) 
-                  << std::fixed << std::setprecision(1)
-                  << components_energy.at(i) << ",";
-    }
-    std::cout << std::setw(13) 
-              << std::fixed << std::setprecision(1)
-              << total_energy << std::endl;
-    std::cout << "Static (pJ),";
-    for(unsigned i = 0; i < components_energy.size(); i++) {
-        std::cout << std::setw(13) 
-                  << std::fixed << std::setprecision(1)
-                  << components_static_energy.at(i) << ",";
-    }
-    std::cout << std::setw(13) 
-              << std::fixed << std::setprecision(1)
-              << total_static_energy << std::endl;
-    // Print components' cycle
-    std::cout << "      Cycle,";
-    for(unsigned i = 0; i < components_cycle.size(); i++) {
-        std::cout << std::setw(13) << components_cycle.at(i) << ",";
-    }
-    std::cout << std::setw(13) << total_cycle << std::endl;
-    std::cout << std::endl;
+    std::cout << "[Analyze Results]"<< std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
+              << "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
+              << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n"
+              << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
+              << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
+              << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n"
+              << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
+              << "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
+              << "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "  LB I allocated tile size : " << lb_tile_size_alloc.input    << "\n"
+              << "  LB W allocated tile size : " << lb_tile_size_alloc.weight   << "\n"
+              << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n"
+              << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
+              << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
+              << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n"
+              << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
+              << "DRAM W allocated tile size : " << dram_tile_size_alloc.weight << "\n"
+              << "DRAM O allocated tile size : " << dram_tile_size_alloc.output << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "  LB I  read access count : " << lb_access_count.input_rd     << "\n"
+              << "  LB W  read access count : " << lb_access_count.weight_rd    << "\n"
+              << "  LB O  read access count : " << lb_access_count.output_rd << "\n"
+              << "  LB O write access count : " << lb_access_count.output_wt << "\n"
+              << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
+              << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
+              << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
+              << "  GB O write access count : " << gb_access_count.output_wt << "\n"
+              << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
+              << "DRAM W  read access count : " << dram_access_count.weight_rd    << "\n"
+              << "DRAM O  read access count : " << dram_access_count.output_rd << "\n"
+              << "DRAM O write access count : " << dram_access_count.output_wt << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "     NUM ACTIVE MAC ARRAY : " << num_active_macs << std::endl;
+    std::cout << "      NUM ACTIVE PE ARRAY : " << num_active_pes << std::endl;
+    std::cout << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "  MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
+              << "   LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n"
+              << "   GB DYNAMIC ENERGY : " << global_buffer_energy << "\n"
+              << " DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "   MAC STATIC ENERGY : " << mac_static           << "\n"
+              << "    LB STATIC ENERGY : " << local_buffer_static  << "\n"
+              << "    GB STATIC ENERGY : " << global_buffer_static << "\n"
+              << "  DRAM STATIC ENERGY : " << dram_static          << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "          MAC ENERGY : " << mac_energy + mac_static << "\n"
+              << "           LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n"
+              << "           GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n"
+              << "         DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "           MAC CYCLE : " << mac_cycle              << "\n"
+              << "            LB CYCLE : " << local_buffer_cycle     << "\n"
+              << "            GB CYCLE : " << global_buffer_cycle    << "\n"
+              << "          DRAM CYCLE : " << dram_cycle             << std::endl;
+    std::cout << "**************************" << std::endl;
+    std::cout << "TOTAL DYNAMIC ENERGY : " << total_energy << std::endl;
+    std::cout << " TOTAL STATIC ENERGY : " << total_static_energy << std::endl;
+    std::cout << "        TOTAL ENERGY : " << total_energy + total_static_energy << std::endl;
+    std::cout << "         TOTAL CYCLE : " << total_cycle            << std::endl;
+    std::cout << "**************************" << std::endl;
     return;
 }
 
 void analyzer_t::reset() {
-    components_energy.clear();
-    components_static_energy.clear();
-    components_cycle.clear();
-    total_energy = 0;
-    total_static_energy = 0;
-    total_cycle  = 0;
-    accelerator->reset(); // Reset accelerator's dataflow
     return;
 }
 
@@ -915,33 +733,45 @@ float analyzer_t::get_target_level_cost(unsigned idx_, metric_t metric_) {
     float rtn = 0;
     // Set Scheduling table row index
     unsigned lower_idx = idx_;
-    unsigned upper_idx = scheduling_table.get_above_buffer_pos(idx_);
     if(metric_ == metric_t::ENERGY) {
-        // Compute energy consumption when lower level buffer transfers
-        // data tile to upper level buffer
-        rtn += get_energy_consumption(lower_idx, 
-                                      direction_t::UPPER);
-        // Compute energy consumption when upper level buffer transfers
-        // data tile to lower level buffer
-        rtn += get_energy_consumption(upper_idx, 
-                                      direction_t::LOWER);
-        // If upper idx is the top temporal level component
-        if(upper_idx == 0) {
-            rtn += get_energy_consumption(upper_idx, 
-                                          direction_t::UPPER);
+        if(lower_idx == dram_idx) {
+            if(is_gb_exist) {
+                rtn = dram_energy + lb_energy_lower;
+            }
+            else {
+                rtn = dram_energy + gb_energy_lower;
+            }
+        }
+        else if(lower_idx == gb_idx) {
+            if(macs_capacity.dim_x * macs_capacity.dim_y == 1) {
+                rtn = gb_energy_upper + lb_energy_lower;
+            }
+            else {
+                rtn = gb_energy_upper + lb_energy_lower + lb_energy_upper;
+            }
+        }
+        else if(lower_idx == lb_idx) {
+            rtn = lb_energy_upper;
+        }
+        else {
+            std::cerr << "Invalid target level " << idx_ << std::endl;
+            exit(0);
         }
     }
     else if(metric_ == metric_t::CYCLE) {
-        rtn += get_cycle_consumption(lower_idx, 
-                                     direction_t::UPPER);
-        // If upper idx is the top temporal level component
-        if(upper_idx == 0) {
-            rtn += get_cycle_consumption(upper_idx, 
-                                         direction_t::UPPER);
+        if(lower_idx == dram_idx) {
+            rtn = dram_cycle + mac_cycle;
         }
-        // MAC cycle
-        rtn += scheduling_table.get_num_mac_operations()
-             / accelerator->get_active_MACs();
+        else if(lower_idx == gb_idx) {
+            rtn = global_buffer_cycle + local_buffer_cycle + mac_cycle;
+        }
+        else if(lower_idx == lb_idx) {
+            rtn = local_buffer_cycle + mac_cycle;
+        }
+        else {
+            std::cerr << "Invalid target level " << idx_ << std::endl;
+            exit(0);
+        }
     }
     else { std::cerr << "Error invalid metric type" << std::endl; exit(0); }
     return rtn;
@@ -980,16 +810,20 @@ unsigned analyzer_t::get_tile_size(unsigned idx_, data_t data_type_) {
     rtn = tile_size.at((unsigned)data_type_);
     return rtn;
 }
-unsigned analyzer_t::get_access_count(unsigned idx_, data_t data_type_) {
+unsigned analyzer_t::get_access_count(unsigned idx_, operation_t op_, data_t data_type_) {
     unsigned rtn;
     std::vector<unsigned> access_count;
-    unsigned component_idx = scheduling_table.get_component_index(idx_);
-    // Get access count and unit access energy 
-    access_count = accelerator->get_tile_access_count(component_idx,
-                                                      operation_t::READ,
-                                                      direction_t::UPPER);
-    assert(access_count.size() == (unsigned)data_t::SIZE);
-    rtn = access_count.at((unsigned)data_type_);
+    if(component_idx_curr == idx_) { 
+        if(data_type_ == data_t::OUTPUT && op_ == operation_t::READ) { rtn = 0; }
+        else{ rtn = 1; }
+    }
+    else {
+        // Get access count and unit access energy 
+        access_count = accelerator->get_tile_access_count(idx_, op_,
+                                                        direction_t::UPPER);
+        assert(access_count.size() == (unsigned)data_t::SIZE);
+        rtn = access_count.at((unsigned)data_type_);
+    }
     return rtn;
 }
 float analyzer_t::get_energy_consumption(unsigned idx_,
@@ -1078,7 +912,7 @@ unsigned analyzer_t::get_factorization_degrees(unsigned idx_) {
         for(unsigned i = 2; i < *value; i++) {
             while(1) {
                 if(*value % i == 0) {
-                    num_factors.push_back(i);
+                    num_factors.emplace_back(i);
                     *value/=i;
                 }
                 else { break; }
@@ -1088,4 +922,124 @@ unsigned analyzer_t::get_factorization_degrees(unsigned idx_) {
         num_factors.clear();
     }
     return factorization_degrees;
+}
+
+void analyzer_t::init_mac_array() {
+    // Init MAC unit
+    mac_unit_energy     = accelerator->get_mac_energy();
+    mac_unit_cycle      = 1;
+    mac_unit_static     = accelerator->get_mac_static_power();
+    
+    // Init MAC array
+    macs_capacity.dim_x = accelerator->get_mac_array_size(dimension_t::DIM_X); 
+    macs_capacity.dim_y = accelerator->get_mac_array_size(dimension_t::DIM_Y);
+}
+void analyzer_t::init_local_buffer() {
+    // Init unit access cost
+    std::vector<float> arr_unit_energy = accelerator->get_energy(buffer_t::LB);
+    std::vector<float> arr_unit_static = accelerator->get_static(buffer_t::LB);
+    std::vector<float> arr_unit_cycle  = accelerator->get_cycle(buffer_t::LB);
+    lb_unit_energy.input    = arr_unit_energy.at((unsigned)data_t::INPUT);
+    lb_unit_energy.weight   = arr_unit_energy.at((unsigned)data_t::WEIGHT);
+    lb_unit_energy.output   = arr_unit_energy.at((unsigned)data_t::OUTPUT);
+    lb_unit_static.input    = arr_unit_static.at((unsigned)data_t::INPUT);
+    lb_unit_static.weight   = arr_unit_static.at((unsigned)data_t::WEIGHT);
+    lb_unit_static.output   = arr_unit_static.at((unsigned)data_t::OUTPUT);
+    lb_unit_cycle.input     = arr_unit_cycle.at((unsigned)data_t::INPUT);
+    lb_unit_cycle.weight    = arr_unit_cycle.at((unsigned)data_t::WEIGHT);
+    lb_unit_cycle.output    = arr_unit_cycle.at((unsigned)data_t::OUTPUT);
+
+    // Init buffer size
+    std::vector<float> arr_buffer_size = accelerator->get_size(buffer_t::LB);
+    // If shared
+    if(arr_buffer_size.size() == 1) {
+        is_lb_shared = true;
+        lb_capacity.shared = arr_buffer_size.back();
+        lb_capacity.input  = 0;
+        lb_capacity.weight = 0;
+        lb_capacity.output = 0;
+    }
+    // If seperated
+    else if(arr_buffer_size.size() == 3) {
+        is_lb_shared = false;
+        lb_capacity.shared = 0;
+        lb_capacity.input  = arr_buffer_size.at((unsigned)data_t::INPUT)  / (accelerator->get_precision() / BYTE);
+        lb_capacity.weight = arr_buffer_size.at((unsigned)data_t::WEIGHT) / (accelerator->get_precision() / BYTE);
+        lb_capacity.output = arr_buffer_size.at((unsigned)data_t::OUTPUT) / (accelerator->get_precision() / BYTE);
+    }
+    else {
+        // Virtual buffer
+        is_lb_exist = false;
+    }
+    
+    // Init bandwidth
+    lb_bandwidth            = accelerator->get_bandwidth(buffer_t::LB) 
+                            / accelerator->get_precision();
+}
+// Init PE array
+void analyzer_t::init_pe_array() {
+    pes_capacity.dim_x = accelerator->get_pe_array_size(dimension_t::DIM_X);
+    pes_capacity.dim_y = accelerator->get_pe_array_size(dimension_t::DIM_Y);
+}
+// Init global buffer
+void analyzer_t::init_global_buffer() {
+    // Init unit access cost
+    std::vector<float> arr_unit_energy = accelerator->get_energy(buffer_t::GB);
+    std::vector<float> arr_unit_static = accelerator->get_static(buffer_t::GB);
+    std::vector<float> arr_unit_cycle  = accelerator->get_cycle(buffer_t::GB);
+    gb_unit_energy.input    = arr_unit_energy.at((unsigned)data_t::INPUT);
+    gb_unit_energy.weight   = arr_unit_energy.at((unsigned)data_t::WEIGHT);
+    gb_unit_energy.output   = arr_unit_energy.at((unsigned)data_t::OUTPUT);
+    gb_unit_static.input    = arr_unit_static.at((unsigned)data_t::INPUT);
+    gb_unit_static.weight   = arr_unit_static.at((unsigned)data_t::WEIGHT);
+    gb_unit_static.output   = arr_unit_static.at((unsigned)data_t::OUTPUT);
+    gb_unit_cycle.input     = arr_unit_cycle.at((unsigned)data_t::INPUT);
+    gb_unit_cycle.weight    = arr_unit_cycle.at((unsigned)data_t::WEIGHT);
+    gb_unit_cycle.output    = arr_unit_cycle.at((unsigned)data_t::OUTPUT);
+    // Init buffer size
+    std::vector<float> arr_buffer_size = accelerator->get_size(buffer_t::GB);
+    // If shared
+    if(arr_buffer_size.size() == 1) {
+        is_gb_shared = true;
+        gb_capacity.shared = arr_buffer_size.back();
+        gb_capacity.input  = 0;
+        gb_capacity.weight = 0;
+        gb_capacity.output = 0;
+    }
+    // If seperated
+    else if(arr_buffer_size.size() == 3) {
+        is_gb_shared = false;
+        gb_capacity.input  = arr_buffer_size.at((unsigned)data_t::INPUT)  / (accelerator->get_precision() / BYTE);
+        gb_capacity.weight = arr_buffer_size.at((unsigned)data_t::WEIGHT) / (accelerator->get_precision() / BYTE);
+        gb_capacity.output = arr_buffer_size.at((unsigned)data_t::OUTPUT) / (accelerator->get_precision() / BYTE);
+    }
+    else {
+        is_gb_exist = false;
+    }  
+    // Init bandwidth
+    gb_bandwidth            = accelerator->get_bandwidth(buffer_t::GB) 
+                            / accelerator->get_precision();
+}
+void analyzer_t::init_multi_chips() {
+    // Init Multi chip 
+    chips_capacity.dim_x = accelerator->get_multi_chips_size(dimension_t::DIM_X);
+    chips_capacity.dim_y = accelerator->get_multi_chips_size(dimension_t::DIM_Y);
+}
+void analyzer_t::init_dram() {
+    // Init unit access cost
+    std::vector<float> arr_unit_energy = accelerator->get_energy(buffer_t::DRAM);
+    std::vector<float> arr_unit_static = accelerator->get_static(buffer_t::DRAM);
+    std::vector<float> arr_unit_cycle  = accelerator->get_cycle(buffer_t::DRAM);
+    dram_unit_energy.input  = arr_unit_energy.at((unsigned)data_t::INPUT);
+    dram_unit_energy.weight = arr_unit_energy.at((unsigned)data_t::WEIGHT);
+    dram_unit_energy.output = arr_unit_energy.at((unsigned)data_t::OUTPUT);
+    dram_unit_static.input  = arr_unit_static.at((unsigned)data_t::INPUT);
+    dram_unit_static.weight = arr_unit_static.at((unsigned)data_t::WEIGHT);
+    dram_unit_static.output = arr_unit_static.at((unsigned)data_t::OUTPUT);
+    dram_unit_cycle.input   = arr_unit_cycle.at((unsigned)data_t::INPUT);
+    dram_unit_cycle.weight  = arr_unit_cycle.at((unsigned)data_t::WEIGHT);
+    dram_unit_cycle.output  = arr_unit_cycle.at((unsigned)data_t::OUTPUT);
+    // Init bandwidth
+    dram_bandwidth          = accelerator->get_bandwidth(buffer_t::DRAM) 
+                            / accelerator->get_precision();
 }

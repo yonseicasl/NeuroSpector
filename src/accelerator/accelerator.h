@@ -19,6 +19,19 @@ public:
     component_type_t get_type(const unsigned idx_);
     unsigned get_precision();
 
+    // DONE 22m
+    unsigned get_mac_array_size(dimension_t dim_);
+    unsigned get_pe_array_size(dimension_t dim_);
+    unsigned get_multi_chips_size(dimension_t dim_);
+
+    // DONE 51m
+    std::vector<float>    get_size(buffer_t buffer_);
+    std::vector<float>  get_energy(buffer_t buffer_);
+    std::vector<float>  get_static(buffer_t buffer_);
+    std::vector<float>   get_cycle(buffer_t buffer_);
+    float            get_bandwidth(buffer_t buffer_);
+    bool     is_upper_most_component(const unsigned idx_);
+
     std::vector<float>    get_size(const unsigned idx_);
     std::vector<unsigned> get_allocated_size(const unsigned idx_, 
                                              direction_t direction_);
