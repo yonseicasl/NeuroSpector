@@ -1,7 +1,7 @@
 # NeuroSpector: Dataflow and Mapping Optimization of Deep Neural Network Accelerators
 Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Intelligent Computing Systems Lab, Yonsei University\
-Current release: TBD (v1.0 to be released in Aug. 2022)
+Current release: v1.0 (Aug. 2022)
 
 ## Table of Contents
 1. [Intoduction](#introduction)
@@ -16,9 +16,13 @@ A number of hardware accelerators have been proposed to speed up deep neural net
 _NeuroSpector_ is a scheduling optimization framework that systematically analyzes the dataflow and mapping possibilities of DNN workloads in accelerators and rapidly identifies optimal scheduling schemes. NeuroSpector finds efficient scheduling solutions for a variety of DNN accelerators 8,000x faster than prior techniques with only 1% energy and cycle differences on average to the optimal schemes, whereas the previous techniques exhibit 85% greater energy and cycle results than the optimal solutions and as much as 15x in the worst case. In addition, NeuroSpector supports many essential features of DNN accelerators and workloads including group convolutions, multi-chip accelerators, data bypassing in buffers, unified/separate buffer types, static power modeling, and network-wise scheduling optimization, which were overlooked or only partly supported in the prior work.
 
 ## Compile
-NeuroSpector is implemented in C++ codes. To build NeuroSpector, type `make` in a terminal.
+NeuroSpector is implemented in C++ codes. It requires only g++ compiler to build and it does not depend on any other libraries or external tools to run. To build NeuroSpector, type `make` in a terminal.
 
 	$ make
+
+If gcc compiler is not installed, type following command in a terminal.
+
+    $ sudo apt install build-essential
 
 ## Run
 ### Optimizer
@@ -51,7 +55,11 @@ The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs 
 
 
 ## Download
-The latest release of the NeuroSpector framework is untagged yet. The initial version of NeuroSpector is expected to be ready in Aug. 2022. The master branch maintains the lastest stable copy of NeuroSpector at this moment.
+The latest release of the NeuroSpector framework is v1.0. The NeuroSpector framework will continually be updated for better code structuring, readability, usability, and bug fixes. To obtain the latest version of NeuroSpector, use the following git command in a terminal. 
+
+	$ git clone --branch v1.0 https://github.com/yonsei-icsl/NeuroSpector
+
+Or, if you wish to use the latest development version, simply clone the git respository as is.
 
 	$ git clone https://github.com/yonsei-icsl/NeuroSpector
 

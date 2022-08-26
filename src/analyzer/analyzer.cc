@@ -264,9 +264,9 @@ void analyzer_t::update_access_count() {
     lb_access_count.output_rd = update_output_access_count(lb_idx, value, operation_t::READ);
     lb_access_count.output_wt = update_output_access_count(lb_idx, value, operation_t::WRITE);
     
-    // Update global buffer access count
-    value = scheduling_table.get_temporal_row_wise_product(gb_idx, dram_idx);
     dataflow = scheduling_table.get_dataflow(lb_idx);
+    dataflow = handle_dataflow_exception_case(gb_idx, dataflow, lb_bypass);
+    value = scheduling_table.get_temporal_row_wise_product(gb_idx, dram_idx);
     gb_access_count.input_rd  = update_input_access_count(gb_idx, value);
     gb_access_count.weight_rd = update_weight_access_count(gb_idx, value);
     gb_access_count.output_rd = update_output_access_count(gb_idx, value, operation_t::READ);
@@ -274,6 +274,7 @@ void analyzer_t::update_access_count() {
 
     // Update dram access count
     dataflow = scheduling_table.get_dataflow(gb_idx);
+    dataflow = handle_dataflow_exception_case(dram_idx, dataflow, gb_bypass);
     value = scheduling_table.get_temporal_row_wise_product(dram_idx, dram_idx);
     dram_access_count.input_rd  = update_input_access_count(dram_idx, value); 
     dram_access_count.weight_rd = update_weight_access_count(dram_idx, value);
@@ -349,7 +350,7 @@ unsigned analyzer_t::update_output_access_count(unsigned idx_,
         case operation_t::WRITE:
             access_count = value_;
             if(dataflow == dataflow_t::OS) {
-                write_access_count /= update_irrelevant_mapping_value(idx_, data_t::OUTPUT); 
+                access_count /= update_irrelevant_mapping_value(idx_, data_t::OUTPUT); 
             }
             break;
         default:
@@ -360,12 +361,33 @@ unsigned analyzer_t::update_output_access_count(unsigned idx_,
 unsigned analyzer_t::update_irrelevant_mapping_value(unsigned row_idx_,
                                                       data_t stationary_data_) {
     unsigned irrelevant_mapping_value = 1;
+    unsigned alternative_one = 1;
+    unsigned alternative_two = 1;
     
     // Product all irrelevant mapping values with stationary data
     switch(stationary_data_) {
     case data_t::INPUT:
         irrelevant_mapping_value 
             = scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::K);
+
+        // If nothing repeats in the inner loops.
+        if(irrelevant_mapping_value == 1) {
+            // evaluates both other dataflows on behalf of the ineffective current dataflow.
+            // Weight stationary
+            alternative_one = scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::B)
+                            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::P)
+                            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::Q);
+            // Output stationary 
+            alternative_two = scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::C)
+                            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::R)
+                            * scheduling_table.get_mapping_value(row_idx_, (unsigned)parameter_t::S);
+            if(alternative_one >  alternative_two) {
+                irrelevant_mapping_value = alternative_one;
+            }
+            else {
+                irrelevant_mapping_value = alternative_two;
+            }
+        }
         break;
     case data_t::WEIGHT:
         irrelevant_mapping_value 
@@ -864,6 +886,52 @@ unsigned analyzer_t::get_factorization_degrees(unsigned idx_) {
         num_factors.clear();
     }
     return factorization_degrees;
+}
+
+// Handle exception case where given dataflow is ineffective 
+dataflow_t analyzer_t::handle_dataflow_exception_case(unsigned idx_, dataflow_t df_, bypass_t bp_) {
+    dataflow_t dataflow = df_;
+    bypass_t bypass = bp_;
+    if(update_irrelevant_mapping_value(idx_, (data_t)((unsigned)df_-1)) == 1) {
+        switch(dataflow) {
+            case dataflow_t::IS:
+                if(bypass.weight) { dataflow = dataflow_t::OS; break; }
+                if(bypass.output) { dataflow = dataflow_t::WS; break; }
+                if(update_irrelevant_mapping_value(idx_, data_t::WEIGHT) 
+                 > update_irrelevant_mapping_value(idx_, data_t::OUTPUT)) {
+                    dataflow = dataflow_t::WS;
+                }
+                else {
+                    dataflow = dataflow_t::OS;
+                }
+                break;
+            case dataflow_t::WS:
+                if(bypass.input)  { dataflow = dataflow_t::OS; break; }
+                if(bypass.output) { dataflow = dataflow_t::IS; break; }
+                if(update_irrelevant_mapping_value(idx_, data_t::INPUT) 
+                 > update_irrelevant_mapping_value(idx_, data_t::OUTPUT)) {
+                    dataflow = dataflow_t::IS;
+                }
+                else {
+                    dataflow = dataflow_t::OS;
+                }
+                break;
+            case dataflow_t::OS:
+                if(bypass.input)  { dataflow = dataflow_t::WS; break; }
+                if(bypass.weight) { dataflow = dataflow_t::IS; break; }
+                if(update_irrelevant_mapping_value(idx_, data_t::INPUT) 
+                 > update_irrelevant_mapping_value(idx_, data_t::WEIGHT)) {
+                    dataflow = dataflow_t::IS;
+                }
+                else {
+                    dataflow = dataflow_t::WS;
+                }
+                break;
+            default:
+                break;
+        }
+    }
+    return dataflow;
 }
 
 void analyzer_t::init_mac_array() {

@@ -123,7 +123,11 @@ private:
     unsigned update_irrelevant_mapping_value(unsigned row_idx_,
                                              data_t stationary_data_);
     
-    unsigned compute_overlapped_size(scheduling_table_t prev_table_); 
+    unsigned compute_overlapped_size(scheduling_table_t prev_table_);
+    // Handle exception case where given dataflow is ineffective 
+    dataflow_t handle_dataflow_exception_case(unsigned idx_, 
+                                              dataflow_t df_, 
+                                              bypass_t bp_);
 
     accelerator_t      *accelerator;
     network_t          *network;
