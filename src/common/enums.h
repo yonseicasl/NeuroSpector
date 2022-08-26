@@ -8,33 +8,12 @@
 enum class ComponentType {
     REG, MAC_X, MAC_Y, LB, PE_X, PE_Y, GB, CHIP_X, CHIP_Y, DRAM, SIZE 
 };
-
 enum class run_t : unsigned {
     OPTIMIZER, ANALYZER, SIZE
 };
-// enum class component_t : unsigned {
-//     REG, 
-//     MAC_ARRAY_X, 
-//     MAC_ARRRAY_Y,
-//     LOCAL_BUFFER,
-//     PE_ARRAY_X,
-//     PE_ARRAY_Y,
-//     GLOBAL_BUFFER,
-//     MULTI_CHIP_X,
-//     MULTI_CHIP_Y,
-//     DRAM,
-//     SIZE
-// };
 // reuse types for separating the kinds of data-reuse
-// enum class reuse_t : unsigned {
 enum class component_type_t : unsigned {
     TEMPORAL, SPATIAL, SIZE
-};
-
-static std::vector<std::string> component_type_str __attribute__((unused)) = {
-    "temporal",
-    "spatial",
-    "size",
 };
 // Eight parameters that comprise DNN data (columns of scheduling table)
 enum class parameter_t : unsigned {
@@ -74,6 +53,16 @@ enum class dimension_t : unsigned {
     DIM_X, DIM_Y, SIZE
 };
 
+static std::vector<std::string> run_str __attribute__((unused)) = {
+    "optimizer",
+    "analyzer",
+    "size",
+};
+static std::vector<std::string> component_type_str __attribute__((unused)) = {
+    "temporal",
+    "spatial",
+    "size",
+};
 static std::vector<std::string> dataflow_str __attribute__((unused)) = {
     "none",
     "is",
