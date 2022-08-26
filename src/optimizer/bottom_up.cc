@@ -106,7 +106,6 @@ void bottom_up_t::print_results() {
         analyzer.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
     }
     analyzer.print_results(); 
-    analyzer.reset();
 }
 // Print multi-chip partitioning results
 void bottom_up_t::print_mcp_results() {
@@ -119,7 +118,6 @@ void bottom_up_t::print_mcp_results() {
         analyzer.init(*it);
         analyzer.estimate_cost();
         total_cost += analyzer.get_total_cost(metric);
-        analyzer.reset();
     }
     std::cout << "[message] Multip chip partitioning result : "
               << total_cost - best_cost_of_multiple_layers
@@ -149,6 +147,8 @@ void bottom_up_t::engine() {
     // Compare DRAM row and dnn parameters
     std::vector<unsigned> dram_rows = scheduling_table->get_row_values(begin_pos);
     std::vector<unsigned> layer_param = scheduling_table->get_layer_parameters();
+    // If DNN parameters in DRAM is different with layer parameters, 
+    // NeuroSpector considers that DRAM row has been set.
     for(unsigned i = 0; i < dram_rows.size(); i++) {
         if(dram_rows.at(i) != layer_param.at(i)) {
             begin_pos = scheduling_table->get_above_buffer_pos(begin_pos);
@@ -201,7 +201,6 @@ void bottom_up_t::engine() {
             best_scheduling_option = *it;
         }
     }
-    analyzer.reset();
     return;
 }
 // Update the optimal scheduling table
@@ -215,12 +214,10 @@ void bottom_up_t::update() {
     analyzer.init(best_scheduling_option.scheduling_table);
     analyzer.estimate_cost();
     curr_df_cost = analyzer.get_total_cost(metric);
-    analyzer.reset();
 
     analyzer.init(global_best_scheduling_option.scheduling_table);
     analyzer.estimate_cost();
     best_df_cost = analyzer.get_total_cost(metric);
-    analyzer.reset();
 
     if(curr_df_cost < best_df_cost) {
         global_best_scheduling_option = best_scheduling_option;
@@ -240,8 +237,7 @@ void bottom_up_t::search(unsigned tid_,
     unsigned spatial_pos = begin_pos_ + 1; 
     std::vector<std::vector<unsigned>> mapping_values_set;
 
-    accelerator_t m_accelerator = accelerator_t(*accelerator);
-    analyzer_t analyzer(&m_accelerator, network);
+    analyzer_t analyzer(accelerator, network);
 
     scheduling_table_t scheduling_table_curr = scheduling_candidates_.scheduling_table;
     scheduling_table_t scheduling_table_pm = scheduling_candidates_.scheduling_table;
@@ -262,8 +258,6 @@ void bottom_up_t::search(unsigned tid_,
         // Update mapping values of scheduling table
         scheduling_table_curr.update_set_of_rows(spatial_pos, end_pos_,
                                                  mapping_values_set);
-        // Reset analyzer's variables
-        analyzer.reset();
         // Load scheduling table to analyzer
         analyzer.init(scheduling_table_curr);
         // Check_Validity
@@ -276,7 +270,6 @@ void bottom_up_t::search(unsigned tid_,
             mapping_values_set = temporal_mapping_space.get_mapping_set();
             scheduling_table_curr.update_row(begin_pos_, mapping_values_set.at(0));
             scheduling_table_curr.update_row(end_pos_, mapping_values_set.at(1));
-            analyzer.reset();
             analyzer.init(scheduling_table_curr);
             if(!analyzer.check_validity()) continue;
             analyzer.estimate_cost();
@@ -450,8 +443,7 @@ void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& table
         unsigned num_same_tile_size = 0;
         unsigned num_total_parallelized_layer = 0;
         unsigned access_count = 1;
-        unsigned dram_index   = accelerator->get_num_components() - 1;
-        float    input_access_energy = accelerator->get_component_energy(dram_index).at((unsigned)data_t::INPUT);
+        float    input_access_energy = accelerator->get_energy(ComponentType::DRAM)[(unsigned)data_t::INPUT];
         for(auto it = tmp_partition_comb.begin(); 
                  it != tmp_partition_comb.end(); 
                  ++it) {
@@ -526,7 +518,6 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         // Update mapping values of scheduling table
         table_.update_set_of_rows(glb_pos, dram_pos, 
                                   mapping_values_set);
-        analyzer.reset();
         // Load scheduling table to analyzer
         analyzer.init(table_);
         // Check_validity
@@ -539,13 +530,11 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         // Get cost between DRAM and Global buffers
         partition_case.cost = analyzer.get_target_level_cost(dram_pos, metric);
         // Get input tile size that DRAM transfers
-        partition_case.input_tile_size = analyzer.get_tile_size(dram_pos, 
-                                                      data_t::INPUT);
+        partition_case.input_tile_size = analyzer.get_tile_size(ComponentType::DRAM, 
+                                                                data_t::INPUT);
         // Get tile-granular access count of input in DRAM 
-        unsigned dram_component_idx = scheduling_table->get_component_index(dram_pos);
-        partition_case.input_access_count = analyzer.get_access_count(dram_component_idx, 
-                                                            operation_t::READ,
-                                                            data_t::INPUT);
+        partition_case.input_access_count = analyzer.get_access_count(ComponentType::DRAM, 
+                                                                      data_t::INPUT);
         partition_case.num_assigned_chips = num_activated_chips;
         partition_case.scheduling_table = table_;
         // Find the num_activated_chips already exist in map

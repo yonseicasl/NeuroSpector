@@ -32,8 +32,6 @@ public:
                                     metric_t      metric_);
     // Print out analysis result
     void print_results();
-    // Reset analyzer variables
-    void reset();
     // Get accelerator's target cost (Energy or Cycle)
     float get_total_cost(metric_t metric_);
     // Get the cost of targeted level 
@@ -43,9 +41,9 @@ public:
     // Get Num. active chips
     unsigned get_num_active_chips();
     // Get tile size of the row of scheduling table 
-    unsigned get_tile_size(unsigned idx_, data_t data_type_);
+    unsigned get_tile_size(ComponentType comp_, data_t data_type_);
     // Get tile-granular access count of the row of scheduling table 
-    unsigned get_access_count(unsigned idx_, operation_t op_, data_t data_type_);
+    unsigned get_access_count(ComponentType comp_, data_t data_type_);
 
     struct tile_size_t {
         unsigned input;
@@ -119,12 +117,6 @@ private:
     unsigned update_output_access_count(unsigned idx_, 
                                         unsigned value_,
                                         operation_t oper_);
-    // Get energy of component level
-    float get_energy_consumption(unsigned component_idx_,
-                                 direction_t direction_);
-    // Get cycle of target component level
-    float get_cycle_consumption(unsigned component_idx_,
-                                direction_t direction_);
     // Get factorziation degrees in target component level
     unsigned get_factorization_degrees(unsigned idx_);
     
@@ -213,10 +205,10 @@ private:
     // Bypass
     bypass_t lb_bypass;
     bypass_t gb_bypass;
-    // Bandwidth
-    float   lb_bandwidth;
-    float   gb_bandwidth;
-    float dram_bandwidth;
+    // bitwidth
+    float   lb_bitwidth;
+    float   gb_bitwidth;
+    float dram_bitwidth;
     // Unit access energy
     float            mac_unit_energy;
     unit_cost_t       lb_unit_energy;

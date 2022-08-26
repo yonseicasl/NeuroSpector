@@ -61,7 +61,6 @@ int main(int argc, char **argv) {
         std::clog << "\nCross Layer Opt  = " << cl_optimization; 
     }
     std::clog << std::endl;
-
     switch(run_type_enum) {
         case run_t::OPTIMIZER:
             if(optimizer_type.compare("bottom-up") == 0) {

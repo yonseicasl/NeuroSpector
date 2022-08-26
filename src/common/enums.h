@@ -5,10 +5,28 @@
 #include <vector>
 #include <string>
 
+enum class ComponentType {
+    REG, MAC_X, MAC_Y, LB, PE_X, PE_Y, GB, CHIP_X, CHIP_Y, DRAM, SIZE 
+};
+
 enum class run_t : unsigned {
     OPTIMIZER, ANALYZER, SIZE
 };
-// Component types for separating the kinds of data-reuse
+// enum class component_t : unsigned {
+//     REG, 
+//     MAC_ARRAY_X, 
+//     MAC_ARRRAY_Y,
+//     LOCAL_BUFFER,
+//     PE_ARRAY_X,
+//     PE_ARRAY_Y,
+//     GLOBAL_BUFFER,
+//     MULTI_CHIP_X,
+//     MULTI_CHIP_Y,
+//     DRAM,
+//     SIZE
+// };
+// reuse types for separating the kinds of data-reuse
+// enum class reuse_t : unsigned {
 enum class component_type_t : unsigned {
     TEMPORAL, SPATIAL, SIZE
 };
@@ -32,7 +50,7 @@ enum class correlation_t : unsigned {
 };
 // Three types of dataflow
 enum class dataflow_t : unsigned {
-    NONE = 0, IS, WS, OS, SIZE
+    NONE, IS, WS, OS, SIZE
 };
 // Data read and write operations
 enum class operation_t :unsigned {
