@@ -37,6 +37,13 @@ int main(int argc, char **argv) {
     std::string cl_optimization  = str_argv.find("cl_optimization")!=str_argv.end()
                                  ? str_argv.find("cl_optimization")->second : "";
 
+    run_t run_type_enum = (run_t)get_enum_type(run_str, run_type);
+    if(run_type_enum > run_t::SIZE) {
+        std::cerr << "Invalid Run type."
+                  << "(Possible run type: optimizer, analyzer)"
+                  << std::endl;
+        exit(0);
+    }
     std::clog << "[message] Run NeuroSpector" 
               << "\nRun_type         = " << run_type
               << "\nAccelerator      = " << accelerator
@@ -50,8 +57,6 @@ int main(int argc, char **argv) {
     clock_t start, finish;
     // Search start
     start = time(nullptr);
-    run_t run_type_enum = run_type == "optimizer" 
-                             ? run_t::OPTIMIZER : run_t::ANALYZER;
     std::vector<unsigned> list_layer;
     if(!mc_partitioning.empty()) {
         std::clog << "\nMulti. Chip. P   = " << mc_partitioning;
@@ -61,7 +66,6 @@ int main(int argc, char **argv) {
         std::clog << "\nCross Layer Opt  = " << cl_optimization; 
     }
     std::clog << std::endl;
-
     switch(run_type_enum) {
         case run_t::OPTIMIZER:
             if(optimizer_type.compare("bottom-up") == 0) {
@@ -111,11 +115,7 @@ int main(int argc, char **argv) {
             break;
 
         default:
-            std::cerr << "Invalid Run type."
-                      << "(Possible run type: optimizer, analyzer)"
-                      << std::endl;
-
-            exit(0);
+            break;
     }
 
 

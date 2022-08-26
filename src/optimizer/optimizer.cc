@@ -8,7 +8,7 @@ optimizer_t::optimizer_t(const std::string& accelerator_pth_,
       network(new network_t(network_pth_)) {
     
     // Init accelerator configuration
-    accelerator->init_accelerator();
+    // accelerator->init_accelerator();
     accelerator->print_spec();
     // Init DNN configuration
     network->init_network();
@@ -46,14 +46,12 @@ unsigned optimizer_t::get_num_targeted_levels(unsigned begin_pos_,
 std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations() {
     std::vector<std::vector<dataflow_t>> dataflow_combinations;
     std::vector<dataflow_t> combination;
-    unsigned component_idx = 0;
     if(is_fixed) {
         // Traverse temporal rows and collect dataflow of each component
         for(unsigned i = 0; i < scheduling_table->get_num_rows() - 1; i++) {
             if(scheduling_table->get_component_type(i) == component_type_t::TEMPORAL
             && scheduling_table->get_component_name(i) != "virtual") {
-                component_idx = scheduling_table->get_component_index(i);
-                combination.push_back(accelerator->get_dataflow(component_idx));
+                combination.push_back(scheduling_table->get_dataflow(i));
             }
         }
         dataflow_combinations.push_back(combination);
@@ -61,7 +59,7 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
     }
     else {
         std::vector<dataflow_t> possible_dataflows;
-        std::vector<data_t> bypass;
+        bool* bypass;
         data_t stationary_data;
         
         unsigned permutation_cnt   = 0;
@@ -76,18 +74,16 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
                 for(unsigned df = (unsigned)dataflow_t::IS; 
                              df < (unsigned)dataflow_t::SIZE; 
                              df++) {
-                    component_idx = scheduling_table->get_component_index(i);
-                    if(accelerator->get_dataflow(component_idx) == dataflow_t::NONE) {
+                    if(scheduling_table->get_dataflow(i) == dataflow_t::NONE) {
                         possible_dataflows.push_back(dataflow_t::NONE);
                         break;
                     }
                     else {
-                        bypass = accelerator->get_bypass(component_idx);
+                        bypass = scheduling_table->get_bypass(i);
                         stationary_data = (data_t)(df-1);
-                        auto exist = find(bypass.begin(), bypass.end(), 
-                                          stationary_data);
-                        if(exist != bypass.end()) { continue; }
-                        possible_dataflows.push_back((dataflow_t)df);
+                        if(bypass[(unsigned)stationary_data]) {
+                            possible_dataflows.push_back((dataflow_t)df);
+                        }
                     }
                 }
                 temp.push_back(possible_dataflows);

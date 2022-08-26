@@ -24,7 +24,7 @@ public:
     // Init analyzer
     void init(scheduling_table_t scheduling_table_);
     // Check scheduling table's validity
-    bool check_validity() const;
+    bool check_validity() ;
     // Estimate accelerator's cost for a given scheduling table
     void estimate_cost();
     // Estimate the amount of data reuse between adjacent layers
@@ -32,8 +32,6 @@ public:
                                     metric_t      metric_);
     // Print out analysis result
     void print_results();
-    // Reset analyzer variables
-    void reset();
     // Get accelerator's target cost (Energy or Cycle)
     float get_total_cost(metric_t metric_);
     // Get the cost of targeted level 
@@ -43,23 +41,54 @@ public:
     // Get Num. active chips
     unsigned get_num_active_chips();
     // Get tile size of the row of scheduling table 
-    unsigned get_tile_size(unsigned idx_, data_t data_type_);
+    unsigned get_tile_size(ComponentType comp_, data_t data_type_);
     // Get tile-granular access count of the row of scheduling table 
-    unsigned get_access_count(unsigned idx_, data_t data_type_);
+    unsigned get_access_count(ComponentType comp_, data_t data_type_);
 
+    struct tile_size_t {
+        unsigned input;
+        unsigned weight;
+        unsigned output;
+    };
+    struct access_count_t {
+        unsigned input_rd;
+        unsigned weight_rd;
+        unsigned output_rd;
+        unsigned output_wt;
+    };
+    struct unit_cost_t {
+        float input;
+        float weight;
+        float output;
+    };
+    struct buffer_size_t {
+        float input;
+        float weight;
+        float output;
+        float shared;
+    };
+    struct arr_size_t {
+        unsigned dim_x;
+        unsigned dim_y;
+    };
+    struct bypass_t {
+        bool input;
+        bool weight;
+        bool output;
+    };
 private:
+    void init_mac_array();
+    void init_local_buffer();
+    void init_pe_array();
+    void init_global_buffer();
+    void init_multi_chips();
+    void init_dram();
     // Check hardware constraints
-    bool check_hardware_constraints() const;
-    // Check active components doesn't exceed physical # components or not
-    bool check_spatial_validity(unsigned idx_) const;
-    // Check allocated tile size fit in buffer capacity or not
-    bool check_temporal_validity(unsigned idx_) const;
+    bool check_hardware_constraints() ;
     // Check parameter constraints
-    bool check_network_constraints() const;
-    // Update tile size to receive from adjacent buffer (or memory)
-    void update_tile_size_to_receive();
-    // Update tile size to send to adjacent buffer (or memory)
-    void update_tile_size_to_send();
+    bool check_network_constraints() ;
+    // Update tile size
+    void update_tile_size();
     // Update tile-granular access count
     void update_access_count();
     // Update num. activated components
@@ -68,36 +97,26 @@ private:
     void update_cycle();
     // Update accelerator's energy (static + dynamic)
     void update_energy();
-    // Update accelerator's static energy
-    void update_static_energy();
 
-    // Update input tile size to receive (or send)
-    void update_component_input_tile_size(unsigned idx_, 
-                                          std::vector<unsigned> values_,
-                                          direction_t direction_);
-    // Update weight tile size to receive (or send)
-    void update_component_weight_tile_size(unsigned idx_, 
-                                          std::vector<unsigned> values_,
-                                          direction_t direction_);
-    // Update output tile size to receive (or send)
-    void update_component_output_tile_size(unsigned idx_, 
-                                          std::vector<unsigned> values_,
-                                          direction_t direction_);
+    // Update input tile size to allocate (or send)
+    unsigned update_input_tile_size(buffer_t buffer_,
+                                    direction_t direction_);
+    // Update weight tile size to allocate (or send)
+    unsigned update_weight_tile_size(buffer_t buffer_,
+                                     direction_t direction_);
+    // Update output tile size to allocate (or send)
+    unsigned update_output_tile_size(buffer_t buffer_,
+                                     direction_t direction_);
     // Update tile-granular input access count
-    void update_component_input_access_count(unsigned idx_, 
-                                             unsigned value_);
+    unsigned update_input_access_count(unsigned idx_, 
+                                       unsigned value_);
     // Update tile-granular weight access count
-    void update_component_weight_access_count(unsigned idx_, 
-                                              unsigned value_);
+    unsigned update_weight_access_count(unsigned idx_, 
+                                        unsigned value_);
     // Update tile-granular output access count
-    void update_component_output_access_count(unsigned idx_, 
-                                              unsigned value_);
-    // Get energy of component level
-    float get_energy_consumption(unsigned component_idx_,
-                                 direction_t direction_);
-    // Get cycle of target component level
-    float get_cycle_consumption(unsigned component_idx_,
-                                direction_t direction_);
+    unsigned update_output_access_count(unsigned idx_, 
+                                        unsigned value_,
+                                        operation_t oper_);
     // Get factorziation degrees in target component level
     unsigned get_factorization_degrees(unsigned idx_);
     
@@ -110,10 +129,6 @@ private:
     network_t          *network;
     scheduling_table_t scheduling_table;
 
-    std::vector<float> components_energy;
-    std::vector<float> components_static_energy;
-    std::vector<float> components_cycle;
-
     unsigned access_count = 0;
     unsigned write_access_count = 0;
     unsigned read_access_count  = 0;
@@ -121,9 +136,97 @@ private:
     unsigned component_idx_curr = 0;
     unsigned component_idx_lower= 0;
     unsigned component_idx_upper= 0;
+    
+    dataflow_t dataflow = dataflow_t::NONE;
 
-    float    total_energy = 0;
-    float    total_static_energy = 0;
-    float    total_cycle  = 0;
+    // Total number of active components
+    unsigned num_active_macs  = 1;
+    unsigned num_active_pes   = 1;
+    unsigned num_active_chips = 1;
+    // Component utilization
+    float       mac_arr_util;
+    float  local_buffer_util;
+    float        pe_arr_util;
+    float global_buffer_util;
+    float      chip_arr_util;
+    // Component tile size transferred to upper level
+    tile_size_t   mac_tile_size_send;
+    tile_size_t    lb_tile_size_send;
+    tile_size_t    gb_tile_size_send;
+    tile_size_t  dram_tile_size_send;
+    // Component tile size allocated in buffer
+    tile_size_t  mac_tile_size_alloc;
+    tile_size_t   lb_tile_size_alloc;
+    tile_size_t   gb_tile_size_alloc;
+    tile_size_t dram_tile_size_alloc;
+    // Component access count
+    access_count_t   lb_access_count;
+    access_count_t   gb_access_count;
+    access_count_t dram_access_count;
+
+    // Total dynamic energy 
+    float    total_energy         = 0;
+    float    mac_energy           = 0;
+    float    local_buffer_energy  = 0;
+    float    lb_energy_upper      = 0;
+    float    lb_energy_lower      = 0;
+    float    global_buffer_energy = 0;
+    float    gb_energy_upper      = 0;
+    float    gb_energy_lower      = 0;
+    float    dram_energy          = 0;
+    // Total static energy 
+    float    total_static_energy  = 0;
+    float    mac_static           = 0;
+    float    local_buffer_static  = 0;
+    float    global_buffer_static = 0;
+    float    dram_static          = 0;
+    // Total cycle
+    float    total_cycle          = 0;
+    float    mac_cycle            = 0;
+    float    local_buffer_cycle   = 0;
+    float    global_buffer_cycle  = 0;
+    float    dram_cycle           = 0;
+
+    arr_size_t  macs_actived;
+    arr_size_t   pes_actived;
+    arr_size_t chips_actived;
+    // Physical limit
+    arr_size_t  macs_capacity;
+    arr_size_t   pes_capacity;
+    arr_size_t chips_capacity;
+    buffer_size_t lb_capacity;
+    buffer_size_t gb_capacity;
+    // is buffer type is shared or sepearted
+    bool is_lb_shared;
+    bool is_gb_shared;
+    // is buffer exist
+    bool is_lb_exist;
+    bool is_gb_exist;
+    // Bypass
+    bypass_t lb_bypass;
+    bypass_t gb_bypass;
+    // bitwidth
+    float   lb_bitwidth;
+    float   gb_bitwidth;
+    float dram_bitwidth;
+    // Unit access energy
+    float            mac_unit_energy;
+    unit_cost_t       lb_unit_energy;
+    unit_cost_t       gb_unit_energy;
+    unit_cost_t     dram_unit_energy;
+    // Unit access cycle
+    float             mac_unit_cycle;
+    unit_cost_t        lb_unit_cycle;
+    unit_cost_t        gb_unit_cycle;
+    unit_cost_t      dram_unit_cycle;
+    // Unit Static power
+    float            mac_unit_static;
+    unit_cost_t       lb_unit_static;
+    unit_cost_t       gb_unit_static;
+    unit_cost_t     dram_unit_static;
+
+    unsigned dram_idx; 
+    unsigned   gb_idx; 
+    unsigned   lb_idx;
 };
 #endif

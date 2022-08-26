@@ -47,6 +47,7 @@ private:
     // Find optimal scheudling option based on primary strategy 
     void optimize_with_primary_strategy(unsigned end_pos_,
                                         analyzer_t& analyzer_,
+                                        float& curr_cost,
                                         float& lowest_cost_,
                                         scheduling_table_t& curr_table_,
                                         scheduling_table_t& pm_table_);
@@ -54,6 +55,7 @@ private:
     void optimize_with_supplementary_strategy(unsigned begin_pos_,
                                               unsigned end_pos_,
                                               analyzer_t& analyzer_,
+                                              float& curr_cost,
                                               float& lowest_cost_,
                                               unsigned& best_opportunity_,
                                               scheduling_table_t& curr_table_,

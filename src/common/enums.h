@@ -5,18 +5,15 @@
 #include <vector>
 #include <string>
 
+enum class ComponentType {
+    REG, MAC_X, MAC_Y, LB, PE_X, PE_Y, GB, CHIP_X, CHIP_Y, DRAM, SIZE 
+};
 enum class run_t : unsigned {
     OPTIMIZER, ANALYZER, SIZE
 };
-// Component types for separating the kinds of data-reuse
+// reuse types for separating the kinds of data-reuse
 enum class component_type_t : unsigned {
     TEMPORAL, SPATIAL, SIZE
-};
-
-static std::vector<std::string> component_type_str __attribute__((unused)) = {
-    "temporal",
-    "spatial",
-    "size",
 };
 // Eight parameters that comprise DNN data (columns of scheduling table)
 enum class parameter_t : unsigned {
@@ -32,7 +29,7 @@ enum class correlation_t : unsigned {
 };
 // Three types of dataflow
 enum class dataflow_t : unsigned {
-    NONE = 0, IS, WS, OS, SIZE
+    NONE, IS, WS, OS, SIZE
 };
 // Data read and write operations
 enum class operation_t :unsigned {
@@ -48,12 +45,24 @@ enum class metric_t:unsigned {
 enum class strategy_t:unsigned {
     PM, SP, SIZE
 };
-
+enum class buffer_t : unsigned {
+    LB, GB, DRAM, SIZE
+};
 // Two dimension of spatial level
 enum class dimension_t : unsigned {
     DIM_X, DIM_Y, SIZE
 };
 
+static std::vector<std::string> run_str __attribute__((unused)) = {
+    "optimizer",
+    "analyzer",
+    "size",
+};
+static std::vector<std::string> component_type_str __attribute__((unused)) = {
+    "temporal",
+    "spatial",
+    "size",
+};
 static std::vector<std::string> dataflow_str __attribute__((unused)) = {
     "none",
     "is",

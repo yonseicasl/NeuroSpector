@@ -110,7 +110,6 @@ void brute_force_t::update() {
         analyzer.init(*it);
         analyzer.estimate_cost();
         curr_cost = analyzer.get_total_cost(metric);
-        analyzer.reset();
         if(curr_cost < global_best_cost) { 
             global_best_cost = curr_cost; 
             global_best_scheduling_option = *it;
@@ -168,8 +167,6 @@ void brute_force_t::search(unsigned tid_,
                 best_local_scheduling_option = local_scheduling_option;
             }
         }
-        // Reset analyzer's variables
-        analyzer.reset();
     }
     m_.lock();
     best_scheduling_option.push_back(best_local_scheduling_option);
