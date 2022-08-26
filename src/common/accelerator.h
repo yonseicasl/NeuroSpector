@@ -82,7 +82,6 @@ private:
 
     std::vector<float>        energy;
     std::vector<float>        cycle;
-    // std::vector<component_t*> components;
 
     void *component_list[(unsigned)ComponentType::SIZE];
     temporal_component_t *register_file;

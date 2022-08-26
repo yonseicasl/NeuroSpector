@@ -267,14 +267,6 @@ void scheduling_table_t::add_virtual_component(component_type_t component_type_)
     row_dataflows.emplace_back(dataflow_t::NONE);
     num_table_rows++;
 }
-// Add virtual component
-void scheduling_table_t::add_virtual_component(component_type_t component_type_,
-                                               unsigned component_idx_) {
-    row_names.emplace_back("virtual");
-    row_types.emplace_back(component_type_);
-    row_dataflows.emplace_back(dataflow_t::NONE);
-    num_table_rows++;
-}
 // Check the component is virtual
 bool scheduling_table_t::is_virtual(unsigned idx_) {
     return row_names.at(idx_) == "virtual";
@@ -448,30 +440,28 @@ std::vector<unsigned> scheduling_table_t::get_row_wise_product(int begin_,
     std::vector<unsigned> rtn;
     unsigned tmp = 1;
     for(unsigned col_idx = 0; col_idx < (unsigned)parameter_t::SIZE; col_idx++) {
-        for(int row_idx = begin_; row_idx <= end_; row_idx++) {
-            tmp *= get_mapping_value(row_idx, col_idx);
-        }
+        tmp = get_column_wise_product((parameter_t)col_idx, begin_, end_);
         rtn.emplace_back(tmp);
         tmp = 1;
     }
 
     return rtn;
 }
+// Get a result that multiplying all mapping values existed in temporal rows
+unsigned scheduling_table_t::get_temporal_row_wise_product(int begin_, 
+                                                           int end_) {
+    unsigned rtn = 1;
+    for(int row_idx = begin_; row_idx <= end_; row_idx++) {
+        if(row_types.at(row_idx) == component_type_t::SPATIAL) continue;
+        rtn *= get_row_product(row_idx);
+    }
+    return rtn;
+}
+// Get a result that multiplying all mapping values existed in a row
 unsigned scheduling_table_t::get_row_product(int pos_) {
     unsigned rtn = 1;
     for(unsigned col_idx = 0; col_idx < (unsigned)parameter_t::SIZE; col_idx++) {
             rtn *= get_mapping_value(pos_, col_idx);
-    }
-    return rtn;
-}
-unsigned scheduling_table_t::get_temporal_row_wise_product(int begin_, 
-                                                            int end_) {
-    unsigned rtn = 1;
-    for(unsigned col_idx = 0; col_idx < (unsigned)parameter_t::SIZE; col_idx++) {
-        for(int row_idx = begin_; row_idx <= end_; row_idx++) {
-            if(row_types.at(row_idx) == component_type_t::SPATIAL) continue;
-            rtn *= get_mapping_value(row_idx, col_idx);
-        }
     }
     return rtn;
 }
