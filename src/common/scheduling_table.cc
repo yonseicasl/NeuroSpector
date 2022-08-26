@@ -49,8 +49,7 @@ scheduling_table_t::scheduling_table_t(const scheduling_table_t &scheduling_tabl
      mapping_values(scheduling_table_.mapping_values), 
      row_names(scheduling_table_.row_names), 
      row_types(scheduling_table_.row_types),
-     row_dataflows(scheduling_table_.row_dataflows),
-     row_index(scheduling_table_.row_index) {
+     row_dataflows(scheduling_table_.row_dataflows) {
 }
 // Initialize scheduling table
 void scheduling_table_t::init() {
@@ -63,68 +62,36 @@ void scheduling_table_t::init() {
 // Initialize scheduling table rows
 void scheduling_table_t::init_table_rows() {
     std::clog << "[message] initialize table rows" << std::endl;
-    component_type_t component_type = component_type_t::TEMPORAL;
-    for(unsigned i = 0; i < accelerator->get_num_components(); i++) {
-        // Verbose logger
-        // std::clog << accelerator->get_name(i) << " Component type : ";  
-        // std::clog << (unsigned) accelerator->get_type(i) << ", Target type : ";
-        // std::clog << (unsigned) component_type << std::endl;
-        // If there's not exist the expected component type, add a virtual component
-        if(accelerator->get_type(i) != component_type) { 
-            // std::clog << "Add New virtual component" << std::endl;
-            i--;
-            add_virtual_component(component_type);
-            // If component type is spatial add one more component level to reflect Dim-Y
-            if(component_type == component_type_t::SPATIAL) {
-                add_virtual_component(component_type);
-            }
+
+    for(unsigned i = 0; i < (unsigned)ComponentType::SIZE; i++) {
+        // If the component is undefined in accelerator then insert virtual row
+        if(accelerator->get_name((ComponentType)i) == "virtual") {
+            add_virtual_component(accelerator->get_type((ComponentType)i));
         }
         else {
-            // Add spatial level
-            if(accelerator->get_type(i) == component_type_t::SPATIAL) {
-                // If the MACs, PEs or Chips are arranged in two-dimension, add row
-                if(accelerator->get_size(i).at(0) == 1) { 
-                    add_virtual_component(component_type, i); 
-                }
-                else {
-                    row_names.emplace_back(accelerator->get_name(i) + "(X)");
-                    row_types.emplace_back(component_type_t::SPATIAL);
-                    row_dataflows.emplace_back(dataflow_t::NONE);
-                    row_index.emplace_back(i);
-                    num_table_rows++;
-                }
-                if(accelerator->get_size(i).at(1) == 1) { 
-                    add_virtual_component(component_type, i); 
-                }
-                else {
-                    row_names.emplace_back(accelerator->get_name(i) + "(Y)");
-                    row_types.emplace_back(component_type_t::SPATIAL);
-                    row_dataflows.emplace_back(dataflow_t::NONE);
-                    row_index.emplace_back(i);
-                    num_table_rows++;
-                }
+            // Skip the component's size is 1, it is considered as virtual row
+            if(accelerator->is_unit_component((ComponentType)i)) {
+                add_virtual_component(accelerator->get_type((ComponentType)i));
             }
-            // Add temporal level
-            else { 
-                if(accelerator->get_size(i).at(0) == 3) {
-                    add_virtual_component(component_type); 
+            else {
+                if(i == (unsigned)ComponentType::MAC_X 
+                || i == (unsigned)ComponentType::PE_X 
+                || i == (unsigned)ComponentType::CHIP_X) {
+                    row_names.emplace_back(accelerator->get_name((ComponentType)i) + "(X)");
+                }
+                else if(i == (unsigned)ComponentType::MAC_Y 
+                    || i == (unsigned)ComponentType::PE_Y 
+                    || i == (unsigned)ComponentType::CHIP_Y) {
+                    row_names.emplace_back(accelerator->get_name((ComponentType)i) + "(Y)");
                 }
                 else {
-                    row_names.emplace_back(accelerator->get_name(i));
-                    row_types.emplace_back(component_type_t::TEMPORAL);
-                    row_dataflows.emplace_back(accelerator->get_dataflow(i));
-                    row_index.emplace_back(i);
-                    num_table_rows++;
+                    row_names.emplace_back(accelerator->get_name((ComponentType)i));
                 }
+
+                row_types.emplace_back(accelerator->get_type((ComponentType)i));
+                row_dataflows.emplace_back(accelerator->get_dataflow((ComponentType)i));
+                num_table_rows++;
             }
-        }
-        // Scheduling table expects that the component type of next row is 
-        // different with current row.
-        if(component_type == component_type_t::SPATIAL) { 
-            component_type = component_type_t::TEMPORAL; 
-        }
-        else { 
-            component_type = component_type_t::SPATIAL; 
         }
     }
 }
@@ -138,22 +105,20 @@ void scheduling_table_t::init_mapping_values() {
     fill(mapping_values.begin(), mapping_values.end(), 1);
 }
 // Get buffer index one level above
-const unsigned scheduling_table_t::get_above_buffer_pos(unsigned pos_) const {
+unsigned scheduling_table_t::get_above_buffer_pos(unsigned pos_) const {
     unsigned rtn = pos_;
     for(int i = (int)rtn-1; i >= 0; i--) {
         rtn--;
-        if(row_types.at(i) == component_type_t::TEMPORAL 
-        && row_index.at(i) != UINT_MAX) { break; }
+        if(row_types.at(i) == component_type_t::TEMPORAL) { break; }
     }
     return rtn;
 }
 // Get buffer index one level below
-const unsigned scheduling_table_t::get_below_buffer_pos(unsigned pos_) const {
+unsigned scheduling_table_t::get_below_buffer_pos(unsigned pos_) const {
     unsigned rtn = pos_;
     for(unsigned i = pos_+1; i < get_num_rows(); i++) {
         rtn++;
-        if(get_component_type(i) == component_type_t::TEMPORAL
-        && row_index.at(i) != UINT_MAX) { break; }
+        if(get_component_type(i) == component_type_t::TEMPORAL) { break; }
     }
     return rtn;
 }
@@ -230,7 +195,7 @@ unsigned scheduling_table_t::get_correlation_product(int idx_,
 unsigned scheduling_table_t::get_dataflow_irrelevant_params_product(int idx_) {
     unsigned rtn = 1;
     unsigned upper_level_idx = get_above_buffer_pos(idx_);
-    dataflow_t dataflow = accelerator->get_dataflow(get_component_index(upper_level_idx));
+    dataflow_t dataflow = get_dataflow(upper_level_idx);
     switch(dataflow) {
         case dataflow_t::IS:
             rtn *= get_mapping_value(idx_, (unsigned)parameter_t::K);
@@ -250,6 +215,11 @@ unsigned scheduling_table_t::get_dataflow_irrelevant_params_product(int idx_) {
     }
     return rtn;
 }
+bool* scheduling_table_t::get_bypass(unsigned idx_) const {
+    bool* rtn;
+    rtn = accelerator->get_bypass((ComponentType)idx_);
+    return rtn;
+}
 dataflow_t scheduling_table_t::get_dataflow(unsigned idx_) const {
     return row_dataflows.at(idx_);
 }
@@ -260,9 +230,6 @@ std::string scheduling_table_t::get_component_name(unsigned idx_) const {
 // Get component type of target row 
 component_type_t scheduling_table_t::get_component_type(unsigned idx_) const {
     return row_types.at(idx_);
-}
-unsigned scheduling_table_t:: get_component_index(unsigned idx_) const {
-    return row_index.at(idx_);
 }
 // Get mapping values of a component level
 std::vector<unsigned> scheduling_table_t::get_row_values(unsigned idx_) const {
@@ -298,7 +265,6 @@ void scheduling_table_t::add_virtual_component(component_type_t component_type_)
     row_names.emplace_back("virtual");
     row_types.emplace_back(component_type_);
     row_dataflows.emplace_back(dataflow_t::NONE);
-    row_index.emplace_back(UINT_MAX);
     num_table_rows++;
 }
 // Add virtual component
@@ -307,7 +273,6 @@ void scheduling_table_t::add_virtual_component(component_type_t component_type_,
     row_names.emplace_back("virtual");
     row_types.emplace_back(component_type_);
     row_dataflows.emplace_back(dataflow_t::NONE);
-    row_index.emplace_back(component_idx_);
     num_table_rows++;
 }
 // Check the component is virtual
@@ -365,13 +330,11 @@ void scheduling_table_t::update_mapping_value(unsigned dst_, unsigned val_) {
 // Update each temporal components dataflow
 void scheduling_table_t::update_dataflow(std::vector<dataflow_t> dataflow_) {
     auto iter = dataflow_.begin();
-    unsigned component_idx = 0;
     for(unsigned i = 0; i < get_num_rows() - 1; i++) {
         if(get_component_type(i) == component_type_t::TEMPORAL 
         && get_component_name(i) != "virtual") {
-            component_idx = get_component_index(i); 
-            accelerator->update_dataflow(component_idx, *iter);
-            ++iter;
+            row_dataflows.at(i) = *iter;
+            iter++;
         }
     }
     return;

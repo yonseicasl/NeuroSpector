@@ -21,17 +21,18 @@ public:
     void init_mapping_values();                                     // Init. Mapping values
     void print_stats();                                             // Print scheduling table
 
-    const unsigned get_above_buffer_pos(unsigned pos_) const;       // Get buffer index one level above 
-    const unsigned get_below_buffer_pos(unsigned pos_) const;       // Get lower temporal level's index
+    unsigned get_above_buffer_pos(unsigned pos_) const;             // Get buffer index one level above 
+    unsigned get_below_buffer_pos(unsigned pos_) const;             // Get lower temporal level's index
     unsigned get_above_spatial_level_pos(unsigned pos_) const;      // Get upper spatial-X level index
     unsigned get_num_rows() const;                                  // Get # rows of scheduling table
     unsigned get_correlation_product(int idx_, 
                                      correlation_t correlation_);
     unsigned get_dataflow_irrelevant_params_product(int idx_);      // Get product of dataflow irrelevant parameters 
+
+    bool*    get_bypass(unsigned idx_) const;
     dataflow_t  get_dataflow(unsigned idx_) const;                  // Get dataflow of target component
     std::string get_component_name(unsigned idx_) const;            // Get target component name 
     component_type_t get_component_type(unsigned idx_) const;       // Get reuse type of target component 
-    unsigned get_component_index(unsigned idx_) const;              // Get accelerator index of component
     std::vector<unsigned> get_row_values(unsigned idx_) const;      // Get mapping values of a component level
     unsigned get_mapping_value(unsigned row_, unsigned col_) const; // Get mapping value at (row, col) 
     unsigned get_layer_index();                                     // Get current layer's index
