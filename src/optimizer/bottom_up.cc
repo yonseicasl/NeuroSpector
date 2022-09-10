@@ -443,7 +443,7 @@ void bottom_up_t::multi_chip_partitioning(std::vector<scheduling_table_t>& table
         unsigned num_same_tile_size = 0;
         unsigned num_total_parallelized_layer = 0;
         unsigned access_count = 1;
-        float    input_access_energy = accelerator->get_energy(ComponentType::DRAM)[(unsigned)data_t::INPUT];
+        float    input_access_energy = accelerator->get_energy(component_t::DRAM)[(unsigned)data_t::INPUT];
         for(auto it = tmp_partition_comb.begin(); 
                  it != tmp_partition_comb.end(); 
                  ++it) {
@@ -530,10 +530,10 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         // Get cost between DRAM and Global buffers
         partition_case.cost = analyzer.get_target_level_cost(dram_pos, metric);
         // Get input tile size that DRAM transfers
-        partition_case.input_tile_size = analyzer.get_tile_size(ComponentType::DRAM, 
+        partition_case.input_tile_size = analyzer.get_tile_size(component_t::DRAM, 
                                                                 data_t::INPUT);
         // Get tile-granular access count of input in DRAM 
-        partition_case.input_access_count = analyzer.get_access_count(ComponentType::DRAM, 
+        partition_case.input_access_count = analyzer.get_access_count(component_t::DRAM, 
                                                                       data_t::INPUT);
         partition_case.num_assigned_chips = num_activated_chips;
         partition_case.scheduling_table = table_;

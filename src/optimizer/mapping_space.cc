@@ -32,14 +32,11 @@ mapping_space_t::~mapping_space_t() {
 
 }
 
-
 void mapping_space_t::clear() {
     num_levels = 0;
     num_permutations = 0;
     permutation_index= 0;
-    // clear var:layer_permutations
     layer_permutations.clear();
-    // clear var:permutation
 }
 
 void mapping_space_t::print_permutations() const {
@@ -187,6 +184,7 @@ void mapping_space_t::get_permutations(const unsigned idx_, const unsigned val_,
 bool mapping_space_t::is_last() const {
     return permutation_index > num_permutations;
 }
+// Return a different mapping set to optimizer for each iteration
 std::vector<std::vector<unsigned>> mapping_space_t::get_mapping_set() {
     std::vector<std::vector<unsigned>> tmp_mapping_set;
     std::vector<std::vector<unsigned>> mapping_set;
@@ -214,6 +212,7 @@ std::vector<std::vector<unsigned>> mapping_space_t::get_mapping_set() {
         mapping_set.push_back(tmp_row_mapping);
         tmp_row_mapping.clear();
     }
+
     // Increase permutation idx
     permutation_index++; 
     return mapping_set;

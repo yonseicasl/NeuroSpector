@@ -14,13 +14,13 @@ public:
             const std::vector<unsigned> parameters_,
             const unsigned stride_);
     ~layer_t();
-    std::string           get_name();                           // Get layer name
-    std::vector<unsigned> get_parameters();                     // Get layer parameters
-    unsigned              get_stride();                         // Get stride
+    std::string           get_name();             // Get layer name
+    std::vector<unsigned> get_parameters();       // Get layer parameters
+    unsigned              get_stride();           // Get stride
 private:
-    std::string name;                                           // Layer name
-    std::vector<unsigned> parameters;                           // Layer parameters
-    unsigned stride;                                       // Stride
+    std::string name;                             // Layer name
+    std::vector<unsigned> parameters;             // Layer parameters
+    unsigned stride;                              // Stride
 };
 
 #endif

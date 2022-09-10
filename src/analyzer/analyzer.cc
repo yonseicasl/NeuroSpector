@@ -24,9 +24,9 @@ analyzer_t::analyzer_t(const std::string& accelerator_pth_,
         init_multi_chips();
         init_dram();
 
-        dram_idx = (unsigned)ComponentType::DRAM;
-        gb_idx   = (unsigned)ComponentType::GB;
-        lb_idx   = (unsigned)ComponentType::LB;
+        dram_idx = (unsigned)component_t::DRAM;
+        gb_idx   = (unsigned)component_t::GB;
+        lb_idx   = (unsigned)component_t::LB;
 }
 analyzer_t::analyzer_t(accelerator_t *accelerator_,
                        network_t    *network_)
@@ -137,44 +137,44 @@ bool analyzer_t::check_network_constraints() {
 // Update tile size 
 void analyzer_t::update_tile_size() {
     // Update   LB tile size
-    lb_tile_size_send.input     =  update_input_tile_size(buffer_t::LB, direction_t::UPPER);
-    lb_tile_size_send.weight    = update_weight_tile_size(buffer_t::LB, direction_t::UPPER);
-    lb_tile_size_send.output    = update_output_tile_size(buffer_t::LB, direction_t::UPPER);
-    lb_tile_size_alloc.input    =  update_input_tile_size(buffer_t::LB, direction_t::LOWER);
-    lb_tile_size_alloc.weight   = update_weight_tile_size(buffer_t::LB, direction_t::LOWER);
-    lb_tile_size_alloc.output   = update_output_tile_size(buffer_t::LB, direction_t::LOWER);
+    lb_tile_size_send.input     =  update_input_tile_size(component_t::LB, direction_t::UPPER);
+    lb_tile_size_send.weight    = update_weight_tile_size(component_t::LB, direction_t::UPPER);
+    lb_tile_size_send.output    = update_output_tile_size(component_t::LB, direction_t::UPPER);
+    lb_tile_size_alloc.input    =  update_input_tile_size(component_t::LB, direction_t::LOWER);
+    lb_tile_size_alloc.weight   = update_weight_tile_size(component_t::LB, direction_t::LOWER);
+    lb_tile_size_alloc.output   = update_output_tile_size(component_t::LB, direction_t::LOWER);
     
     // Update   GB tile size
-    gb_tile_size_send.input     =  update_input_tile_size(buffer_t::GB, direction_t::UPPER);
-    gb_tile_size_send.weight    = update_weight_tile_size(buffer_t::GB, direction_t::UPPER);
-    gb_tile_size_send.output    = update_output_tile_size(buffer_t::GB, direction_t::UPPER);
-    gb_tile_size_alloc.input    =  update_input_tile_size(buffer_t::GB, direction_t::LOWER);
-    gb_tile_size_alloc.weight   = update_weight_tile_size(buffer_t::GB, direction_t::LOWER);
-    gb_tile_size_alloc.output   = update_output_tile_size(buffer_t::GB, direction_t::LOWER);
+    gb_tile_size_send.input     =  update_input_tile_size(component_t::GB, direction_t::UPPER);
+    gb_tile_size_send.weight    = update_weight_tile_size(component_t::GB, direction_t::UPPER);
+    gb_tile_size_send.output    = update_output_tile_size(component_t::GB, direction_t::UPPER);
+    gb_tile_size_alloc.input    =  update_input_tile_size(component_t::GB, direction_t::LOWER);
+    gb_tile_size_alloc.weight   = update_weight_tile_size(component_t::GB, direction_t::LOWER);
+    gb_tile_size_alloc.output   = update_output_tile_size(component_t::GB, direction_t::LOWER);
 
     // Update DRAM tile size
-    dram_tile_size_send.input   =  update_input_tile_size(buffer_t::DRAM, direction_t::UPPER);
-    dram_tile_size_send.weight  = update_weight_tile_size(buffer_t::DRAM, direction_t::UPPER);
-    dram_tile_size_send.output  = update_output_tile_size(buffer_t::DRAM, direction_t::UPPER);
-    dram_tile_size_alloc.input  =  update_input_tile_size(buffer_t::DRAM, direction_t::LOWER);
-    dram_tile_size_alloc.weight = update_weight_tile_size(buffer_t::DRAM, direction_t::LOWER);
-    dram_tile_size_alloc.output = update_output_tile_size(buffer_t::DRAM, direction_t::LOWER);
+    dram_tile_size_send.input   =  update_input_tile_size(component_t::DRAM, direction_t::UPPER);
+    dram_tile_size_send.weight  = update_weight_tile_size(component_t::DRAM, direction_t::UPPER);
+    dram_tile_size_send.output  = update_output_tile_size(component_t::DRAM, direction_t::UPPER);
+    dram_tile_size_alloc.input  =  update_input_tile_size(component_t::DRAM, direction_t::LOWER);
+    dram_tile_size_alloc.weight = update_weight_tile_size(component_t::DRAM, direction_t::LOWER);
+    dram_tile_size_alloc.output = update_output_tile_size(component_t::DRAM, direction_t::LOWER);
 
     return;
 }
 // Update input tile size to allocate (or send)
-unsigned analyzer_t::update_input_tile_size(buffer_t buffer_,
+unsigned analyzer_t::update_input_tile_size(component_t buffer_,
                                             direction_t direction_) {
     unsigned tile_size = 1;
     unsigned buffer_idx = 0;
     switch (buffer_) {
-    case buffer_t::LB:
+    case component_t::LB:
         buffer_idx = lb_idx;
         break;
-    case buffer_t::GB:
+    case component_t::GB:
         buffer_idx = gb_idx;
         break;
-    case buffer_t::DRAM:
+    case component_t::DRAM:
         buffer_idx = dram_idx;
         break;
     default:
@@ -199,18 +199,18 @@ unsigned analyzer_t::update_input_tile_size(buffer_t buffer_,
     return tile_size;
 }
 // Update weight tile size to allocate (or send)
-unsigned analyzer_t::update_weight_tile_size(buffer_t buffer_,
+unsigned analyzer_t::update_weight_tile_size(component_t buffer_,
                                              direction_t direction_) {
     unsigned tile_size = 1;
     unsigned buffer_idx = 0;
     switch (buffer_) {
-    case buffer_t::LB:
+    case component_t::LB:
         buffer_idx = lb_idx;
         break;
-    case buffer_t::GB:
+    case component_t::GB:
         buffer_idx = gb_idx;
         break;
-    case buffer_t::DRAM:
+    case component_t::DRAM:
         buffer_idx = dram_idx;
         break;
     default:
@@ -227,18 +227,18 @@ unsigned analyzer_t::update_weight_tile_size(buffer_t buffer_,
     return tile_size;
 }
 // Update output tile size to allocate (or send)
-unsigned analyzer_t::update_output_tile_size(buffer_t buffer_,
+unsigned analyzer_t::update_output_tile_size(component_t buffer_,
                                              direction_t direction_) {
     unsigned tile_size = 1;
     unsigned buffer_idx = 0;
     switch (buffer_) {
-    case buffer_t::LB:
+    case component_t::LB:
         buffer_idx = lb_idx;
         break;
-    case buffer_t::GB:
+    case component_t::GB:
         buffer_idx = gb_idx;
         break;
-    case buffer_t::DRAM:
+    case component_t::DRAM:
         buffer_idx = dram_idx;
         break;
     default:
@@ -281,7 +281,6 @@ void analyzer_t::update_access_count() {
     dram_access_count.output_rd = update_output_access_count(dram_idx, value, operation_t::READ);
     dram_access_count.output_wt = update_output_access_count(dram_idx, value, operation_t::WRITE);
 
-    
     // Read once adjustment
     if(dram_tile_size_alloc.input  == dram_tile_size_send.input)  {
         dram_access_count.input_rd  = 1;
@@ -302,6 +301,20 @@ void analyzer_t::update_access_count() {
     if(gb_tile_size_alloc.output == gb_tile_size_send.output) {
         gb_access_count.output_rd = dram_access_count.output_rd;
         gb_access_count.output_wt = dram_access_count.output_wt;
+    }
+    // Bypass adjustment
+    if(gb_bypass.input && (dram_tile_size_alloc.input == dram_tile_size_send.input)
+    && (gb_tile_size_alloc.input != gb_tile_size_send.input)) {
+        dram_access_count.output_wt *= update_irrelevant_mapping_value((unsigned)component_t::DRAM, data_t::INPUT);
+    }
+    if(gb_bypass.weight && (dram_tile_size_alloc.weight == dram_tile_size_send.weight)
+    && (gb_tile_size_alloc.weight != gb_tile_size_send.weight)) {
+        dram_access_count.weight_rd *= update_irrelevant_mapping_value((unsigned)component_t::DRAM, data_t::WEIGHT);
+    }
+    if(gb_bypass.output && (dram_tile_size_alloc.output == dram_tile_size_send.output)
+    && (gb_tile_size_alloc.output != gb_tile_size_send.output)) {
+        dram_access_count.output_rd = update_irrelevant_mapping_value((unsigned)component_t::DRAM, data_t::OUTPUT) - 1;
+        dram_access_count.output_wt *= update_irrelevant_mapping_value((unsigned)component_t::DRAM, data_t::OUTPUT);
     }
     return;
 }
@@ -358,13 +371,13 @@ unsigned analyzer_t::update_output_access_count(unsigned idx_,
     }
     return access_count;
 }
+// Product all irrelevant mapping values with stationary data
 unsigned analyzer_t::update_irrelevant_mapping_value(unsigned row_idx_,
                                                       data_t stationary_data_) {
     unsigned irrelevant_mapping_value = 1;
     unsigned alternative_one = 1;
     unsigned alternative_two = 1;
     
-    // Product all irrelevant mapping values with stationary data
     switch(stationary_data_) {
     case data_t::INPUT:
         irrelevant_mapping_value 
@@ -459,7 +472,7 @@ void analyzer_t::estimate_cross_layer_reuse(scheduling_table_t prev_table_,
      */
 	unsigned overlapped_size = 0;
 	float    reduced_cost    = 0.0f;
-    float    bitwidth       = accelerator->get_bitwidth(ComponentType::DRAM)
+    float    bitwidth       = accelerator->get_bitwidth(component_t::DRAM)
                              / accelerator->get_precision();
  
     float  input_access_energy = dram_unit_energy.input;
@@ -637,10 +650,10 @@ void analyzer_t::update_energy() {
     // Calcue total energy
     total_energy = mac_energy + local_buffer_energy + global_buffer_energy + dram_energy;
     
-    // /**
-    //  * @brief Total static energy (pJ) 
-    //  * = Unit static power (mW) x clock time (ns) x total cycle count
-    //  */
+    /**
+     * @brief Total static energy (pJ) 
+     * = Unit static power (mW) x clock time (ns) x total cycle count
+     */
     mac_static = accelerator->get_mac_static_power()
                 * accelerator->get_clock_time()
                 * accelerator->get_total_num_MACs()
@@ -702,30 +715,30 @@ void analyzer_t::print_results() {
     std::cout << "      NUM ACTIVE PE ARRAY : " << num_active_pes << std::endl;
     std::cout << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "  MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
-              << "   LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n"
-              << "   GB DYNAMIC ENERGY : " << global_buffer_energy << "\n"
-              << " DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
+    std::cout << "       MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
+              << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n"
+              << "        GB DYNAMIC ENERGY : " << global_buffer_energy << "\n"
+              << "      DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "   MAC STATIC ENERGY : " << mac_static           << "\n"
-              << "    LB STATIC ENERGY : " << local_buffer_static  << "\n"
-              << "    GB STATIC ENERGY : " << global_buffer_static << "\n"
-              << "  DRAM STATIC ENERGY : " << dram_static          << std::endl;
+    std::cout << "        MAC STATIC ENERGY : " << mac_static           << "\n"
+              << "         LB STATIC ENERGY : " << local_buffer_static  << "\n"
+              << "         GB STATIC ENERGY : " << global_buffer_static << "\n"
+              << "       DRAM STATIC ENERGY : " << dram_static          << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "          MAC ENERGY : " << mac_energy + mac_static << "\n"
-              << "           LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n"
-              << "           GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n"
-              << "         DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
+    std::cout << "               MAC ENERGY : " << mac_energy + mac_static << "\n"
+              << "                LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n"
+              << "                GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n"
+              << "              DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "           MAC CYCLE : " << mac_cycle              << "\n"
-              << "            LB CYCLE : " << local_buffer_cycle     << "\n"
-              << "            GB CYCLE : " << global_buffer_cycle    << "\n"
-              << "          DRAM CYCLE : " << dram_cycle             << std::endl;
+    std::cout << "                MAC CYCLE : " << mac_cycle              << "\n"
+              << "                 LB CYCLE : " << local_buffer_cycle     << "\n"
+              << "                 GB CYCLE : " << global_buffer_cycle    << "\n"
+              << "               DRAM CYCLE : " << dram_cycle             << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "TOTAL DYNAMIC ENERGY : " << total_energy << std::endl;
-    std::cout << " TOTAL STATIC ENERGY : " << total_static_energy << std::endl;
-    std::cout << "        TOTAL ENERGY : " << total_energy + total_static_energy << std::endl;
-    std::cout << "         TOTAL CYCLE : " << total_cycle            << std::endl;
+    std::cout << "     TOTAL DYNAMIC ENERGY : " << total_energy << std::endl;
+    std::cout << "      TOTAL STATIC ENERGY : " << total_static_energy << std::endl;
+    std::cout << "             TOTAL ENERGY : " << total_energy + total_static_energy << std::endl;
+    std::cout << "              TOTAL CYCLE : " << total_cycle            << std::endl;
     std::cout << "**************************" << std::endl;
     return;
 }
@@ -801,7 +814,7 @@ unsigned analyzer_t::get_num_active_chips() {
     rtn *= chips_actived.dim_x * chips_actived.dim_y;
     return rtn;
 }
-unsigned analyzer_t::get_tile_size(ComponentType comp_, data_t data_type_) {
+unsigned analyzer_t::get_tile_size(component_t comp_, data_t data_type_) {
     unsigned rtn = 1;
     switch (data_type_) {
     case data_t::INPUT:
@@ -818,10 +831,10 @@ unsigned analyzer_t::get_tile_size(ComponentType comp_, data_t data_type_) {
     }
     return rtn;
 }
-unsigned analyzer_t::get_access_count(ComponentType comp_, data_t data_type_) {
+unsigned analyzer_t::get_access_count(component_t comp_, data_t data_type_) {
     unsigned rtn = 1;
     std::vector<unsigned> access_count;
-    if(comp_ == ComponentType::DRAM) {
+    if(comp_ == component_t::DRAM) {
         switch (data_type_) {
         case data_t::INPUT:
             rtn = dram_access_count.input_rd; 
@@ -836,7 +849,7 @@ unsigned analyzer_t::get_access_count(ComponentType comp_, data_t data_type_) {
             break;
         }
     }
-    else if(comp_ == ComponentType::GB) {
+    else if(comp_ == component_t::GB) {
         switch (data_type_) {
         case data_t::INPUT:
             rtn = gb_access_count.input_rd; 
@@ -851,7 +864,7 @@ unsigned analyzer_t::get_access_count(ComponentType comp_, data_t data_type_) {
             break;
         }
     }
-    else if(comp_ == ComponentType::LB) {
+    else if(comp_ == component_t::LB) {
         switch (data_type_) {
         case data_t::INPUT:
             rtn = lb_access_count.input_rd; 
@@ -946,9 +959,9 @@ void analyzer_t::init_mac_array() {
 }
 void analyzer_t::init_local_buffer() {
     // Init unit access cost
-    float* arr_unit_energy  = accelerator->get_energy(ComponentType::LB);
-    float* arr_unit_static  = accelerator->get_static(ComponentType::LB);
-    float* arr_unit_cycle   = accelerator->get_cycle(ComponentType::LB);
+    float* arr_unit_energy  = accelerator->get_energy(component_t::LB);
+    float* arr_unit_static  = accelerator->get_static(component_t::LB);
+    float* arr_unit_cycle   = accelerator->get_cycle(component_t::LB);
     lb_unit_energy.input    = arr_unit_energy[(unsigned)data_t::INPUT];
     lb_unit_energy.weight   = arr_unit_energy[(unsigned)data_t::WEIGHT];
     lb_unit_energy.output   = arr_unit_energy[(unsigned)data_t::OUTPUT];
@@ -960,7 +973,7 @@ void analyzer_t::init_local_buffer() {
     lb_unit_cycle.output    =  arr_unit_cycle[(unsigned)data_t::OUTPUT];
 
     // Init buffer size
-    std::vector<float> arr_buffer_size = accelerator->get_size(ComponentType::LB);
+    std::vector<float> arr_buffer_size = accelerator->get_size(component_t::LB);
     // If shared
     if(arr_buffer_size.size() == 1) {
         is_lb_shared = true;
@@ -983,7 +996,7 @@ void analyzer_t::init_local_buffer() {
     }
     
     // Init bitwidth
-    lb_bitwidth = accelerator->get_bitwidth(ComponentType::LB) 
+    lb_bitwidth = accelerator->get_bitwidth(component_t::LB) 
                  / accelerator->get_precision();
 }
 // Init PE array
@@ -994,9 +1007,9 @@ void analyzer_t::init_pe_array() {
 // Init global buffer
 void analyzer_t::init_global_buffer() {
     // Init unit access cost
-    float* arr_unit_energy = accelerator->get_energy(ComponentType::GB);
-    float* arr_unit_static = accelerator->get_static(ComponentType::GB);
-    float* arr_unit_cycle  = accelerator->get_cycle(ComponentType::GB);
+    float* arr_unit_energy = accelerator->get_energy(component_t::GB);
+    float* arr_unit_static = accelerator->get_static(component_t::GB);
+    float* arr_unit_cycle  = accelerator->get_cycle(component_t::GB);
     gb_unit_energy.input    = arr_unit_energy[(unsigned)data_t::INPUT];
     gb_unit_energy.weight   = arr_unit_energy[(unsigned)data_t::WEIGHT];
     gb_unit_energy.output   = arr_unit_energy[(unsigned)data_t::OUTPUT];
@@ -1007,7 +1020,7 @@ void analyzer_t::init_global_buffer() {
     gb_unit_cycle.weight    =  arr_unit_cycle[(unsigned)data_t::WEIGHT];
     gb_unit_cycle.output    =  arr_unit_cycle[(unsigned)data_t::OUTPUT];
     // Init buffer size
-    std::vector<float> arr_buffer_size = accelerator->get_size(ComponentType::GB);
+    std::vector<float> arr_buffer_size = accelerator->get_size(component_t::GB);
     // If shared
     if(arr_buffer_size.size() == 1) {
         is_gb_shared = true;
@@ -1027,7 +1040,7 @@ void analyzer_t::init_global_buffer() {
         is_gb_exist = false;
     }  
     // Init bitwidth
-    gb_bitwidth = accelerator->get_bitwidth(ComponentType::GB) 
+    gb_bitwidth = accelerator->get_bitwidth(component_t::GB) 
                  / accelerator->get_precision();
 }
 void analyzer_t::init_multi_chips() {
@@ -1037,9 +1050,9 @@ void analyzer_t::init_multi_chips() {
 }
 void analyzer_t::init_dram() {
     // Init unit access cost
-    float* arr_unit_energy = accelerator->get_energy(ComponentType::DRAM);
-    float* arr_unit_static = accelerator->get_static(ComponentType::DRAM);
-    float* arr_unit_cycle  = accelerator->get_cycle(ComponentType::DRAM);
+    float* arr_unit_energy = accelerator->get_energy(component_t::DRAM);
+    float* arr_unit_static = accelerator->get_static(component_t::DRAM);
+    float* arr_unit_cycle  = accelerator->get_cycle(component_t::DRAM);
     dram_unit_energy.input  = arr_unit_energy[(unsigned)data_t::INPUT];
     dram_unit_energy.weight = arr_unit_energy[(unsigned)data_t::WEIGHT];
     dram_unit_energy.output = arr_unit_energy[(unsigned)data_t::OUTPUT];
@@ -1050,6 +1063,6 @@ void analyzer_t::init_dram() {
     dram_unit_cycle.weight  = arr_unit_cycle[(unsigned)data_t::WEIGHT];
     dram_unit_cycle.output  = arr_unit_cycle[(unsigned)data_t::OUTPUT];
     // Init bitwidth
-    dram_bitwidth = accelerator->get_bitwidth(ComponentType::DRAM) 
+    dram_bitwidth = accelerator->get_bitwidth(component_t::DRAM) 
                    / accelerator->get_precision();
 }

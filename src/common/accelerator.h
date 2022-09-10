@@ -1,14 +1,13 @@
 #ifndef __ACCELERATOR_H__
 #define __ACCELERATOR_H__
 
-// #include "component.h"
 #include "enums.h"
 #include "parser.h"
 
 class accelerator_t {
 public:
     struct temporal_component_t {
-        component_type_t   type = component_type_t::TEMPORAL;
+        reuse_t   type = reuse_t::TEMPORAL;
         std::string        name;
         std::vector<float> size;
         dataflow_t         dataflow;
@@ -20,7 +19,7 @@ public:
     };
 
     struct spatial_component_t {
-        component_type_t   type = component_type_t::SPATIAL;
+        reuse_t   type = reuse_t::SPATIAL;
         std::string name;
         unsigned    dim_x = 1;
         unsigned    dim_y = 1;
@@ -46,17 +45,17 @@ public:
     unsigned            get_pe_array_size(dimension_t dim_);
     unsigned            get_multi_chips_size(dimension_t dim_);
     // Get variables in temporal component structure
-    std::string         get_name(ComponentType comp_);
-    component_type_t    get_type(ComponentType comp_);
-    bool*               get_bypass(ComponentType comp_); 
-    std::vector<float>  get_size(ComponentType comp_);         
-    dataflow_t          get_dataflow(ComponentType comp_);
-    float               get_bitwidth(ComponentType comp_);         
-    float*              get_energy(ComponentType comp_);
-    float*              get_static(ComponentType comp_);
-    float*              get_cycle(ComponentType comp_);
+    std::string         get_name(component_t comp_);
+    reuse_t        get_type(component_t comp_);
+    bool*               get_bypass(component_t comp_); 
+    std::vector<float>  get_size(component_t comp_);         
+    dataflow_t          get_dataflow(component_t comp_);
+    float               get_bitwidth(component_t comp_);         
+    float*              get_energy(component_t comp_);
+    float*              get_static(component_t comp_);
+    float*              get_cycle(component_t comp_);
     // Check the component sizes is 1
-    bool                is_unit_component(ComponentType comp_);
+    bool                is_unit_component(component_t comp_);
     
     // Print specifiations of accelerator
     void print_spec();
@@ -83,7 +82,7 @@ private:
     std::vector<float>        energy;
     std::vector<float>        cycle;
 
-    void *component_list[(unsigned)ComponentType::SIZE];
+    void *component_list[(unsigned)component_t::SIZE];
     temporal_component_t *register_file;
     spatial_component_t  *mac_array;
     temporal_component_t *local_buffer;

@@ -41,9 +41,9 @@ public:
     // Get Num. active chips
     unsigned get_num_active_chips();
     // Get tile size of the row of scheduling table 
-    unsigned get_tile_size(ComponentType comp_, data_t data_type_);
+    unsigned get_tile_size(component_t comp_, data_t data_type_);
     // Get tile-granular access count of the row of scheduling table 
-    unsigned get_access_count(ComponentType comp_, data_t data_type_);
+    unsigned get_access_count(component_t comp_, data_t data_type_);
 
     struct tile_size_t {
         unsigned input;
@@ -99,13 +99,13 @@ private:
     void update_energy();
 
     // Update input tile size to allocate (or send)
-    unsigned update_input_tile_size(buffer_t buffer_,
+    unsigned update_input_tile_size(component_t buffer_,
                                     direction_t direction_);
     // Update weight tile size to allocate (or send)
-    unsigned update_weight_tile_size(buffer_t buffer_,
+    unsigned update_weight_tile_size(component_t buffer_,
                                      direction_t direction_);
     // Update output tile size to allocate (or send)
-    unsigned update_output_tile_size(buffer_t buffer_,
+    unsigned update_output_tile_size(component_t buffer_,
                                      direction_t direction_);
     // Update tile-granular input access count
     unsigned update_input_access_count(unsigned idx_, 
@@ -117,12 +117,12 @@ private:
     unsigned update_output_access_count(unsigned idx_, 
                                         unsigned value_,
                                         operation_t oper_);
-    // Get factorziation degrees in target component level
-    unsigned get_factorization_degrees(unsigned idx_);
-    
+    // Update irrelevant mapping values with stationary data
     unsigned update_irrelevant_mapping_value(unsigned row_idx_,
                                              data_t stationary_data_);
-    
+    // Get factorziation degrees in target component level
+    unsigned get_factorization_degrees(unsigned idx_);
+
     unsigned compute_overlapped_size(scheduling_table_t prev_table_);
     // Handle exception case where given dataflow is ineffective 
     dataflow_t handle_dataflow_exception_case(unsigned idx_, 
@@ -190,7 +190,7 @@ private:
     float    local_buffer_cycle   = 0;
     float    global_buffer_cycle  = 0;
     float    dram_cycle           = 0;
-
+    // The number of spatially arranged component being used
     arr_size_t  macs_actived;
     arr_size_t   pes_actived;
     arr_size_t chips_actived;

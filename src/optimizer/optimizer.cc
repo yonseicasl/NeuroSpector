@@ -49,7 +49,7 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
     if(is_fixed) {
         // Traverse temporal rows and collect dataflow of each component
         for(unsigned i = 0; i < scheduling_table->get_num_rows() - 1; i++) {
-            if(scheduling_table->get_component_type(i) == component_type_t::TEMPORAL
+            if(scheduling_table->get_component_type(i) == reuse_t::TEMPORAL
             && scheduling_table->get_component_name(i) != "virtual") {
                 combination.push_back(scheduling_table->get_dataflow(i));
             }
@@ -69,7 +69,7 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
         // Traverse rows of scheduling table 
         // and Reorganize possible dataflows that each component can have 
         for(unsigned i = 0; i < scheduling_table->get_num_rows() - 1; i++) {
-            if(scheduling_table->get_component_type(i) == component_type_t::TEMPORAL
+            if(scheduling_table->get_component_type(i) == reuse_t::TEMPORAL
             && scheduling_table->get_component_name(i) != "virtual") {
                 for(unsigned df = (unsigned)dataflow_t::IS; 
                              df < (unsigned)dataflow_t::SIZE; 
