@@ -22,6 +22,7 @@ public:
     void init_table_rows();                                         // Init. # table rows
     void init_mapping_values();                                     // Init. Mapping values
     void print_stats();                                             // Print scheduling table
+    void print_stats(std::ofstream &output_file_);                  // Print scheduling table
 
     unsigned    get_above_buffer_pos(unsigned pos_) const;          // Get buffer index one level above 
     unsigned    get_below_buffer_pos(unsigned pos_) const;          // Get lower temporal level's index

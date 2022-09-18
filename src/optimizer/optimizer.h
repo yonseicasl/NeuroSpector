@@ -22,7 +22,7 @@ class optimizer_t {
         virtual void run() = 0;                         
         // Run optimizer for target layer
         virtual void run(const unsigned idx_) = 0;      
-        // Print results
+        // Print results on termianl
         virtual void print_results() = 0;               
         // Count total number of component level to fill out
         unsigned get_num_targeted_levels(unsigned begin_pos_, unsigned end_pos_);

@@ -29,6 +29,7 @@ public:
 private:
     // Print results
     void print_results();
+    void print_results(unsigned idx_);
     // Print multi-chip partitioning results
     void print_mcp_results();
     // Reset all variables

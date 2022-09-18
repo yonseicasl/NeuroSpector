@@ -43,6 +43,13 @@ accelerator_t::~accelerator_t() {
 
 // Generate components that make up accelerator
 void accelerator_t::generate_components(const parser_t parser) {
+    register_file = new temporal_component_t;
+    mac_array     = new spatial_component_t;
+    local_buffer  = new temporal_component_t;
+    pe_array      = new spatial_component_t;
+    global_buffer = new temporal_component_t;
+    multi_chips   = new spatial_component_t;
+    dram          = new temporal_component_t;
     for(unsigned i = 0; i < parser.sections.size(); i++) {
         section_config_t section_config = parser.sections[i];
         if(section_config.name == "ACCELERATOR") {
@@ -61,45 +68,41 @@ void accelerator_t::generate_components(const parser_t parser) {
         }
         else {
             if(section_config.name == "REGISTER") {
-                register_file = new temporal_component_t;
                 init_temporal_component(register_file, section_config);
                 component_list[(unsigned)component_t::REG] = register_file;
             }
             else if(section_config.name == "MAC_ARRAY") {
-                mac_array = new spatial_component_t;
                 init_spatial_component(mac_array, section_config);
                 component_list[(unsigned)component_t::MAC_X] = mac_array;
                 component_list[(unsigned)component_t::MAC_Y] = mac_array;
             }
             else if(section_config.name == "LOCAL_BUFFER") {
-                local_buffer = new temporal_component_t;
                 init_temporal_component(local_buffer, section_config);
                 component_list[(unsigned)component_t::LB] = local_buffer;
             }
             else if(section_config.name == "PE_ARRAY") {
-                pe_array = new spatial_component_t;
                 init_spatial_component(pe_array, section_config);
                 component_list[(unsigned)component_t::PE_X] = pe_array;
                 component_list[(unsigned)component_t::PE_Y] = pe_array;
             }
             else if(section_config.name == "GLOBAL_BUFFER") {
-                global_buffer = new temporal_component_t;
                 init_temporal_component(global_buffer, section_config);
                 component_list[(unsigned)component_t::GB] = global_buffer;
             }
             else if(section_config.name == "MULTI_CHIPS") {
-                multi_chips = new spatial_component_t;
                 init_spatial_component(multi_chips, section_config);
                 component_list[(unsigned)component_t::CHIP_X] = multi_chips;
                 component_list[(unsigned)component_t::CHIP_Y] = multi_chips;
             }
             else if(section_config.name == "DRAM") {
-                dram = new temporal_component_t;
                 init_temporal_component(dram, section_config);
                 component_list[(unsigned)component_t::DRAM] = dram;
             }
         }
     }
+}
+std::string accelerator_t::get_acc_name() {
+    return name;
 }
 std::string accelerator_t::get_name(component_t comp_) {
     std::string rtn;
@@ -397,6 +400,29 @@ void accelerator_t::print_spec() {
     }
     std::cout << "==========================" << std::endl;
 }
+void accelerator_t::print_spec(std::ofstream &output_file_) {
+    output_file_ << "==== Accelerator Spec ====" << std::endl;
+    output_file_ << "[ acc. name] " << name << std::endl;
+    output_file_ << "[ precision] " << get_precision() << std::endl;
+    output_file_ << "[ frequency] " << clock_frequency << std::endl;
+    output_file_ << "[clock time] " << get_clock_time() << std::endl;
+    output_file_ << "[MAC energy] " << get_mac_energy() << std::endl;
+    output_file_ << "[MAC static] " << get_mac_static_power() << std::endl;
+    for(unsigned i = 0; i < (unsigned)component_t::SIZE; i++) {
+        if(component_list[i] == nullptr) { continue; }
+        output_file_ << std::endl;
+        if(((temporal_component_t*)component_list[i])->type == reuse_t::TEMPORAL) {
+            output_file_ << "[ comp. name] " << ((temporal_component_t*)component_list[i])->name << std::endl;
+            print_temporal_component(output_file_, (temporal_component_t*)component_list[i]);
+        }
+        else {
+            output_file_ << "[ comp. name] " << ((spatial_component_t*)component_list[i])->name << std::endl;
+            print_spatial_component(output_file_, (spatial_component_t*)component_list[i]);
+            i++;
+        }
+    }
+    output_file_ << "==========================" << std::endl;
+}
 // Print out temporal component
 void accelerator_t::print_temporal_component(temporal_component_t* component_) {
     std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
@@ -436,7 +462,55 @@ void accelerator_t::print_temporal_component(temporal_component_t* component_) {
     std::cout << std::endl;
     return;
 }
+void accelerator_t::print_temporal_component(std::ofstream &output_file_, 
+                                             temporal_component_t* component_) {
+    std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
+    std::string data_type[4] = {"INPUT", "WEIGHT", "OUTPUT", "NONE"};
+    std::string dataflow_type[4] = {"none", "Input Stationary", "Weight Stationary", "Output Stationary"};
+    output_file_ << "[ comp. type] " << type_str[(unsigned)component_->type] << "\n"
+              << "[ comp. size] "; 
+    for(unsigned i = 0; i < component_->size.size(); i++) {
+        output_file_ << component_->size.at(i) << "  ";
+    }
+    output_file_ << std::endl;
+    output_file_ << "[     bypass] ";
+    for(unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+        if(component_->bypass[i]) {
+            output_file_ << data_type[i] << " ";
+        }
+    }
+    output_file_ << std::endl;
+    output_file_ << "[   bitwidth] ";
+    output_file_ << component_->bitwidth << "  ";
+    output_file_ << std::endl;
+    output_file_ << "[   dataflow] " << dataflow_type[(unsigned)component_->dataflow] << std::endl;
+    output_file_ << "[unit energy] "; 
+    for(unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+        output_file_ << component_->unit_energy[i] << "  ";
+    }
+    output_file_ << std::endl;
+    output_file_ << "[unit static] "; 
+    for(unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+        output_file_ << component_->unit_static[i] << "  ";
+    }
+    output_file_ << std::endl;
+    output_file_ << "[ unit cycle] "; 
+    for(unsigned i = 0; i < (unsigned)data_t::SIZE; i++) {
+        output_file_ << component_->unit_cycle[i] << "  ";
+    }
+    output_file_ << std::endl;
+    return;
+}
 // Print out spatial component
+void accelerator_t::print_spatial_component(std::ofstream &output_file_, 
+                                            spatial_component_t* component_) {
+    std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
+
+    output_file_ << "[ comp. type] " << type_str[(unsigned)component_->type] << "\n"
+              << "[ comp. dimX] " << component_->dim_x << "\n"
+              << "[ comp. dimY] " << component_->dim_y << std::endl; 
+    return;
+}
 void accelerator_t::print_spatial_component(spatial_component_t* component_) {
     std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
 

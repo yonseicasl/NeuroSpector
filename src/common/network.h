@@ -13,6 +13,7 @@ public:
     ~network_t();
     void init_network();
     void get_layers(section_config_t section_config_);
+    std::string           get_network_name();                   // Get network name
     std::string           get_layer_name(unsigned idx_);        // Get target layer's name
     std::vector<unsigned> get_layer_parameters(unsigned idx_);  // Get target layer's parameters
     unsigned              get_layer_index(std::string name_);   // Get index of target layer

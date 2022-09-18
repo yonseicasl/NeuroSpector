@@ -20,6 +20,7 @@ public:
     void run(const unsigned idx_);
     // Print results
     void print_results();
+    void print_results(unsigned idx_);
 
 private:
     // Reset all variables

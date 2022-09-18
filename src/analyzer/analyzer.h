@@ -32,6 +32,7 @@ public:
                                     metric_t      metric_);
     // Print out analysis result
     void print_results();
+    void print_results(std::ofstream &output_file_);
     // Get accelerator's target cost (Energy or Cycle)
     float get_total_cost(metric_t metric_);
     // Get the cost of targeted level 
@@ -46,35 +47,35 @@ public:
     unsigned get_access_count(component_t comp_, data_t data_type_);
 
     struct tile_size_t {
-        unsigned input;
-        unsigned weight;
-        unsigned output;
+        unsigned input  = 1;
+        unsigned weight = 1;
+        unsigned output = 1;
     };
     struct access_count_t {
-        unsigned input_rd;
-        unsigned weight_rd;
-        unsigned output_rd;
-        unsigned output_wt;
+        unsigned input_rd  = 1;
+        unsigned weight_rd = 1;
+        unsigned output_rd = 0;
+        unsigned output_wt = 1;
     };
     struct unit_cost_t {
-        float input;
-        float weight;
-        float output;
+        float input  = 0;
+        float weight = 0;
+        float output = 0;
     };
     struct buffer_size_t {
-        float input;
-        float weight;
-        float output;
-        float shared;
+        float input  = 1;
+        float weight = 1;
+        float output = 1;
+        float shared = 1;
     };
     struct arr_size_t {
-        unsigned dim_x;
-        unsigned dim_y;
+        unsigned dim_x = 1;
+        unsigned dim_y = 1;
     };
     struct bypass_t {
-        bool input;
-        bool weight;
-        bool output;
+        bool input  = false;
+        bool weight = false;
+        bool output = false;
     };
 private:
     void init_mac_array();
@@ -148,11 +149,11 @@ private:
     unsigned num_active_pes   = 1;
     unsigned num_active_chips = 1;
     // Component utilization
-    float       mac_arr_util;
-    float  local_buffer_util;
-    float        pe_arr_util;
-    float global_buffer_util;
-    float      chip_arr_util;
+    float       mac_arr_util  = 0;
+    float  local_buffer_util  = 0;
+    float        pe_arr_util  = 0;
+    float global_buffer_util  = 0;
+    float      chip_arr_util  = 0;
     // Component tile size transferred to upper level
     tile_size_t   mac_tile_size_send;
     tile_size_t    lb_tile_size_send;
@@ -204,8 +205,8 @@ private:
     bool is_lb_shared;
     bool is_gb_shared;
     // is buffer exist
-    bool is_lb_exist;
-    bool is_gb_exist;
+    bool is_lb_exist = true;
+    bool is_gb_exist = true;
     // Bypass
     bypass_t lb_bypass;
     bypass_t gb_bypass;

@@ -6,11 +6,11 @@
 
 
 brute_force_t::brute_force_t(const std::string& accelerator_pth_,
-                         const std::string& dataflow_,
-                         const std::string& network_pth_,
-                         const std::string& layer_,
-                         const std::string& metric_,
-                         const std::string& thread_)
+                             const std::string& dataflow_,
+                             const std::string& network_pth_,
+                             const std::string& layer_,
+                             const std::string& metric_,
+                             const std::string& thread_)
     : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
       metric(metric_t::ENERGY),
       num_threads(1) {
@@ -50,13 +50,30 @@ void brute_force_t::run(const unsigned idx_) {
         update();
         ++it;
     }
-    print_results();
+    print_results(idx_);
 }
+// Print out results
 void brute_force_t::print_results() {
     analyzer_t analyzer(accelerator, network);
     analyzer.init(global_best_scheduling_option);
     analyzer.estimate_cost();
     analyzer.print_results();
+}
+// Print out results as an output file
+void brute_force_t::print_results(unsigned idx_) {
+    // Set output file name
+    std::string output_file_name = accelerator->get_acc_name() + "_" + network->get_network_name() + "_" + std::to_string(idx_+1) + ".txt";
+    std::clog << "[message] optimization result is written in '" << output_file_name << "'"<< std::endl;
+    // Open file stream
+    std::ofstream output_file;
+    analyzer_t analyzer(accelerator, network);
+    output_file.open(output_file_name, std::ios::out);
+    analyzer.init(global_best_scheduling_option);
+    analyzer.estimate_cost();
+    analyzer.print_results(output_file);
+    // Close the file stream
+    output_file.close();
+    return;
 }
 void brute_force_t::reset() {
     // Reset all variables
@@ -128,8 +145,7 @@ void brute_force_t::search(unsigned tid_,
     mapping_space_t local_mapping_space;
     std::vector<std::vector<unsigned>> mapping_values_set;
     
-    accelerator_t *m_accelerator = new accelerator_t(*accelerator);
-    analyzer_t analyzer(m_accelerator, network);
+    analyzer_t analyzer(accelerator, network);
 
     // Take mapping candidates assigned to thread ID 
     local_mapping_space = mapping_space_.partition_off(tid_, num_threads);

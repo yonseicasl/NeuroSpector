@@ -7,8 +7,7 @@ optimizer_t::optimizer_t(const std::string& accelerator_pth_,
     : accelerator(new accelerator_t(accelerator_pth_)),
       network(new network_t(network_pth_)) {
     
-    // Init accelerator configuration
-    // accelerator->init_accelerator();
+    // Print out accelerator specifications
     accelerator->print_spec();
     // Init DNN configuration
     network->init_network();
@@ -29,9 +28,8 @@ optimizer_t::~optimizer_t() {
 void optimizer_t::run() { return; }
 // Run optimizer for target layer
 void optimizer_t::run(const unsigned idx_) { return; }
-// Print results
+// Print results on termianl
 void optimizer_t::print_results() { return; }
-
 // Count total number of component level to fill out
 unsigned optimizer_t::get_num_targeted_levels(unsigned begin_pos_, 
                                               unsigned end_pos_) {

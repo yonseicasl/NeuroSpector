@@ -363,6 +363,37 @@ void scheduling_table_t::print_stats() {
     std::cout << "|------------------------------------------------------------------------------|------|" << std::endl;
 }
 
+void scheduling_table_t::print_stats(std::ofstream &output_file_) {
+    std::string dataflow_type[4] = {"-", "IS", "WS", "OS"};
+    output_file_ << "|------------------------------------------------------------------------------|------|" << std::endl;
+    output_file_ << "|Correlations  |  W/O  |          O/I          |          I/W          | I/W/O | DATA |" << std::endl;
+    output_file_ << "|Parameters    |   K   |   B   |   P   |   Q   |   C   |   R   |   S   |   G   | FLOW |" << std::endl;
+    output_file_ << "|------------------------------------------------------------------------------|------|" << std::endl;
+    for(unsigned row = 0; row < num_table_rows; row++) {
+        if(!is_virtual(row)) {
+            output_file_ << "|";
+            output_file_.width(14);
+            output_file_ << std::left << row_names.at(row); 
+            output_file_ << "|";
+            for(unsigned col = 0; col < num_table_cols; col++) {
+                output_file_.width(6);
+                output_file_ << std::right 
+                          << mapping_values.at((row * num_table_cols) + col) 
+                          << " |";
+            }
+            // Print dataflow
+            if(get_component_type(row) == reuse_t::TEMPORAL) {
+                output_file_ << std::setw(5) 
+                          << dataflow_type[(unsigned)get_dataflow(row)]
+                          << " |";
+            }
+            else { output_file_ << std::setw(5) << "-" << " |"; }
+            output_file_ << std::endl;
+        }
+    }
+    output_file_ << "|------------------------------------------------------------------------------|------|" << std::endl;
+}
+
 // Overload != operation to compare to scheduling table
 bool scheduling_table_t::operator!=(const scheduling_table_t& scheduling_table_) {
     bool rtn = false;

@@ -10,7 +10,7 @@ public:
         reuse_t   type = reuse_t::TEMPORAL;
         std::string        name;
         std::vector<float> size;
-        dataflow_t         dataflow;
+        dataflow_t         dataflow = dataflow_t::NONE;
         unsigned           bitwidth;
         float unit_energy[(unsigned)data_t::SIZE] = { };
         float unit_static[(unsigned)data_t::SIZE] = { };
@@ -31,7 +31,9 @@ public:
 
     // Generate components which make up the accelerator
     void generate_components(const parser_t parser); 
-    
+
+    // Get accelerator name 
+    std::string         get_acc_name();
     float               get_clock_time();
     float               get_mac_energy();
     float               get_mac_static_power();
@@ -46,7 +48,7 @@ public:
     unsigned            get_multi_chips_size(dimension_t dim_);
     // Get variables in temporal component structure
     std::string         get_name(component_t comp_);
-    reuse_t        get_type(component_t comp_);
+    reuse_t             get_type(component_t comp_);
     bool*               get_bypass(component_t comp_); 
     std::vector<float>  get_size(component_t comp_);         
     dataflow_t          get_dataflow(component_t comp_);
@@ -61,6 +63,13 @@ public:
     void print_spec();
     void print_temporal_component(temporal_component_t* component_); 
     void print_spatial_component(spatial_component_t* component_); 
+
+    // Print specifiations of accelerator to output file
+    void print_spec(std::ofstream &output_file_);
+    void print_temporal_component(std::ofstream &output_file_,
+                                  temporal_component_t* component_); 
+    void print_spatial_component(std::ofstream &output_file_,
+                                 spatial_component_t* component_); 
     
     
 private:
@@ -75,9 +84,9 @@ private:
     std::string               acc_cfg_path;
     std::string               name;
     unsigned                  precision;
-    unsigned                  clock_frequency;
-    float                     mac_static_power;
-    float                     mac_operation_energy;
+    unsigned                  clock_frequency      = 0;
+    float                     mac_static_power     = 0.0;
+    float                     mac_operation_energy = 0.0;
 
     std::vector<float>        energy;
     std::vector<float>        cycle;

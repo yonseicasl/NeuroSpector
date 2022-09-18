@@ -28,6 +28,7 @@ bottom_up_t::~bottom_up_t() {
 void bottom_up_t::run() {
     assert(layer_idx <= network->get_num_layers());
     for(unsigned idx = 0; idx < network->get_num_layers(); idx++) {
+        // If target layer index is specified, then NeuroSpector skips optimization for the other layers 
         if(layer_idx != 0) { if((idx + 1) != layer_idx) continue; }
         scheduling_table->load_dnn_layer(idx); 
         run(idx);
@@ -83,7 +84,8 @@ void bottom_up_t::run(const unsigned idx_) {
         update();
         ++it;
     }
-    print_results();
+    // Generate output file that contains optimiation results
+    print_results(idx_);
     list_of_scheduling_table.push_back(global_best_scheduling_option.scheduling_table);
 }
 // Print results
@@ -106,6 +108,39 @@ void bottom_up_t::print_results() {
         analyzer.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
     }
     analyzer.print_results(); 
+    return;
+}
+// Print out results as an output file
+void bottom_up_t::print_results(unsigned idx_) {
+    // Set output file name
+    std::string output_file_name = accelerator->get_acc_name() + "_" + network->get_network_name() + "_" + std::to_string(idx_+1) + ".txt";
+    std::clog << "[message] optimization result is written in '" << output_file_name << "'"<< std::endl;
+    // Open file stream
+    std::ofstream output_file;
+    analyzer_t analyzer(accelerator, network);
+    std::string strategy[2] = {"PM", "SP"};
+    output_file.open(output_file_name, std::ios::out);
+
+    accelerator->print_spec(output_file);
+    // Write optimization results
+    output_file << "Strategies : "; 
+    for(auto it = global_best_scheduling_option.strategy.begin();
+             it != global_best_scheduling_option.strategy.end();
+             ++it) {
+        output_file << strategy[(unsigned)*it];
+        if(it+1 != global_best_scheduling_option.strategy.end()) { output_file << "-"; }
+    }
+    output_file << std::endl;
+    analyzer.init(global_best_scheduling_option.scheduling_table);
+    analyzer.estimate_cost();
+    // If cross layer optimization is activated
+    if(is_cross_layer_opt && !list_of_scheduling_table.empty()) {
+        analyzer.estimate_cross_layer_reuse(list_of_scheduling_table.back(), metric);
+    }
+    analyzer.print_results(output_file);
+    // Close the file stream
+    output_file.close();
+    return;
 }
 // Print multi-chip partitioning results
 void bottom_up_t::print_mcp_results() {

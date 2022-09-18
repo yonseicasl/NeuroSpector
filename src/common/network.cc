@@ -51,6 +51,9 @@ void network_t::get_layers(section_config_t section_config_) {
     }
     return;
 }
+std::string network_t::get_network_name() {
+    return name;
+}
 std::string network_t::get_layer_name(unsigned idx_) {
     layer_t layer = layers.at(idx_); 
     return layer.get_name();

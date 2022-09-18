@@ -742,6 +742,76 @@ void analyzer_t::print_results() {
     std::cout << "**************************" << std::endl;
     return;
 }
+// Print analyze result to output file
+void analyzer_t::print_results(std::ofstream &output_file_) {
+    output_file_ << "[Scheduling Table]"<< std::endl;
+    scheduling_table.print_stats(output_file_);
+    output_file_ << "[Analyze Results]"<< std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
+                 << "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
+                 << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n"
+                 << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
+                 << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
+                 << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n"
+                 << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
+                 << "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
+                 << "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "  LB I allocated tile size : " << lb_tile_size_alloc.input    << "\n"
+                 << "  LB W allocated tile size : " << lb_tile_size_alloc.weight   << "\n"
+                 << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n"
+                 << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
+                 << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
+                 << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n"
+                 << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
+                 << "DRAM W allocated tile size : " << dram_tile_size_alloc.weight << "\n"
+                 << "DRAM O allocated tile size : " << dram_tile_size_alloc.output << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "  LB I  read access count : " << lb_access_count.input_rd     << "\n"
+                 << "  LB W  read access count : " << lb_access_count.weight_rd    << "\n"
+                 << "  LB O  read access count : " << lb_access_count.output_rd << "\n"
+                 << "  LB O write access count : " << lb_access_count.output_wt << "\n"
+                 << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
+                 << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
+                 << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
+                 << "  GB O write access count : " << gb_access_count.output_wt << "\n"
+                 << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
+                 << "DRAM W  read access count : " << dram_access_count.weight_rd    << "\n"
+                 << "DRAM O  read access count : " << dram_access_count.output_rd << "\n"
+                 << "DRAM O write access count : " << dram_access_count.output_wt << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "     NUM ACTIVE MAC ARRAY : " << num_active_macs << std::endl;
+    output_file_ << "      NUM ACTIVE PE ARRAY : " << num_active_pes << std::endl;
+    output_file_ << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "       MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
+                 << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n"
+                 << "        GB DYNAMIC ENERGY : " << global_buffer_energy << "\n"
+                 << "      DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "        MAC STATIC ENERGY : " << mac_static           << "\n"
+                 << "         LB STATIC ENERGY : " << local_buffer_static  << "\n"
+                 << "         GB STATIC ENERGY : " << global_buffer_static << "\n"
+                 << "       DRAM STATIC ENERGY : " << dram_static          << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "               MAC ENERGY : " << mac_energy + mac_static << "\n"
+                 << "                LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n"
+                 << "                GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n"
+                 << "              DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "                MAC CYCLE : " << mac_cycle              << "\n"
+                 << "                 LB CYCLE : " << local_buffer_cycle     << "\n"
+                 << "                 GB CYCLE : " << global_buffer_cycle    << "\n"
+                 << "               DRAM CYCLE : " << dram_cycle             << std::endl;
+    output_file_ << "**************************" << std::endl;
+    output_file_ << "     TOTAL DYNAMIC ENERGY : " << total_energy << std::endl;
+    output_file_ << "      TOTAL STATIC ENERGY : " << total_static_energy << std::endl;
+    output_file_ << "             TOTAL ENERGY : " << total_energy + total_static_energy << std::endl;
+    output_file_ << "              TOTAL CYCLE : " << total_cycle            << std::endl;
+    output_file_ << "**************************" << std::endl;
+    return;
+}
 
 float analyzer_t::get_total_cost(metric_t  metric_) {
     float rtn = 0;
@@ -1007,6 +1077,7 @@ void analyzer_t::init_pe_array() {
 // Init global buffer
 void analyzer_t::init_global_buffer() {
     // Init unit access cost
+    bool*  arr_gb_bypass   = accelerator->get_bypass(component_t::GB);
     float* arr_unit_energy = accelerator->get_energy(component_t::GB);
     float* arr_unit_static = accelerator->get_static(component_t::GB);
     float* arr_unit_cycle  = accelerator->get_cycle(component_t::GB);
@@ -1023,6 +1094,7 @@ void analyzer_t::init_global_buffer() {
     std::vector<float> arr_buffer_size = accelerator->get_size(component_t::GB);
     // If shared
     if(arr_buffer_size.size() == 1) {
+        is_gb_exist = true;
         is_gb_shared = true;
         gb_capacity.shared = arr_buffer_size.back();
         gb_capacity.input  = 0;
@@ -1031,6 +1103,7 @@ void analyzer_t::init_global_buffer() {
     }
     // If seperated
     else if(arr_buffer_size.size() == 3) {
+        is_gb_exist = true;
         is_gb_shared = false;
         gb_capacity.input  = arr_buffer_size.at((unsigned)data_t::INPUT)  / (accelerator->get_precision() / BYTE);
         gb_capacity.weight = arr_buffer_size.at((unsigned)data_t::WEIGHT) / (accelerator->get_precision() / BYTE);
@@ -1038,7 +1111,10 @@ void analyzer_t::init_global_buffer() {
     }
     else {
         is_gb_exist = false;
-    }  
+    }
+    if(arr_gb_bypass[(unsigned)data_t::INPUT]) { gb_bypass.input = true; }
+    if(arr_gb_bypass[(unsigned)data_t::WEIGHT]) { gb_bypass.weight = true; }  
+    if(arr_gb_bypass[(unsigned)data_t::OUTPUT]) { gb_bypass.output = true; }  
     // Init bitwidth
     gb_bitwidth = accelerator->get_bitwidth(component_t::GB) 
                  / accelerator->get_precision();
