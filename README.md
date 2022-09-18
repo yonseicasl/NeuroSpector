@@ -1,7 +1,7 @@
 # NeuroSpector: Dataflow and Mapping Optimization of Deep Neural Network Accelerators
 Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Intelligent Computing Systems Lab, Yonsei University\
-Current release: v1.1 (Sep. 2022)
+Current release: v1.2 (Sep. 2022)
 
 ## Table of Contents
 1. [Intoduction](#introduction)
@@ -55,9 +55,9 @@ The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs 
 
 
 ## Download
-The latest release of the NeuroSpector framework is v1.1. The NeuroSpector framework will continually be updated for better code structuring, readability, usability, and bug fixes. To obtain the latest version of NeuroSpector, use the following git command in a terminal. 
+The latest release of the NeuroSpector framework is v1.2. The NeuroSpector framework will continually be updated for better code structuring, readability, usability, and bug fixes. To obtain the latest version of NeuroSpector, use the following git command in a terminal. 
 
-	$ git clone --branch v1.1 https://github.com/yonsei-icsl/NeuroSpector
+	$ git clone --branch v1.2 https://github.com/yonsei-icsl/NeuroSpector
 
 Or, if you wish to use the latest development version, simply clone the git respository as is.
 
