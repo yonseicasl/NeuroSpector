@@ -129,6 +129,7 @@ private:
     dataflow_t handle_dataflow_exception_case(unsigned idx_, 
                                               dataflow_t df_, 
                                               bypass_t bp_);
+    void update_bypassed_data(); 
 
     accelerator_t      *accelerator;
     network_t          *network;

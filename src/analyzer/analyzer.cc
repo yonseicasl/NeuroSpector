@@ -682,6 +682,7 @@ void analyzer_t::update_energy() {
 }
 // Print out analysis result
 void analyzer_t::print_results() {
+    update_bypassed_data();
     std::cout << "[Scheduling Table]"<< std::endl;
     scheduling_table.print_stats();
     std::cout << "[Analyze Results]"<< std::endl;
@@ -766,39 +767,46 @@ void analyzer_t::print_results() {
 }
 // Print analyze result to output file
 void analyzer_t::print_results(std::ofstream &output_file_) {
+    update_bypassed_data();
     output_file_ << "[Scheduling Table]"<< std::endl;
     scheduling_table.print_stats(output_file_);
     output_file_ << "[Analyze Results]"<< std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
                  << "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
-                 << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n"
-                 << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
-                 << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
-                 << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n"
-                 << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
+                 << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n";
+    if(is_gb_exist) {
+        output_file_ << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
+                     << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
+                     << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n";
+    }
+    output_file_ << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
                  << "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
                  << "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "  LB I allocated tile size : " << lb_tile_size_alloc.input    << "\n"
                  << "  LB W allocated tile size : " << lb_tile_size_alloc.weight   << "\n"
-                 << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n"
-                 << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
-                 << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
-                 << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n"
-                 << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
+                 << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n";
+    if(is_gb_exist) {
+        output_file_ << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
+                     << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
+                     << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n";
+    }
+    output_file_ << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
                  << "DRAM W allocated tile size : " << dram_tile_size_alloc.weight << "\n"
                  << "DRAM O allocated tile size : " << dram_tile_size_alloc.output << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "  LB I  read access count : " << lb_access_count.input_rd     << "\n"
                  << "  LB W  read access count : " << lb_access_count.weight_rd    << "\n"
                  << "  LB O  read access count : " << lb_access_count.output_rd << "\n"
-                 << "  LB O write access count : " << lb_access_count.output_wt << "\n"
-                 << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
-                 << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
-                 << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
-                 << "  GB O write access count : " << gb_access_count.output_wt << "\n"
-                 << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
+                 << "  LB O write access count : " << lb_access_count.output_wt << "\n";
+    if(is_gb_exist) {
+        output_file_ << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
+                     << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
+                     << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
+                     << "  GB O write access count : " << gb_access_count.output_wt << "\n";
+    }
+    output_file_ << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
                  << "DRAM W  read access count : " << dram_access_count.weight_rd    << "\n"
                  << "DRAM O  read access count : " << dram_access_count.output_rd << "\n"
                  << "DRAM O write access count : " << dram_access_count.output_wt << std::endl;
@@ -808,24 +816,32 @@ void analyzer_t::print_results(std::ofstream &output_file_) {
     output_file_ << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "       MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
-                 << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n"
-                 << "        GB DYNAMIC ENERGY : " << global_buffer_energy << "\n"
-                 << "      DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
+                 << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n";
+    if(is_gb_exist) {
+        output_file_ << "        GB DYNAMIC ENERGY : " << global_buffer_energy << "\n";
+    }
+    output_file_ << "      DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "        MAC STATIC ENERGY : " << mac_static           << "\n"
-                 << "         LB STATIC ENERGY : " << local_buffer_static  << "\n"
-                 << "         GB STATIC ENERGY : " << global_buffer_static << "\n"
-                 << "       DRAM STATIC ENERGY : " << dram_static          << std::endl;
+                 << "         LB STATIC ENERGY : " << local_buffer_static  << "\n";
+    if(is_gb_exist) {
+        output_file_ << "         GB STATIC ENERGY : " << global_buffer_static << "\n";
+    }
+    output_file_ << "       DRAM STATIC ENERGY : " << dram_static          << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "               MAC ENERGY : " << mac_energy + mac_static << "\n"
-                 << "                LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n"
-                 << "                GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n"
-                 << "              DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
+                 << "                LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n";
+    if(is_gb_exist) {
+        output_file_ << "                GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n";
+    }
+    output_file_ << "              DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "                MAC CYCLE : " << mac_cycle              << "\n"
-                 << "                 LB CYCLE : " << local_buffer_cycle     << "\n"
-                 << "                 GB CYCLE : " << global_buffer_cycle    << "\n"
-                 << "               DRAM CYCLE : " << dram_cycle             << std::endl;
+                 << "                 LB CYCLE : " << local_buffer_cycle     << "\n";
+    if(is_gb_exist) {
+        output_file_ << "                 GB CYCLE : " << global_buffer_cycle    << "\n";
+    }
+    output_file_ << "               DRAM CYCLE : " << dram_cycle             << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "     TOTAL DYNAMIC ENERGY : " << total_energy << std::endl;
     output_file_ << "      TOTAL STATIC ENERGY : " << total_static_energy << std::endl;
@@ -839,7 +855,7 @@ float analyzer_t::get_total_cost(metric_t  metric_) {
     float rtn = 0;
     switch(metric_) {
         case metric_t::ENERGY:
-            rtn = total_energy;
+            rtn = total_energy + total_static_energy;
             break;
         case metric_t::CYCLE:
             rtn = total_cycle;
@@ -1053,6 +1069,7 @@ void analyzer_t::init_mac_array() {
 }
 void analyzer_t::init_local_buffer() {
     // Init unit access cost
+    bool*  arr_lb_bypass   = accelerator->get_bypass(component_t::LB);
     float* arr_unit_energy  = accelerator->get_energy(component_t::LB);
     float* arr_unit_static  = accelerator->get_static(component_t::LB);
     float* arr_unit_cycle   = accelerator->get_cycle(component_t::LB);
@@ -1087,6 +1104,11 @@ void analyzer_t::init_local_buffer() {
     else {
         // Virtual buffer
         is_lb_exist = false;
+    }
+    if(arr_lb_bypass != nullptr) {
+        if(arr_lb_bypass[(unsigned)data_t::INPUT]) { lb_bypass.input = true; }
+        if(arr_lb_bypass[(unsigned)data_t::WEIGHT]) { lb_bypass.weight = true; }  
+        if(arr_lb_bypass[(unsigned)data_t::OUTPUT]) { lb_bypass.output = true; }  
     }
     
     // Init bitwidth
@@ -1177,4 +1199,48 @@ void analyzer_t::init_dram() {
     // Init bitwidth
     dram_bitwidth = accelerator->get_bitwidth(component_t::DRAM) 
                    / accelerator->get_precision();
+}
+void analyzer_t::update_bypassed_data() {
+    // Neat access counts and tile size for bypassed data.
+    // It is just to prevent misunderstanding of the result file by users when 
+    // result reports that bypassed data types are allocated in a specific buffer level.
+    // Since unit access costs are set to zero, the access count and allocated 
+    // tile of the bypassed data type do not affect the accelerator's cost.
+    if(lb_bypass.input && lb_unit_energy.input == 0) {
+        lb_tile_size_alloc.input  = 0;
+        lb_tile_size_send.input   = 0;
+        lb_access_count.input_rd  = 0;
+    }
+    if(lb_bypass.weight && lb_unit_energy.weight == 0) {
+        lb_tile_size_alloc.input  = 0;
+        lb_tile_size_alloc.weight = 0;
+        lb_tile_size_send.weight  = 0;
+        lb_access_count.weight_rd = 0;
+    }
+
+    if(lb_bypass.output && lb_unit_energy.output == 0) {
+        lb_tile_size_alloc.output = 0;
+        lb_tile_size_send.output  = 0;
+        lb_access_count.output_rd = 0;
+        lb_access_count.output_wt = 0;
+    }
+
+    if(gb_bypass.input && gb_unit_energy.input == 0) {
+        gb_tile_size_alloc.input  = 0;
+        gb_tile_size_send.input   = 0;
+        gb_access_count.input_rd  = 0;
+    }
+
+    if(gb_bypass.weight && gb_unit_energy.weight == 0) {
+        gb_tile_size_alloc.weight = 0;
+        gb_tile_size_send.weight  = 0;
+        gb_access_count.weight_rd = 0;
+    }
+
+    if(gb_bypass.output && gb_unit_energy.output == 0) {
+        gb_tile_size_alloc.output = 0;
+        gb_tile_size_send.output  = 0;
+        gb_access_count.output_rd = 0;
+        gb_access_count.output_wt = 0;
+    }
 }
