@@ -17,7 +17,6 @@ optimizer_t::optimizer_t(const std::string& accelerator_pth_,
 
     is_fixed  = dataflow_.compare("fixed") == 0 ? true : false;
     if(!layer_.empty()) { layer_idx = stoi(layer_); }       // If layer_ is empty, run all layers
-    std::cout << "[message] end optimzier constructor" << std::endl;
 }
 optimizer_t::~optimizer_t() {
     delete accelerator;
@@ -79,7 +78,7 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
                     else {
                         bypass = scheduling_table->get_bypass(i);
                         stationary_data = (data_t)(df-1);
-                        if(bypass[(unsigned)stationary_data]) {
+                        if(!bypass[(unsigned)stationary_data]) {
                             possible_dataflows.push_back((dataflow_t)df);
                         }
                     }

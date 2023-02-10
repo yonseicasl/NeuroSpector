@@ -154,6 +154,9 @@ dataflow_t accelerator_t::get_dataflow(component_t comp_) {
         if(component_list[(unsigned)comp_] != nullptr) {
             rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->dataflow;
         }
+        else {
+
+        }
     }
     return rtn;
 }
@@ -175,10 +178,12 @@ float accelerator_t::get_bitwidth(component_t comp_) {
 }
 // Get component energy
 float* accelerator_t::get_energy(component_t comp_) {
-    float* rtn;
+    float* rtn = nullptr;
     if(comp_ == component_t::REG || comp_ == component_t::LB
     || comp_ == component_t::GB  || comp_ == component_t::DRAM) {
-        rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->unit_energy;
+        if(component_list[(unsigned)comp_] != nullptr) {
+            rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->unit_energy;
+        }
     }
     else {
         std::cerr << "Invalid function access; target component is spatial" 
@@ -189,10 +194,12 @@ float* accelerator_t::get_energy(component_t comp_) {
 }
 // Get component static power
 float* accelerator_t::get_static(component_t comp_) {
-    float* rtn;
+    float* rtn = nullptr;
     if(comp_ == component_t::REG || comp_ == component_t::LB
     || comp_ == component_t::GB  || comp_ == component_t::DRAM) {
-        rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->unit_static;
+        if(component_list[(unsigned)comp_] != nullptr) {
+            rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->unit_static;
+        }
     }
     else {
         std::cerr << "Invalid function access; target component is spatial" 
@@ -203,10 +210,12 @@ float* accelerator_t::get_static(component_t comp_) {
 }
 // Get component cycle
 float* accelerator_t::get_cycle(component_t comp_) {
-    float* rtn;
+    float* rtn = nullptr;
     if(comp_ == component_t::REG || comp_ == component_t::LB
     || comp_ == component_t::GB  || comp_ == component_t::DRAM) {
-        rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->unit_cycle;
+        if(component_list[(unsigned)comp_] != nullptr) {
+            rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->unit_cycle;
+        }
     }
     else {
         std::cerr << "Invalid function access; target component is spatial" 
@@ -217,10 +226,12 @@ float* accelerator_t::get_cycle(component_t comp_) {
 }
 // Get component bypass
 bool* accelerator_t::get_bypass(component_t comp_) {
-    bool* rtn;
+    bool* rtn = nullptr;
     if(comp_ == component_t::REG || comp_ == component_t::LB
     || comp_ == component_t::GB  || comp_ == component_t::DRAM) {
-        rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->bypass;
+        if(component_list[(unsigned)comp_] != nullptr) {
+            rtn = ((temporal_component_t*)component_list[(unsigned)comp_])->bypass;
+        }
     }
     else {
         std::cerr << "Invalid function access; target component is spatial" 
@@ -531,18 +542,28 @@ void accelerator_t::init_temporal_component(temporal_component_t* component_,
     // Set component size
     unrefined_value = "";
     section_config_.get_setting("buffer_size", &unrefined_value);
+    section_config_.get_setting("size", &unrefined_value);
     if(!unrefined_value.empty()) { 
         component_->size = set_size(unrefined_value); 
     }
-    // Set component bypass
-    unrefined_value = "";
-    section_config_.get_setting("bypass", &unrefined_value);
-    if(!unrefined_value.empty()) { set_bypass(component_->bypass, unrefined_value); }
     // Set dataflow
     unrefined_value = "";
     section_config_.get_setting("dataflow", &unrefined_value);
     if(!unrefined_value.empty()) {
         component_->dataflow = (dataflow_t)get_enum_type(dataflow_str, unrefined_value);
+    }
+    // Set component bypass
+    unrefined_value = "";
+    section_config_.get_setting("bypass", &unrefined_value);
+    if(!unrefined_value.empty()) { set_bypass(component_->bypass, unrefined_value); }
+    // Check bypass validity
+    if((component_->dataflow == dataflow_t::IS && component_->bypass[unsigned(data_t::INPUT)])
+    || (component_->dataflow == dataflow_t::WS && component_->bypass[unsigned(data_t::WEIGHT)])
+    || (component_->dataflow == dataflow_t::OS && component_->bypass[unsigned(data_t::OUTPUT)])) {
+        std::cerr << "[Error] Invalid bypass setting in `" << component_->name 
+                  << "`. Data type, affected by dataflow, should be stored in the buffer level."
+                  << std::endl;
+        exit(0);
     }
     // Set bitwidth
     unrefined_value = "";

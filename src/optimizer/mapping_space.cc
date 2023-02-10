@@ -233,9 +233,9 @@ range_t::range_t(const unsigned tid_,
       start_c(0),
       end_c(layer_permutations_.at((unsigned) parameter_t::C).size()),
       start_r(0),
-      end_r(layer_permutations_.at((unsigned) parameter_t::S).size()),
+      end_r(layer_permutations_.at((unsigned) parameter_t::R).size()),
       start_s(0),
-      end_s(layer_permutations_.at((unsigned) parameter_t::R).size()),
+      end_s(layer_permutations_.at((unsigned) parameter_t::S).size()),
       start_g(0),
       end_g(layer_permutations_.at((unsigned) parameter_t::G).size()) {
 

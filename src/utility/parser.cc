@@ -19,6 +19,23 @@ void section_config_t::show_setting() {
 unsigned section_config_t::get_num_settings() {
     return settings.size();
 }
+// Get setting value with settings order
+std::string section_config_t::get_value(unsigned idx_) {
+    assert(idx_ < settings_order.size());
+    return settings_order.at(idx_);
+}
+// Get setting value with key value
+std::string section_config_t::get_value(std::string key_) {
+    // Find position of key
+    auto it = settings.find(key_);
+    if(it != settings.end()) {
+        return it->second;
+    }
+    else {
+        std::cerr << "[Error] key(" << key_ << ") does not exist" << std::endl;
+        return "False";
+    }
+}
 // Get setting value
 std::string section_config_t::get_value(std::string value_, unsigned idx_) {
     assert(idx_ < settings.size());
@@ -38,6 +55,7 @@ std::string section_config_t::get_value(std::string value_, unsigned idx_) {
 // Add (key, value) pair to the section settings
 void section_config_t::add_setting(std::string key_, std::string value_) {
     settings.insert(std::pair<std::string,std::string>(lowercase(key_), lowercase(value_)));
+    settings_order.push_back(lowercase(key_));
 }
 // Check if a setting exists.
 bool section_config_t::exist(std::string key_) {

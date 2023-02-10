@@ -11,7 +11,6 @@ analyzer_t::analyzer_t(const std::string& accelerator_pth_,
                        const std::string& scheduling_table_pth_) 
     : accelerator(new accelerator_t(accelerator_pth_)),
       network(new network_t(network_pth_)) {
-        // accelerator->init_accelerator();
         accelerator->print_spec();
         network->init_network();
         scheduling_table = scheduling_table_t(accelerator, 
@@ -39,7 +38,8 @@ analyzer_t::analyzer_t(accelerator_t *accelerator_,
         init_multi_chips();
         init_dram();
 }
-analyzer_t::~analyzer_t() { }
+analyzer_t::~analyzer_t() {
+}
 // Run analyzer 
 void analyzer_t::run() {
     update_tile_size();
@@ -54,14 +54,18 @@ void analyzer_t::run() {
     estimate_cost();
     // Print out analysis results
     print_results();
+
+    // Delete accelerator and network
+    delete accelerator;
+    delete network;
 }
 // Initialize analyzer to evaluate a given scheduling table
 void analyzer_t::init(scheduling_table_t scheduling_table_) {
     // Copy scheduling table
     scheduling_table = scheduling_table_;
     dram_idx = scheduling_table.get_num_rows() - 1;
-    gb_idx = scheduling_table.get_above_buffer_pos(dram_idx);
-    lb_idx = scheduling_table.get_above_buffer_pos(gb_idx);
+    gb_idx = (unsigned)component_t::GB;
+    lb_idx = (unsigned)component_t::LB;
     update_tile_size();
     update_access_count();
     update_active_components();
@@ -90,18 +94,20 @@ bool analyzer_t::check_hardware_constraints() {
     }
 
     // Check Local Buffer validity
-    if(is_lb_shared) {
-        shared_tile_size  = lb_bypass.input  ?  0 : lb_tile_size_alloc.input ;
-        shared_tile_size += lb_bypass.weight ?  0 : lb_tile_size_alloc.weight;
-        shared_tile_size += lb_bypass.output ?  0 : lb_tile_size_alloc.output;
-        if(shared_tile_size > lb_capacity.shared ) {
-            rtn = false;
+    if(is_lb_exist) {
+        if(is_lb_shared) {
+            shared_tile_size  = lb_bypass.input  ?  0 : lb_tile_size_alloc.input;
+            shared_tile_size += lb_bypass.weight ?  0 : lb_tile_size_alloc.weight;
+            shared_tile_size += lb_bypass.output ?  0 : lb_tile_size_alloc.output;
+            if(shared_tile_size > lb_capacity.shared ) {
+                rtn = false;
+            }
         }
-    }
-    else {
-        rtn = rtn && (lb_tile_size_alloc.input  < lb_capacity.input);
-        rtn = rtn && (lb_tile_size_alloc.weight < lb_capacity.weight);
-        rtn = rtn && (lb_tile_size_alloc.output < lb_capacity.output);
+        else {
+            rtn = rtn && (lb_tile_size_alloc.input  < lb_capacity.input);
+            rtn = rtn && (lb_tile_size_alloc.weight < lb_capacity.weight);
+            rtn = rtn && (lb_tile_size_alloc.output < lb_capacity.output);
+        }
     }
     // Check PE array validity
     if(pes_actived.dim_x > pes_capacity.dim_x 
@@ -109,18 +115,20 @@ bool analyzer_t::check_hardware_constraints() {
         rtn = false;
     }
     // Check Global Buffer validity
-    if(is_gb_shared) {
-        shared_tile_size  = gb_bypass.input  ? 0 : gb_tile_size_alloc.input;
-        shared_tile_size += gb_bypass.weight ? 0 : gb_tile_size_alloc.weight;
-        shared_tile_size += gb_bypass.output ? 0 : gb_tile_size_alloc.output;
-        if(shared_tile_size > gb_capacity.shared ) {
-            rtn = false;
+    if(is_gb_exist) {
+        if(is_gb_shared) {
+            shared_tile_size  = gb_bypass.input  ? 0 : gb_tile_size_alloc.input;
+            shared_tile_size += gb_bypass.weight ? 0 : gb_tile_size_alloc.weight;
+            shared_tile_size += gb_bypass.output ? 0 : gb_tile_size_alloc.output;
+            if(shared_tile_size > gb_capacity.shared ) {
+                rtn = false;
+            }
         }
-    }
-    else {
-        rtn = rtn && (gb_tile_size_alloc.input  < gb_capacity.input);
-        rtn = rtn && (gb_tile_size_alloc.weight < gb_capacity.weight);
-        rtn = rtn && (gb_tile_size_alloc.output < gb_capacity.output);
+        else {
+            rtn = rtn && (gb_tile_size_alloc.input  < gb_capacity.input);
+            rtn = rtn && (gb_tile_size_alloc.weight < gb_capacity.weight);
+            rtn = rtn && (gb_tile_size_alloc.output < gb_capacity.output);
+        }
     }
     // Check Multi chips validity
     if(chips_actived.dim_x > chips_capacity.dim_x 
@@ -265,7 +273,7 @@ void analyzer_t::update_access_count() {
     lb_access_count.output_wt = update_output_access_count(lb_idx, value, operation_t::WRITE);
     
     dataflow = scheduling_table.get_dataflow(lb_idx);
-    dataflow = handle_dataflow_exception_case(gb_idx, dataflow, lb_bypass);
+    // dataflow = handle_dataflow_exception_case(gb_idx, dataflow, lb_bypass);
     value = scheduling_table.get_temporal_row_wise_product(gb_idx, dram_idx);
     gb_access_count.input_rd  = update_input_access_count(gb_idx, value);
     gb_access_count.weight_rd = update_weight_access_count(gb_idx, value);
@@ -274,7 +282,7 @@ void analyzer_t::update_access_count() {
 
     // Update dram access count
     dataflow = scheduling_table.get_dataflow(gb_idx);
-    dataflow = handle_dataflow_exception_case(dram_idx, dataflow, gb_bypass);
+    // dataflow = handle_dataflow_exception_case(dram_idx, dataflow, gb_bypass);
     value = scheduling_table.get_temporal_row_wise_product(dram_idx, dram_idx);
     dram_access_count.input_rd  = update_input_access_count(dram_idx, value); 
     dram_access_count.weight_rd = update_weight_access_count(dram_idx, value);
@@ -680,33 +688,39 @@ void analyzer_t::print_results() {
     std::cout << "**************************" << std::endl;
     std::cout << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
               << "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
-              << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n"
-              << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
-              << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
-              << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n"
-              << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
+              << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n";
+    if(is_gb_exist) {
+        std::cout << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
+                  << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
+                  << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n";
+    }
+    std::cout << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
               << "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
               << "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "  LB I allocated tile size : " << lb_tile_size_alloc.input    << "\n"
               << "  LB W allocated tile size : " << lb_tile_size_alloc.weight   << "\n"
-              << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n"
-              << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
-              << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
-              << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n"
-              << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
+              << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n";
+    if(is_gb_exist) {
+        std::cout << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
+                  << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
+                  << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n";
+    }
+    std::cout << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
               << "DRAM W allocated tile size : " << dram_tile_size_alloc.weight << "\n"
               << "DRAM O allocated tile size : " << dram_tile_size_alloc.output << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "  LB I  read access count : " << lb_access_count.input_rd     << "\n"
               << "  LB W  read access count : " << lb_access_count.weight_rd    << "\n"
               << "  LB O  read access count : " << lb_access_count.output_rd << "\n"
-              << "  LB O write access count : " << lb_access_count.output_wt << "\n"
-              << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
-              << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
-              << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
-              << "  GB O write access count : " << gb_access_count.output_wt << "\n"
-              << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
+              << "  LB O write access count : " << lb_access_count.output_wt << "\n";
+    if(is_gb_exist) {
+        std::cout << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
+                << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
+                << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
+                << "  GB O write access count : " << gb_access_count.output_wt << "\n";
+    }
+    std::cout << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
               << "DRAM W  read access count : " << dram_access_count.weight_rd    << "\n"
               << "DRAM O  read access count : " << dram_access_count.output_rd << "\n"
               << "DRAM O write access count : " << dram_access_count.output_wt << std::endl;
@@ -716,24 +730,32 @@ void analyzer_t::print_results() {
     std::cout << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "       MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
-              << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n"
-              << "        GB DYNAMIC ENERGY : " << global_buffer_energy << "\n"
-              << "      DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
+              << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n";
+    if(is_gb_exist) {
+        std::cout << "        GB DYNAMIC ENERGY : " << global_buffer_energy << "\n";
+    }
+    std::cout << "      DRAM DYNAMIC ENERGY : " << dram_energy          << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "        MAC STATIC ENERGY : " << mac_static           << "\n"
-              << "         LB STATIC ENERGY : " << local_buffer_static  << "\n"
-              << "         GB STATIC ENERGY : " << global_buffer_static << "\n"
-              << "       DRAM STATIC ENERGY : " << dram_static          << std::endl;
+              << "         LB STATIC ENERGY : " << local_buffer_static  << "\n";
+    if(is_gb_exist) {
+        std::cout << "         GB STATIC ENERGY : " << global_buffer_static << "\n";
+    }
+    std::cout << "       DRAM STATIC ENERGY : " << dram_static          << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "               MAC ENERGY : " << mac_energy + mac_static << "\n"
-              << "                LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n"
-              << "                GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n"
-              << "              DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
+              << "                LB ENERGY : " << local_buffer_energy + local_buffer_static << "\n";
+    if(is_gb_exist) {
+        std::cout << "                GB ENERGY : " << global_buffer_energy + global_buffer_static << "\n";
+    }
+    std::cout << "              DRAM ENERGY : " << dram_energy  + dram_static << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "                MAC CYCLE : " << mac_cycle              << "\n"
-              << "                 LB CYCLE : " << local_buffer_cycle     << "\n"
-              << "                 GB CYCLE : " << global_buffer_cycle    << "\n"
-              << "               DRAM CYCLE : " << dram_cycle             << std::endl;
+              << "                 LB CYCLE : " << local_buffer_cycle     << "\n";
+    if(is_gb_exist) {
+        std::cout << "                 GB CYCLE : " << global_buffer_cycle    << "\n";
+    }
+    std::cout << "               DRAM CYCLE : " << dram_cycle             << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "     TOTAL DYNAMIC ENERGY : " << total_energy << std::endl;
     std::cout << "      TOTAL STATIC ENERGY : " << total_static_energy << std::endl;
@@ -975,6 +997,8 @@ unsigned analyzer_t::get_factorization_degrees(unsigned idx_) {
 dataflow_t analyzer_t::handle_dataflow_exception_case(unsigned idx_, dataflow_t df_, bypass_t bp_) {
     dataflow_t dataflow = df_;
     bypass_t bypass = bp_;
+    // if target component does not exist, return NONE
+    if(dataflow == dataflow_t::NONE) { return df_;}
     if(update_irrelevant_mapping_value(idx_, (data_t)((unsigned)df_-1)) == 1) {
         switch(dataflow) {
             case dataflow_t::IS:
@@ -1047,7 +1071,7 @@ void analyzer_t::init_local_buffer() {
     // If shared
     if(arr_buffer_size.size() == 1) {
         is_lb_shared = true;
-        lb_capacity.shared = arr_buffer_size.back();
+        lb_capacity.shared = arr_buffer_size.back() / (accelerator->get_precision() / BYTE);
         lb_capacity.input  = 0;
         lb_capacity.weight = 0;
         lb_capacity.output = 0;
@@ -1081,29 +1105,36 @@ void analyzer_t::init_global_buffer() {
     float* arr_unit_energy = accelerator->get_energy(component_t::GB);
     float* arr_unit_static = accelerator->get_static(component_t::GB);
     float* arr_unit_cycle  = accelerator->get_cycle(component_t::GB);
-    gb_unit_energy.input    = arr_unit_energy[(unsigned)data_t::INPUT];
-    gb_unit_energy.weight   = arr_unit_energy[(unsigned)data_t::WEIGHT];
-    gb_unit_energy.output   = arr_unit_energy[(unsigned)data_t::OUTPUT];
-    gb_unit_static.input    = arr_unit_static[(unsigned)data_t::INPUT];
-    gb_unit_static.weight   = arr_unit_static[(unsigned)data_t::WEIGHT];
-    gb_unit_static.output   = arr_unit_static[(unsigned)data_t::OUTPUT];
-    gb_unit_cycle.input     =  arr_unit_cycle[(unsigned)data_t::INPUT];
-    gb_unit_cycle.weight    =  arr_unit_cycle[(unsigned)data_t::WEIGHT];
-    gb_unit_cycle.output    =  arr_unit_cycle[(unsigned)data_t::OUTPUT];
+    if(arr_unit_energy != nullptr) {
+        gb_unit_energy.input    = arr_unit_energy[(unsigned)data_t::INPUT];
+        gb_unit_energy.weight   = arr_unit_energy[(unsigned)data_t::WEIGHT];
+        gb_unit_energy.output   = arr_unit_energy[(unsigned)data_t::OUTPUT];
+    }
+    else {
+        is_gb_exist = false;
+    }
+    if(arr_unit_static != nullptr) {
+        gb_unit_static.input    = arr_unit_static[(unsigned)data_t::INPUT];
+        gb_unit_static.weight   = arr_unit_static[(unsigned)data_t::WEIGHT];
+        gb_unit_static.output   = arr_unit_static[(unsigned)data_t::OUTPUT];
+    }
+    if(arr_unit_cycle != nullptr) {
+        gb_unit_cycle.input     =  arr_unit_cycle[(unsigned)data_t::INPUT];
+        gb_unit_cycle.weight    =  arr_unit_cycle[(unsigned)data_t::WEIGHT];
+        gb_unit_cycle.output    =  arr_unit_cycle[(unsigned)data_t::OUTPUT];
+    }
     // Init buffer size
     std::vector<float> arr_buffer_size = accelerator->get_size(component_t::GB);
     // If shared
     if(arr_buffer_size.size() == 1) {
-        is_gb_exist = true;
         is_gb_shared = true;
-        gb_capacity.shared = arr_buffer_size.back();
+        gb_capacity.shared = arr_buffer_size.back() / (accelerator->get_precision() / BYTE);
         gb_capacity.input  = 0;
         gb_capacity.weight = 0;
         gb_capacity.output = 0;
     }
     // If seperated
     else if(arr_buffer_size.size() == 3) {
-        is_gb_exist = true;
         is_gb_shared = false;
         gb_capacity.input  = arr_buffer_size.at((unsigned)data_t::INPUT)  / (accelerator->get_precision() / BYTE);
         gb_capacity.weight = arr_buffer_size.at((unsigned)data_t::WEIGHT) / (accelerator->get_precision() / BYTE);
@@ -1112,12 +1143,17 @@ void analyzer_t::init_global_buffer() {
     else {
         is_gb_exist = false;
     }
-    if(arr_gb_bypass[(unsigned)data_t::INPUT]) { gb_bypass.input = true; }
-    if(arr_gb_bypass[(unsigned)data_t::WEIGHT]) { gb_bypass.weight = true; }  
-    if(arr_gb_bypass[(unsigned)data_t::OUTPUT]) { gb_bypass.output = true; }  
+    if(arr_gb_bypass != nullptr) {
+        if(arr_gb_bypass[(unsigned)data_t::INPUT]) { gb_bypass.input = true; }
+        if(arr_gb_bypass[(unsigned)data_t::WEIGHT]) { gb_bypass.weight = true; }  
+        if(arr_gb_bypass[(unsigned)data_t::OUTPUT]) { gb_bypass.output = true; }  
+    }
     // Init bitwidth
-    gb_bitwidth = accelerator->get_bitwidth(component_t::GB) 
-                 / accelerator->get_precision();
+    if(is_gb_exist) {
+        gb_bitwidth = accelerator->get_bitwidth(component_t::GB) 
+                / accelerator->get_precision();
+    }
+    else { gb_bitwidth = 1; }
 }
 void analyzer_t::init_multi_chips() {
     // Init Multi chip 

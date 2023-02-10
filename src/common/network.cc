@@ -31,9 +31,9 @@ void network_t::get_layers(section_config_t section_config_) {
 
     for(unsigned i = 0; i < section_config_.get_num_settings(); i++) {
         // Get name, parameters, and stride from layer configuration
-        name = section_config_.get_value("key", i);
+        name = section_config_.get_value(i);
         // Separate config values by comma
-        tmp_param = split(section_config_.get_value("value", i), ',');
+        tmp_param = split(section_config_.get_value(name), ',');
         // Convert string to unsigned
         for(unsigned i = 0; i < tmp_param.size(); i++) {
             parameters.push_back(stoi(tmp_param.at(i)));
@@ -64,12 +64,15 @@ std::vector<unsigned> network_t::get_layer_parameters(unsigned idx_) {
 }
 unsigned  network_t::get_layer_index(std::string name_) {
     unsigned index = 0;
-    for(unsigned i = 0; i < layers.size(); i++) {
-        index = i; 
+    for(unsigned i = 0; i < layers.size();) {
         if(layers.at(i).get_name() == name_) { break;}
+        i++;
+        index = i; 
     }
     if(index == layers.size()) { 
-        std::cerr << "Error: invalid layer name" << name_ << std::endl;
+        std::cerr << "Error: invalid layer name in scheduling table `" 
+                  << name_ 
+                  << "`" << std::endl;
         exit(0);
     }
     return index;

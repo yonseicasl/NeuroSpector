@@ -113,7 +113,9 @@ void bottom_up_t::print_results() {
 // Print out results as an output file
 void bottom_up_t::print_results(unsigned idx_) {
     // Set output file name
-    std::string output_file_name = accelerator->get_acc_name() + "_" + network->get_network_name() + "_" + std::to_string(idx_+1) + ".txt";
+    std::string output_file_name = accelerator->get_acc_name() + "-" 
+                                 + network->get_network_name() + "_" + std::to_string(idx_+1) + "-"
+                                 + "bottom_up" + ".txt";
     std::clog << "[message] optimization result is written in '" << output_file_name << "'"<< std::endl;
     // Open file stream
     std::ofstream output_file;

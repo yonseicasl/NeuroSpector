@@ -5,6 +5,11 @@ std::string& lowercase(std::string &str_) {
     return str_;
 }
 
+std::string& uppercase(std::string &str_) {
+    transform(str_.begin(), str_.end(), str_.begin(), ::toupper);
+    return str_;
+}
+
 std::vector<std::string> split(std::string str_, char divisor_) {
     std::istringstream ss(str_);
     std::string buffer;

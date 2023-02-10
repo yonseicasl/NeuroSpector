@@ -134,26 +134,12 @@ private:
     network_t          *network;
     scheduling_table_t scheduling_table;
 
-    unsigned access_count = 0;
-    unsigned write_access_count = 0;
-    unsigned read_access_count  = 0;
-    
-    unsigned component_idx_curr = 0;
-    unsigned component_idx_lower= 0;
-    unsigned component_idx_upper= 0;
-    
     dataflow_t dataflow = dataflow_t::NONE;
 
     // Total number of active components
     unsigned num_active_macs  = 1;
     unsigned num_active_pes   = 1;
     unsigned num_active_chips = 1;
-    // Component utilization
-    float       mac_arr_util  = 0;
-    float  local_buffer_util  = 0;
-    float        pe_arr_util  = 0;
-    float global_buffer_util  = 0;
-    float      chip_arr_util  = 0;
     // Component tile size transferred to upper level
     tile_size_t   mac_tile_size_send;
     tile_size_t    lb_tile_size_send;

@@ -109,7 +109,8 @@ unsigned scheduling_table_t::get_above_buffer_pos(unsigned pos_) const {
     unsigned rtn = pos_;
     for(int i = (int)rtn-1; i >= 0; i--) {
         rtn--;
-        if(row_types.at(i) == reuse_t::TEMPORAL) { break; }
+        if(row_types.at(i) == reuse_t::TEMPORAL 
+        && row_dataflows.at(i) != dataflow_t::NONE) { break; }
     }
     return rtn;
 }
@@ -118,7 +119,8 @@ unsigned scheduling_table_t::get_below_buffer_pos(unsigned pos_) const {
     unsigned rtn = pos_;
     for(unsigned i = pos_+1; i < get_num_rows(); i++) {
         rtn++;
-        if(get_component_type(i) == reuse_t::TEMPORAL) { break; }
+        if(get_component_type(i) == reuse_t::TEMPORAL
+        && row_dataflows.at(i) != dataflow_t::NONE) { break; }
     }
     return rtn;
 }
@@ -221,7 +223,16 @@ bool* scheduling_table_t::get_bypass(unsigned idx_) const {
     return rtn;
 }
 dataflow_t scheduling_table_t::get_dataflow(unsigned idx_) const {
-    return row_dataflows.at(idx_);
+    dataflow_t rtn;
+    // Check whether target component is virtual
+    if(row_names.at(idx_)=="virtual") {
+        // If target component is virtual, return its upper-level's datalfow
+        rtn = row_dataflows.at(get_above_buffer_pos(idx_)); 
+    }
+    else {
+        rtn = row_dataflows.at(idx_);
+    }
+    return rtn;
 }
 // Get target component name
 std::string scheduling_table_t::get_component_name(unsigned idx_) const {
@@ -333,6 +344,7 @@ void scheduling_table_t::update_dataflow(std::vector<dataflow_t> dataflow_) {
 }
 // Print out scheduling table
 void scheduling_table_t::print_stats() {
+    std::cout << "Layer Name : " << uppercase(layer_name) << std::endl;
     std::string dataflow_type[4] = {"-", "IS", "WS", "OS"};
     std::cout << "|------------------------------------------------------------------------------|------|" << std::endl;
     std::cout << "|Correlations  |  W/O  |          O/I          |          I/W          | I/W/O | DATA |" << std::endl;
@@ -364,6 +376,7 @@ void scheduling_table_t::print_stats() {
 }
 
 void scheduling_table_t::print_stats(std::ofstream &output_file_) {
+    output_file_ << "Layer Name : " << uppercase(layer_name) << std::endl;
     std::string dataflow_type[4] = {"-", "IS", "WS", "OS"};
     output_file_ << "|------------------------------------------------------------------------------|------|" << std::endl;
     output_file_ << "|Correlations  |  W/O  |          O/I          |          I/W          | I/W/O | DATA |" << std::endl;
@@ -416,21 +429,47 @@ bool scheduling_table_t::operator!=(const scheduling_table_t& scheduling_table_)
 void scheduling_table_t::fill_out_mapping_values(const parser_t parser_) {
     std::string target_level_name;
     std::string target_level_mapping_str;
+    std::string virtual_level_name;
     std::vector<unsigned> target_level_mapping;
-    for(unsigned i = 0; i < parser_.sections.size(); i++) {
-        section_config_t section_config = parser_.sections[i];
+    for(unsigned p = 0; p < parser_.sections.size(); p++) {
+        section_config_t section_config = parser_.sections[p];
         if(section_config.name == "SCHEDULING_TABLE") {
             for(unsigned i = 0; i < get_num_rows(); i++) {
                 target_level_name = get_component_name(i);
                 if(target_level_name == "virtual") {
-                    target_level_mapping_str.assign((unsigned)parameter_t::SIZE, 1);
+                    // Exception handling
+                    virtual_level_name = accelerator->get_name((component_t)i);
+                    if(virtual_level_name != "virtual" && 
+                       accelerator->get_type((component_t)i) == reuse_t::SPATIAL) {
+                        if(i % 3 == 1) {
+                            virtual_level_name = virtual_level_name+"(X)";
+                        }
+                        else if(i % 3 == 2) {
+                            virtual_level_name = virtual_level_name+"(Y)";
+                        }
+                    }
+                    if(!section_config.get_setting(virtual_level_name, 
+                                            &target_level_mapping_str)) {
+                        target_level_mapping_str.assign((unsigned)parameter_t::SIZE, 1);
+                    }
+                    else {
+                        target_level_mapping = comma_to_vector(target_level_mapping_str);
+                        for(unsigned i = 0; i < target_level_mapping.size(); i++) {
+                            if(target_level_mapping.at(i) != 1) {
+                                std::cerr << "[Error] All mapping values in "
+                                        << virtual_level_name 
+                                        << " should be 1" << std::endl;
+                                exit(0);
+                            }
+                        }
+                    }
                 }
                 else {
-                    section_config.get_setting(target_level_name, 
-                                            &target_level_mapping_str);
-                    if(target_level_mapping_str.empty()) {
-                        std::cerr << "Please enter the mapping value of "
-                                << target_level_name << std::endl;
+                    if(!section_config.get_setting(target_level_name, 
+                                            &target_level_mapping_str)) {
+                        std::cerr << "[Error] Please enter mapping values of "
+                                << target_level_name 
+                                << " in scheduling table" << std::endl;
                         exit(0);
                     }
                     target_level_mapping = comma_to_vector(target_level_mapping_str);
@@ -449,8 +488,10 @@ void scheduling_table_t::fill_out_mapping_values(const parser_t parser_) {
     for(unsigned i = 0; i < (unsigned)parameter_t::SIZE; i++) {
         layer_parameters.at(i) = get_column_wise_product((parameter_t)i, 0, get_num_rows() - 1);
         if(layer_parameters.at(i) != network->get_layer_parameters(layer_index).at(i)) {
-            std::cerr << "Error: Violate parameter constraint; column "
-                      << parameter[i] 
+            std::cerr << "[Error] Violate parameter constraint (column "
+                      << parameter[i] << ") "
+                      << "Input value: " << network->get_layer_parameters(layer_index).at(i) << " / "
+                      << "Producted value: " << layer_parameters.at(i) 
                       << std::endl;
             exit(0);
         }

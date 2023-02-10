@@ -22,6 +22,8 @@ public:
     // Get total number of settings
     unsigned get_num_settings();
     // Get setting value
+    std::string get_value(unsigned idx_); 
+    std::string get_value(std::string key_); 
     std::string get_value(std::string value_, unsigned idx_); 
     // Add (key, value) pair to the latest section settings
     void add_setting(std::string key_, std::string value_);
@@ -51,6 +53,8 @@ public:
 private:
     // Section settings
     std::map<std::string, std::string> settings;
+    // Section order
+    std::vector<std::string> settings_order;
 };
 
 class parser_t {

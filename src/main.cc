@@ -68,6 +68,16 @@ int main(int argc, char **argv) {
     std::clog << std::endl;
     switch(run_type_enum) {
         case run_t::OPTIMIZER:
+            if(dataflow.empty()) {
+                std::cerr << "[Error] Specify dataflow (fixed or flexible)"
+                        << std::endl;
+                exit(0);
+            }
+            if(metric.empty()) {
+                std::cerr << "[Error] Specify optimization objectives (energy or cycle)"
+                        << std::endl;
+                exit(0);
+            }
             if(optimizer_type.compare("bottom-up") == 0) {
                 bottom_up_t *optimizer = new bottom_up_t(accelerator, dataflow, 
                                                         network, layer, metric,

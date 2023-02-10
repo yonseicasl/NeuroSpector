@@ -1,7 +1,7 @@
 # NeuroSpector: Dataflow and Mapping Optimization of Deep Neural Network Accelerators
 Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Intelligent Computing Systems Lab, Yonsei University\
-Current release: v1.2 (Sep. 2022)
+Current release: v1.3 (Feb. 2023)
 
 ## Table of Contents
 1. [Intoduction](#introduction)
@@ -48,16 +48,16 @@ For example, the following command triggers NeuroSpector to find the most energy
 ### Analyzer
 The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs of an accelerator using a scheduling scheme provided in the `--scheduling_table` option of a run command. A combinatorial case of dataflow and mapping in an accelerator is represented via the notion of scheduling table in NeuroSpector. The following command invokes NeuroSpector to calculate the cost metrics of Eyeriss for ResNet-50 layers based on the given scheduling option.
 
-	$ ./neurospector --run_type=analyzer\
-			 --accelerator=configs/accelerators/eyeriss.cfg\
-			 --network=configs/networks/resnet50.cfg\
-			 --scheduling_table=configs/scheduling_table/eyeriss_sample.cfg
+	$ ./neurospector --run_type=analyzer \
+			 --accelerator=configs/accelerators/eyeriss.cfg \
+			 --network=configs/networks/resnet50.cfg \
+			 --scheduling_table=configs/scheduling_tables/eyeriss_sample.cfg
 
 
 ## Download
-The latest release of the NeuroSpector framework is v1.2. The NeuroSpector framework will continually be updated for better code structuring, readability, usability, and bug fixes. To obtain the latest version of NeuroSpector, use the following git command in a terminal. 
+The latest release of the NeuroSpector framework is v1.3. The NeuroSpector framework will continually be updated for better code structuring, readability, usability, and bug fixes. To obtain the latest version of NeuroSpector, use the following git command in a terminal. 
 
-	$ git clone --branch v1.2 https://github.com/yonsei-icsl/NeuroSpector
+	$ git clone --branch v1.3 https://github.com/yonsei-icsl/NeuroSpector
 
 Or, if you wish to use the latest development version, simply clone the git respository as is.
 
