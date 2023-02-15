@@ -682,53 +682,116 @@ void analyzer_t::update_energy() {
 }
 // Print out analysis result
 void analyzer_t::print_results() {
+    float shared_tile_size = 0;
     update_bypassed_data();
     std::cout << "[Scheduling Table]"<< std::endl;
     scheduling_table.print_stats();
     std::cout << "[Analyze Results]"<< std::endl;
+    // TRANSFERED TILE SIZE 
+    //std::cout << "**************************" << std::endl;
+    //std::cout << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
+              //<< "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
+              //<< "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n";
+    //if(is_gb_exist) {
+        //std::cout << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
+                  //<< "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
+                  //<< "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n";
+    //}
+    //std::cout << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
+              //<< "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
+              //<< "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
-              << "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
-              << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n";
+    std::cout << "           LB I TILE SIZE : " << lb_tile_size_alloc.input    << "\n"
+              << "           LB W TILE SIZE : " << lb_tile_size_alloc.weight   << "\n"
+              << "           LB O TILE SIZE : " << lb_tile_size_alloc.output   << "\n";
     if(is_gb_exist) {
-        std::cout << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
-                  << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
-                  << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n";
+        std::cout << "           GB I TILE SIZE : " << gb_tile_size_alloc.input    << "\n"
+                  << "           GB W TILE SIZE : " << gb_tile_size_alloc.weight   << "\n"
+                  << "           GB O TILE SIZE : " << gb_tile_size_alloc.output   << "\n";
     }
-    std::cout << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
-              << "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
-              << "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
+    std::cout << "         DRAM I TILE SIZE : " << dram_tile_size_alloc.input  << "\n"
+              << "         DRAM W TILE SIZE : " << dram_tile_size_alloc.weight << "\n"
+              << "         DRAM O TILE SIZE : " << dram_tile_size_alloc.output << std::endl;
     std::cout << "**************************" << std::endl;
-    std::cout << "  LB I allocated tile size : " << lb_tile_size_alloc.input    << "\n"
-              << "  LB W allocated tile size : " << lb_tile_size_alloc.weight   << "\n"
-              << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n";
+    std::cout << "  LB I  READ ACCESS COUNT : " << lb_access_count.input_rd     << "\n"
+              << "  LB W  READ ACCESS COUNT : " << lb_access_count.weight_rd    << "\n"
+              << "  LB O  READ ACCESS COUNT : " << lb_access_count.output_rd << "\n"
+              << "  LB O WRITE ACCESS COUNT : " << lb_access_count.output_wt << "\n";
     if(is_gb_exist) {
-        std::cout << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
-                  << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
-                  << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n";
+        std::cout << "  GB I  READ ACCESS COUNT : " << gb_access_count.input_rd     << "\n"
+                << "  GB W  READ ACCESS COUNT : " << gb_access_count.weight_rd    << "\n"
+                << "  GB O  READ ACCESS COUNT : " << gb_access_count.output_rd << "\n"
+                << "  GB O WRITE ACCESS COUNT : " << gb_access_count.output_wt << "\n";
     }
-    std::cout << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
-              << "DRAM W allocated tile size : " << dram_tile_size_alloc.weight << "\n"
-              << "DRAM O allocated tile size : " << dram_tile_size_alloc.output << std::endl;
-    std::cout << "**************************" << std::endl;
-    std::cout << "  LB I  read access count : " << lb_access_count.input_rd     << "\n"
-              << "  LB W  read access count : " << lb_access_count.weight_rd    << "\n"
-              << "  LB O  read access count : " << lb_access_count.output_rd << "\n"
-              << "  LB O write access count : " << lb_access_count.output_wt << "\n";
-    if(is_gb_exist) {
-        std::cout << "  GB I  read access count : " << gb_access_count.input_rd     << "\n"
-                << "  GB W  read access count : " << gb_access_count.weight_rd    << "\n"
-                << "  GB O  read access count : " << gb_access_count.output_rd << "\n"
-                << "  GB O write access count : " << gb_access_count.output_wt << "\n";
-    }
-    std::cout << "DRAM I  read access count : " << dram_access_count.input_rd     << "\n"
-              << "DRAM W  read access count : " << dram_access_count.weight_rd    << "\n"
-              << "DRAM O  read access count : " << dram_access_count.output_rd << "\n"
-              << "DRAM O write access count : " << dram_access_count.output_wt << std::endl;
+    std::cout << "DRAM I  READ ACCESS COUNT : " << dram_access_count.input_rd     << "\n"
+              << "DRAM W  READ ACCESS COUNT : " << dram_access_count.weight_rd    << "\n"
+              << "DRAM O  READ ACCESS COUNT : " << dram_access_count.output_rd << "\n"
+              << "DRAM O WRITE ACCESS COUNT : " << dram_access_count.output_wt << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "     NUM ACTIVE MAC ARRAY : " << num_active_macs << std::endl;
     std::cout << "      NUM ACTIVE PE ARRAY : " << num_active_pes << std::endl;
     std::cout << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
+    std::cout << "**************************" << std::endl;
+    if(is_lb_shared) {
+        // Print utilization as shared format
+        shared_tile_size = 0;
+        shared_tile_size += lb_bypass.input  ? 0 : lb_tile_size_alloc.input;
+        shared_tile_size += lb_bypass.weight ? 0 : lb_tile_size_alloc.weight;
+        shared_tile_size += lb_bypass.output ? 0 : lb_tile_size_alloc.output;
+        std::cout << " LOCAL BUFFER UTILIZATION : " 
+                << shared_tile_size / (lb_capacity.shared) * 100
+                << std::endl;
+    }
+    else {
+        if(!lb_bypass.input) {
+            std::cout << "  LB I BUFFER UTILIZATION : "
+                      << (float)lb_tile_size_alloc.input / lb_capacity.input  * 100 
+                      << std::endl;
+        }
+        if(!lb_bypass.weight) {
+            std::cout << "  LB W BUFFER UTILIZATION : " 
+                      << (float)lb_tile_size_alloc.weight/ lb_capacity.weight * 100 
+                      << std::endl;
+        }
+        if(!lb_bypass.output) {
+            std::cout << "  LB O BUFFER UTILIZATION : " 
+                      << (float)lb_tile_size_alloc.output/ lb_capacity.output * 100 
+                      << std::endl;
+        }
+    }
+    if(is_gb_exist) {
+        if(is_gb_shared) {
+            // Print utilization as shared format
+            shared_tile_size = 0;
+            shared_tile_size += gb_bypass.input  ? 0 : gb_tile_size_alloc.input;
+            shared_tile_size += gb_bypass.weight ? 0 : gb_tile_size_alloc.weight;
+            shared_tile_size += gb_bypass.output ? 0 : gb_tile_size_alloc.output;
+            std::cout << "GLOBAL BUFFER UTILIZATION : " 
+                    << shared_tile_size / (gb_capacity.shared) * 100
+                    << std::endl;
+        }
+        else {
+            if(!gb_bypass.input) {
+                std::cout << "  GB I BUFFER UTILIZATION : " 
+                          << (float)gb_tile_size_alloc.input / gb_capacity.input * 100 
+                          << std::endl;
+            }
+            if(!gb_bypass.weight) {
+                std::cout << "  GB W BUFFER UTILIZATION : " 
+                          << (float)gb_tile_size_alloc.weight/ gb_capacity.weight * 100 
+                          << std::endl;
+            }
+            if(!gb_bypass.output) {
+                std::cout << "  GB O BUFFER UTILIZATION : " 
+                          << (float)gb_tile_size_alloc.output/ gb_capacity.output * 100 
+                          << std::endl;
+            }
+        }
+    }
+    std::cout << "**************************" << std::endl;
+    std::cout << "    MAC ARRAY UTILIZAITON : " << (float)num_active_macs / (macs_capacity.dim_x * macs_capacity.dim_y) * 100 << std::endl;
+    std::cout << "     PE ARRAY UTILIZATION : " << (float)num_active_pes / (pes_capacity.dim_x * pes_capacity.dim_y) * 100 << std::endl;
+    std::cout << "  MULTI CHIPS UTILIZATION : " << (float)num_active_chips / (chips_capacity.dim_x * chips_capacity.dim_y) * 100 << std::endl;
     std::cout << "**************************" << std::endl;
     std::cout << "       MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
               << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n";
@@ -767,34 +830,36 @@ void analyzer_t::print_results() {
 }
 // Print analyze result to output file
 void analyzer_t::print_results(std::ofstream &output_file_) {
+    float shared_tile_size = 0;
     update_bypassed_data();
     output_file_ << "[Scheduling Table]"<< std::endl;
     scheduling_table.print_stats(output_file_);
     output_file_ << "[Analyze Results]"<< std::endl;
+    // TRANSFERED TILE SIZE 
+    //output_file_ << "**************************" << std::endl;
+    //output_file_ << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
+                 //<< "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
+                 //<< "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n";
+    //if(is_gb_exist) {
+        //output_file_ << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
+                     //<< "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
+                     //<< "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n";
+    //}
+    //output_file_ << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
+                 //<< "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
+                 //<< "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
     output_file_ << "**************************" << std::endl;
-    output_file_ << "  LB I  transfer tile size : " << lb_tile_size_send.input    << "\n"
-                 << "  LB W  transfer tile size : " << lb_tile_size_send.weight   << "\n"
-                 << "  LB O  transfer tile size : " << lb_tile_size_send.output   << "\n";
+    output_file_ << "           LB I tile size : " << lb_tile_size_alloc.input    << "\n"
+                 << "           LB W tile size : " << lb_tile_size_alloc.weight   << "\n"
+                 << "           LB O tile size : " << lb_tile_size_alloc.output   << "\n";
     if(is_gb_exist) {
-        output_file_ << "  GB I  transfer tile size : " << gb_tile_size_send.input    << "\n"
-                     << "  GB W  transfer tile size : " << gb_tile_size_send.weight   << "\n"
-                     << "  GB O  transfer tile size : " << gb_tile_size_send.output   << "\n";
+        output_file_ << "           GB I tile size : " << gb_tile_size_alloc.input    << "\n"
+                     << "           GB W tile size : " << gb_tile_size_alloc.weight   << "\n"
+                     << "           GB O tile size : " << gb_tile_size_alloc.output   << "\n";
     }
-    output_file_ << "DRAM I  transfer tile size : " << dram_tile_size_send.input  << "\n"
-                 << "DRAM W  transfer tile size : " << dram_tile_size_send.weight << "\n"
-                 << "DRAM O  transfer tile size : " << dram_tile_size_send.output << std::endl;
-    output_file_ << "**************************" << std::endl;
-    output_file_ << "  LB I allocated tile size : " << lb_tile_size_alloc.input    << "\n"
-                 << "  LB W allocated tile size : " << lb_tile_size_alloc.weight   << "\n"
-                 << "  LB O allocated tile size : " << lb_tile_size_alloc.output   << "\n";
-    if(is_gb_exist) {
-        output_file_ << "  GB I allocated tile size : " << gb_tile_size_alloc.input    << "\n"
-                     << "  GB W allocated tile size : " << gb_tile_size_alloc.weight   << "\n"
-                     << "  GB O allocated tile size : " << gb_tile_size_alloc.output   << "\n";
-    }
-    output_file_ << "DRAM I allocated tile size : " << dram_tile_size_alloc.input  << "\n"
-                 << "DRAM W allocated tile size : " << dram_tile_size_alloc.weight << "\n"
-                 << "DRAM O allocated tile size : " << dram_tile_size_alloc.output << std::endl;
+    output_file_ << "         DRAM I tile size : " << dram_tile_size_alloc.input  << "\n"
+                 << "         DRAM W tile size : " << dram_tile_size_alloc.weight << "\n"
+                 << "         DRAM O tile size : " << dram_tile_size_alloc.output << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "  LB I  read access count : " << lb_access_count.input_rd     << "\n"
                  << "  LB W  read access count : " << lb_access_count.weight_rd    << "\n"
@@ -814,6 +879,66 @@ void analyzer_t::print_results(std::ofstream &output_file_) {
     output_file_ << "     NUM ACTIVE MAC ARRAY : " << num_active_macs << std::endl;
     output_file_ << "      NUM ACTIVE PE ARRAY : " << num_active_pes << std::endl;
     output_file_ << "   NUM ACTIVE MULTI CHIPS : " << num_active_chips << std::endl;
+    output_file_ << "**************************" << std::endl;
+    if(is_lb_shared) {
+        // Print utilization as shared format
+        shared_tile_size = 0;
+        shared_tile_size += lb_bypass.input  ? 0 : lb_tile_size_alloc.input;
+        shared_tile_size += lb_bypass.weight ? 0 : lb_tile_size_alloc.weight;
+        shared_tile_size += lb_bypass.output ? 0 : lb_tile_size_alloc.output;
+        output_file_ << " LOCAL BUFFER UTILIZATION : " 
+                     << shared_tile_size / (lb_capacity.shared) * 100
+                     << std::endl;
+    }
+    else {
+        if(!lb_bypass.input) {
+            output_file_ << "  LB I BUFFER UTILIZATION : "
+                         << (float)lb_tile_size_alloc.input / lb_capacity.input  * 100 
+                         << std::endl;
+        }
+        if(!lb_bypass.weight) {
+            output_file_ << "  LB W BUFFER UTILIZATION : " 
+                         << (float)lb_tile_size_alloc.weight/ lb_capacity.weight * 100 
+                         << std::endl;
+        }
+        if(!lb_bypass.output) {
+            output_file_ << "  LB O BUFFER UTILIZATION : " 
+                         << (float)lb_tile_size_alloc.output/ lb_capacity.output * 100 
+                         << std::endl;
+        }
+    }
+    if(is_gb_exist) {
+        if(is_gb_shared) {
+            // Print utilization as shared format
+            shared_tile_size = 0;
+            shared_tile_size += gb_bypass.input  ? 0 : gb_tile_size_alloc.input;
+            shared_tile_size += gb_bypass.weight ? 0 : gb_tile_size_alloc.weight;
+            shared_tile_size += gb_bypass.output ? 0 : gb_tile_size_alloc.output;
+            output_file_ << "GLOBAL BUFFER UTILIZATION : " 
+                         << shared_tile_size / (gb_capacity.shared) * 100
+                         << std::endl;
+        }
+        else {
+            if(!gb_bypass.input) {
+                output_file_ << "  GB I BUFFER UTILIZATION : " 
+                             << (float)gb_tile_size_alloc.input / gb_capacity.input * 100 
+                             << std::endl;
+            }
+            if(!gb_bypass.weight) {
+                output_file_ << "  GB W BUFFER UTILIZATION : " 
+                             << (float)gb_tile_size_alloc.weight/ gb_capacity.weight * 100 
+                             << std::endl;
+            }
+            if(!gb_bypass.output) {
+                output_file_ << "  GB O BUFFER UTILIZATION : " 
+                             << (float)gb_tile_size_alloc.output/ gb_capacity.output * 100 
+                             << std::endl;
+            }
+        }
+    }
+    output_file_ << "    MAC ARRAY UTILIZAITON : " << (float)num_active_macs / (macs_capacity.dim_x * macs_capacity.dim_y) * 100 << std::endl;
+    output_file_ << "     PE ARRAY UTILIZATION : " << (float)num_active_pes / (pes_capacity.dim_x * pes_capacity.dim_y) * 100 << std::endl;
+    output_file_ << "  MULTI CHIPS UTILIZATION : " << (float)num_active_chips / (chips_capacity.dim_x * chips_capacity.dim_y) * 100 << std::endl;
     output_file_ << "**************************" << std::endl;
     output_file_ << "       MAC DYNAMIC ENERGY : " << mac_energy           << "\n"
                  << "        LB DYNAMIC ENERGY : " << local_buffer_energy  << "\n";

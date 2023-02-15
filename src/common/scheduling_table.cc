@@ -480,6 +480,7 @@ void scheduling_table_t::fill_out_mapping_values(const parser_t parser_) {
         }
         else {
             section_config.get_setting("layer_name", &layer_name);
+            section_config.get_setting("name", &layer_name);
             layer_index = network->get_layer_index(layer_name);
         }
     }
