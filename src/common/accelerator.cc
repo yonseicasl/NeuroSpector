@@ -270,7 +270,7 @@ unsigned accelerator_t::get_total_num_PEs() {
         rtn *= ((spatial_component_t*)component_list[(unsigned)component_t::CHIP_X])->dim_x
              * ((spatial_component_t*)component_list[(unsigned)component_t::CHIP_Y])->dim_y;
     }
-    return 1;
+    return rtn;
 }
 // Get Total number of CHIP components in accelerator
 unsigned accelerator_t::get_total_num_chips() {
@@ -279,7 +279,7 @@ unsigned accelerator_t::get_total_num_chips() {
         rtn *= ((spatial_component_t*)component_list[(unsigned)component_t::CHIP_X])->dim_x
              * ((spatial_component_t*)component_list[(unsigned)component_t::CHIP_Y])->dim_y;
     }
-    return 1;
+    return rtn;
 }
 // Get MAC array width (or height)
 unsigned accelerator_t::get_mac_array_size(dimension_t dim_) {

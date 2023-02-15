@@ -180,8 +180,8 @@ void brute_force_t::search(unsigned tid_,
             for(auto value = row_best.begin(); value != row_best.end(); ++value) {
                 iter_best *= *value;
             }
-            // Compare DRAM iteration
-            if(row_curr < row_best) {
+            // Change to current scheduling table
+            if(iter_curr < iter_best) {
                 best_local_scheduling_option = local_scheduling_option;
             }
         }
