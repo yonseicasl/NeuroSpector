@@ -64,14 +64,14 @@ Or, if you wish to use the latest development version, simply clone the git resp
 	$ git clone https://github.com/yonsei-icsl/NeuroSpector
 
 ## Reference
-Related publication is currently under review.
+To reference NeuroSpector, please use our TPDS paper.
 
-	@inproceedings{park_icsl2022,
-	    author    = {C. Park and and B. Kim and S. Ryu and W. Song},
-	    title     = {{NeuroSpector: Systematic Optimization of Dataflow Scheduling in Deep Neural Network Accelerators}},
-	    booktitle = {under review},
-	    month     = {Aug.},
-	    year      = {2022},
+	@article{park_tpds2023,
+	    author  = {C. Park and and B. Kim and S. Ryu and W. Song},
+	    title   = {{NeuroSpector: Systematic Optimization of Dataflow Scheduling in Deep Neural Network Accelerators}},
+	    journal = {IEEE Transactions on Parallel and Distributed Systems},
+	    month   = {Aug.},
+	    year    = {2023},
 	}
 
 For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr. Or, visit our lab webpage: https://icsl.yonsei.ac.kr
