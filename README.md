@@ -11,16 +11,16 @@ Current release: v1.4 (Feb. 2023)
 5. [Reference](#reference)
 
 ## Introduction
-A number of hardware accelerators have been proposed to speed up deep neural network (DNN) computations and enhance energy efficiency. DNN accelerators offer high-throughput and energy-efficient computing solutions by deploying many processing elements (PEs) and chips in parallel and exploiting data reuse across multiple levels of memory hierarchy in the accelerators. The vertical and spatial arrangements of buffers and PEs construct a multi-level hierarchy of accelerator components from multiply-accumulate (MAC) units to global buffers and off-chip DRAM. For diverse DNN workload configurations and accelerator implementations, it is a highly challenging problem to find the proper ways of executing neural layers on accelerators to maximize energy efficiency and performance. The challenge lies in that hardware specifications (e.g., number of PEs and chips, buffer sizes and types) associated with workload configurations (e.g., width, height, channel, batch) produce an enormous number of possible dataflow and mapping options that can be exercised in an accelerator.
+A number of hardware accelerators have been proposed to speed up deep neural network (DNN) computations and enhance energy efficiency. DNN accelerators offer high-throughput and energy-efficient computing solutions by deploying many processing elements (PEs) and chips in parallel and exploiting data reuse across multiple levels of the memory hierarchy in the accelerators. The vertical and spatial arrangements of buffers and PEs construct a multi-level hierarchy of accelerator components from multiply-accumulate (MAC) units to global buffers and off-chip DRAM. For diverse DNN workload configurations and accelerator implementations, it is a highly challenging problem to find the proper ways of executing neural layers on accelerators to maximize energy efficiency and performance. The challenge lies in that hardware specifications (e.g., number of PEs and chips, buffer sizes and types) associated with workload configurations (e.g., width, height, channel, batch size) produce a huge number of possible dataflow and mapping options that can be exercised in an accelerator.
 
-_NeuroSpector_ is a scheduling optimization framework that systematically analyzes the dataflow and mapping possibilities of DNN workloads in accelerators and rapidly identifies optimal scheduling schemes. NeuroSpector finds efficient scheduling solutions for a variety of DNN accelerators 8,000x faster than prior techniques with only 1% energy and cycle differences on average to the optimal schemes, whereas the previous techniques exhibit 85% greater energy and cycle results than the optimal solutions and as much as 15x in the worst case. In addition, NeuroSpector supports many essential features of DNN accelerators and workloads including group convolutions, multi-chip accelerators, data bypassing in buffers, unified/separate buffer types, static power modeling, and network-wise scheduling optimization, which were overlooked or only partly supported in the prior work.
+_NeuroSpector_ is a scheduling optimization framework that systematically analyzes the dataflow and mapping possibilities of DNN workloads in accelerators and rapidly identifies optimal execution schemes. NeuroSpector finds scheduling solutions for a variety of DNN accelerators and workloads 7,958x faster than previous work with only 1.5% energy and cycle differences on average to the optimal schemes, whereas the prior techniques produce hit-or-miss results with 100.1% greater energy and cycle results than the optimal solutions and as much as 14.9x in the worst case. In addition, NeuroSpector supports many essential features of DNN accelerators and workloads, including group convolutions, multi-chip accelerators, data bypassing in buffers, unified/separate buffer types, static power modeling, and network-wise scheduling optimization, which were overlooked or only partly supported in related work.
 
 ## Compile
-NeuroSpector is implemented in C++ codes. It requires only g++ compiler to build and it does not depend on any other libraries or external tools to run. To build NeuroSpector, type `make` in a terminal.
+NeuroSpector is implemented in C++. It only requires a g++ compiler to build and does not depend on any other libraries or external tools to run. To build NeuroSpector, type `make` in a terminal.
 
 	$ make
 
-If gcc compiler is not installed, type following command in a terminal.
+If the gcc compiler is not installed, type the following command in a terminal.
 
     $ sudo apt install build-essential
 
@@ -46,7 +46,7 @@ For example, the following command triggers NeuroSpector to find the most energy
 			 --metric=energy
 
 ### Analyzer
-The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs of an accelerator using a scheduling scheme provided in the `--scheduling_table` option of a run command. A combinatorial case of dataflow and mapping in an accelerator is represented via the notion of scheduling table in NeuroSpector. The following command invokes NeuroSpector to calculate the cost metrics of Eyeriss for ResNet-50 layers based on the given scheduling option.
+The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs of an accelerator using a scheduling scheme provided in the `--scheduling_table` option of the run command. A combinatorial case of dataflow and mapping in an accelerator is represented via a scheduling table in NeuroSpector. The following command invokes NeuroSpector to calculate the cost metrics of Eyeriss for ResNet-50 layers based on the given scheduling option.
 
 	$ ./neurospector --run_type=analyzer \
 			 --accelerator=configs/accelerators/eyeriss.cfg \
@@ -59,7 +59,7 @@ The latest release of the NeuroSpector framework is v1.4. The NeuroSpector frame
 
 	$ git clone --branch v1.4 https://github.com/yonsei-icsl/NeuroSpector
 
-Or, if you wish to use the latest development version, simply clone the git respository as is.
+Or, if you wish to use the latest development version, simply clone the git repository as is.
 
 	$ git clone https://github.com/yonsei-icsl/NeuroSpector
 
@@ -74,4 +74,4 @@ To reference NeuroSpector, please use our TPDS paper.
 	    year    = {2023},
 	}
 
-For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr. Or, visit our lab webpage: https://icsl.yonsei.ac.kr
+For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr, or visit our lab webpage: https://icsl.yonsei.ac.kr.
