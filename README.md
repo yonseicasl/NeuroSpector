@@ -70,6 +70,8 @@ To reference NeuroSpector, please use our TPDS paper.
 	    author  = {C. Park and and B. Kim and S. Ryu and W. Song},
 	    title   = {{NeuroSpector: Systematic Optimization of Dataflow Scheduling in Deep Neural Network Accelerators}},
 	    journal = {IEEE Transactions on Parallel and Distributed Systems},
+            volume  = {34},
+	    number  = {8},
 	    month   = {Aug.},
 	    year    = {2023},
 	}
