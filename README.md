@@ -74,6 +74,7 @@ To reference NeuroSpector, please use our TPDS paper.
 	    number  = {8},
 	    month   = {Aug.},
 	    year    = {2023},
+	    pages   = {2279-2294},
 	}
 
 For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr, or visit our lab webpage: https://icsl.yonsei.ac.kr.
