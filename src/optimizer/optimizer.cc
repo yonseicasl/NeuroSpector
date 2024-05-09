@@ -32,12 +32,12 @@ void optimizer_t::print_results() { return; }
 // Count total number of component level to fill out
 unsigned optimizer_t::get_num_targeted_levels(unsigned begin_pos_, 
                                               unsigned end_pos_) {
-    unsigned partiton_comb = 1;
+    unsigned num_targeted_level = 1;
     // From begin_pos_ to end_pos_, count the number of actually exist levels.
     for(unsigned i = begin_pos_; i < end_pos_; i++) {
-        if(!scheduling_table->is_virtual(i)) partiton_comb++;
+        if(!scheduling_table->is_skippable(i)) num_targeted_level++;
     }
-    return partiton_comb;
+    return num_targeted_level;
 }
 // Generate all possible dataflow combination for the target accelerator
 std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations() {
@@ -47,7 +47,7 @@ std::vector<std::vector<dataflow_t>> optimizer_t::generate_dataflow_combinations
         // Traverse temporal rows and collect dataflow of each component
         for(unsigned i = 0; i < scheduling_table->get_num_rows() - 1; i++) {
             if(scheduling_table->get_component_type(i) == reuse_t::TEMPORAL
-            && scheduling_table->get_component_name(i) != "virtual") {
+            && scheduling_table->get_dataflow(i) != dataflow_t::NONE) {
                 combination.push_back(scheduling_table->get_dataflow(i));
             }
         }

@@ -32,7 +32,7 @@ public:
     bool*       get_bypass(unsigned idx_) const;
     dataflow_t  get_dataflow(unsigned idx_) const;                  // Get dataflow of target component
     std::string get_component_name(unsigned idx_) const;            // Get target component name 
-    reuse_t get_component_type(unsigned idx_) const;       // Get reuse type of target component 
+    reuse_t     get_component_type(unsigned idx_) const;            // Get reuse type of target component 
 
     unsigned    get_correlation_product(int idx_, correlation_t correlation_);
     unsigned    get_column_wise_product(parameter_t param_,
@@ -49,6 +49,7 @@ public:
     float get_num_mac_operations();                                   // Get total number of MAC operations in a layer 
 
     bool is_virtual(unsigned idx_);                                   // Check the component is virtual
+    bool is_skippable(unsigned idx_);                                 // Check the component is skippable
     
     void load_dnn_layer(unsigned idx_);                               // Update DRAM mapping values to layer parameters
     void clear_set_of_rows(unsigned begin_, unsigned end_ );          // Set to all mapping values in targeted rows to 1
@@ -64,6 +65,7 @@ public:
 
 private:
     void add_virtual_component(reuse_t component_type_); 
+    void add_virtual_component(component_t component_); 
     void update_mapping_value(unsigned dst_, unsigned val_); 
 
     accelerator_t         *accelerator;        // Target accelerator
@@ -78,9 +80,10 @@ private:
     unsigned              num_table_cols;      // # table cols
     std::vector<unsigned> mapping_values;      // Mapping_values
     std::vector<std::string>  row_names;       // row's names
-    std::vector<reuse_t> row_types;       // row's types 
+    std::vector<reuse_t>  row_types;           // row's types 
     std::vector<dataflow_t>   row_dataflows;   // row's dataflow 
     std::vector<unsigned>     row_index;       // row's determined
+    std::vector<bool>         row_skippable;     // row's virtual flag
 };
 
 struct PartitioningInfo {

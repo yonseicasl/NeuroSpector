@@ -20,6 +20,8 @@ public:
     unsigned              get_num_layers();                     // Get total # layers in network
     unsigned              get_stride(unsigned idx_);            // Get target layer's stride
     void print_stats();
+    void print_stats(unsigned layer_idx_);
+    void print_stats(unsigned layer_idx_, std::ofstream &output_file_); 
 private:
     std::string net_cfg_path;                                   // Path to Network config.
     std::string name;                                           // Network name

@@ -1,8 +1,8 @@
 #include <ctime>
-#include <iostream>
 #include <string>
 
 #include "parser.h"
+#include "banner.h"
 #include "bottom_up.h"
 #include "brute_force.h"
 
@@ -44,8 +44,8 @@ int main(int argc, char **argv) {
                   << std::endl;
         exit(0);
     }
-    std::clog << "[message] Run NeuroSpector" 
-              << "\nRun_type         = " << run_type
+    print_banner();
+    std::clog << "Run_type         = " << run_type
               << "\nAccelerator      = " << accelerator
               << "\nDataflow         = " << dataflow
               << "\nNetwork          = " << network
@@ -53,6 +53,7 @@ int main(int argc, char **argv) {
               << "\nTarget Metric    = " << metric
               << "\nTarget Layer     = " << layer
               << "\nNum. threads     = " << thread;
+    std::clog << "\n=======================================================";
     
     clock_t start, finish;
     // Search start

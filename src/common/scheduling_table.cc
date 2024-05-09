@@ -49,7 +49,8 @@ scheduling_table_t::scheduling_table_t(const scheduling_table_t &scheduling_tabl
      mapping_values(scheduling_table_.mapping_values), 
      row_names(scheduling_table_.row_names), 
      row_types(scheduling_table_.row_types),
-     row_dataflows(scheduling_table_.row_dataflows) {
+     row_dataflows(scheduling_table_.row_dataflows),
+     row_skippable(scheduling_table_.row_skippable) {
 }
 // Initialize scheduling table
 void scheduling_table_t::init() {
@@ -66,12 +67,12 @@ void scheduling_table_t::init_table_rows() {
     for(unsigned i = 0; i < (unsigned)component_t::SIZE; i++) {
         // If the component is undefined in accelerator then insert virtual row
         if(accelerator->get_name((component_t)i) == "virtual") {
-            add_virtual_component(accelerator->get_type((component_t)i));
+            add_virtual_component((component_t)i);
         }
         else {
             // Skip the component's size is 1, it is considered as virtual row
             if(accelerator->is_unit_component((component_t)i)) {
-                add_virtual_component(accelerator->get_type((component_t)i));
+                add_virtual_component((component_t)i);
             }
             else {
                 if(i == (unsigned)component_t::MAC_X 
@@ -90,6 +91,7 @@ void scheduling_table_t::init_table_rows() {
 
                 row_types.emplace_back(accelerator->get_type((component_t)i));
                 row_dataflows.emplace_back(accelerator->get_dataflow((component_t)i));
+                row_skippable.emplace_back(false);
                 num_table_rows++;
             }
         }
@@ -224,8 +226,10 @@ bool* scheduling_table_t::get_bypass(unsigned idx_) const {
 }
 dataflow_t scheduling_table_t::get_dataflow(unsigned idx_) const {
     dataflow_t rtn;
-    // Check whether target component is virtual
-    if(row_names.at(idx_)=="virtual") {
+    // Check whether target component is temporal & virtual & doesn't specify dataflow
+    if(row_names.at(idx_)=="virtual"
+    && row_dataflows.at(idx_) == dataflow_t::NONE
+    && row_types.at(idx_) == reuse_t::TEMPORAL) {
         // If target component is virtual, return its upper-level's datalfow
         rtn = row_dataflows.at(get_above_buffer_pos(idx_)); 
     }
@@ -272,15 +276,19 @@ float scheduling_table_t::get_num_mac_operations() {
     return num_mac_operations;
 }
 // Add virtual component
-void scheduling_table_t::add_virtual_component(reuse_t component_type_) {
-    row_names.emplace_back("virtual");
-    row_types.emplace_back(component_type_);
-    row_dataflows.emplace_back(dataflow_t::NONE);
+void scheduling_table_t::add_virtual_component(component_t component_) {
+    row_names.emplace_back(accelerator->get_name(component_));
+    row_types.emplace_back(accelerator->get_type(component_));
+    row_dataflows.emplace_back(accelerator->get_dataflow(component_));
+    row_skippable.emplace_back(true);
     num_table_rows++;
 }
 // Check the component is virtual
 bool scheduling_table_t::is_virtual(unsigned idx_) {
     return row_names.at(idx_) == "virtual";
+}
+bool scheduling_table_t::is_skippable(unsigned idx_) {
+    return row_skippable.at(idx_);
 }
 // Update DRAM mapping values to layer parameters
 void scheduling_table_t::load_dnn_layer(unsigned idx_) {
@@ -300,7 +308,6 @@ void scheduling_table_t::load_dnn_layer(unsigned idx_) {
 void scheduling_table_t::clear_set_of_rows(unsigned begin_, unsigned end_) {
     std::vector<unsigned> mapping_values_set = {1, 1, 1, 1, 1, 1, 1, 1};
     for(unsigned row_idx = begin_; row_idx < end_ + 1; row_idx++) {
-        if(is_virtual(row_idx)) continue;
         update_row(row_idx, mapping_values_set); 
     }
     return;
@@ -310,7 +317,7 @@ void scheduling_table_t::update_set_of_rows(unsigned begin_, unsigned end_,
                         std::vector<std::vector<unsigned>> mapping_values_set_) {
     unsigned mapping_set_idx = 0;
     for(unsigned row_idx = begin_; row_idx < end_ + 1; row_idx++) {
-        if(is_virtual(row_idx)) continue;
+        if(row_skippable.at(row_idx)) continue;
         update_row(row_idx, mapping_values_set_.at(mapping_set_idx)); 
         mapping_set_idx++;
     }
@@ -334,8 +341,8 @@ void scheduling_table_t::update_mapping_value(unsigned dst_, unsigned val_) {
 void scheduling_table_t::update_dataflow(std::vector<dataflow_t> dataflow_) {
     auto iter = dataflow_.begin();
     for(unsigned i = 0; i < get_num_rows() - 1; i++) {
-        if(get_component_type(i) == reuse_t::TEMPORAL 
-        && get_component_name(i) != "virtual") {
+        if(get_component_type(i) == reuse_t::TEMPORAL
+        && !is_virtual(i)) {
             row_dataflows.at(i) = *iter;
             iter++;
         }
@@ -351,7 +358,7 @@ void scheduling_table_t::print_stats() {
     std::cout << "|Parameters    |   K   |   B   |   P   |   Q   |   C   |   R   |   S   |   G   | FLOW |" << std::endl;
     std::cout << "|------------------------------------------------------------------------------|------|" << std::endl;
     for(unsigned row = 0; row < num_table_rows; row++) {
-        if(!is_virtual(row)) {
+        if(!row_skippable.at(row) || row_dataflows.at(row) != dataflow_t::NONE) {
             std::cout << "|";
             std::cout.width(14);
             std::cout << std::left << row_names.at(row); 
@@ -383,7 +390,7 @@ void scheduling_table_t::print_stats(std::ofstream &output_file_) {
     output_file_ << "|Parameters    |   K   |   B   |   P   |   Q   |   C   |   R   |   S   |   G   | FLOW |" << std::endl;
     output_file_ << "|------------------------------------------------------------------------------|------|" << std::endl;
     for(unsigned row = 0; row < num_table_rows; row++) {
-        if(!is_virtual(row)) {
+        if(!row_skippable.at(row) || row_dataflows.at(row) != dataflow_t::NONE) {
             output_file_ << "|";
             output_file_.width(14);
             output_file_ << std::left << row_names.at(row); 

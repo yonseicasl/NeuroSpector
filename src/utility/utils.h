@@ -14,6 +14,8 @@ std::string& uppercase(std::string &str_);
 std::vector<std::string> split(std::string str_, char divisor_); 
 // Convert Comma separated string to vector
 std::vector<unsigned> comma_to_vector(std::string value_); 
+// Check whether String is Number
+bool is_number(std::string& str_);
 
 
 #endif

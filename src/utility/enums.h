@@ -73,6 +73,16 @@ static std::vector<std::string> metric_str __attribute__((unused)) = {
     "cycle",
     "size",
 };
+static std::vector<std::string> parameter_str __attribute__((unused)) = {
+    "k",
+    "b",
+    "p",
+    "q",
+    "c",
+    "r",
+    "s",
+    "g",
+};
 
 #define get_enum_type(m_vector, m_string) \
         distance(m_vector.begin(), find(m_vector.begin(), m_vector.end(), m_string.c_str()))

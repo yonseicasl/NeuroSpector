@@ -16,6 +16,7 @@ public:
         float unit_static[(unsigned)data_t::SIZE] = { };
         float unit_cycle[(unsigned)data_t::SIZE] = { };
         bool  bypass[(unsigned)data_t::SIZE] = { false };
+        std::string        constraint;
     };
 
     struct spatial_component_t {
@@ -23,6 +24,8 @@ public:
         std::string name;
         unsigned    dim_x = 1;
         unsigned    dim_y = 1;
+        std::string constraint_x;
+        std::string constraint_y;
     };
     // Construct components in accelerator 
     accelerator_t(const std::string &cfg_path_); 
@@ -43,9 +46,7 @@ public:
     unsigned            get_total_num_MACs();
     unsigned            get_total_num_PEs();
     unsigned            get_total_num_chips();
-    unsigned            get_mac_array_size(dimension_t dim_);
-    unsigned            get_pe_array_size(dimension_t dim_);
-    unsigned            get_multi_chips_size(dimension_t dim_);
+    unsigned            get_array_size(component_t comp_, dimension_t dim_); 
     // Get variables in temporal component structure
     std::string         get_name(component_t comp_);
     reuse_t             get_type(component_t comp_);
@@ -58,6 +59,10 @@ public:
     float*              get_cycle(component_t comp_);
     // Check the component sizes is 1
     bool                is_unit_component(component_t comp_);
+    // Get user specified constraints
+    std::vector<unsigned> get_memory_constraint(component_t comp_); 
+    std::string           get_array_constraint(component_t comp_, 
+                                               dimension_t dim_); 
     
     // Print specifiations of accelerator
     void print_spec();
@@ -75,7 +80,8 @@ public:
 private:
     std::vector<float>  set_size(std::string value_) const;
     void                set_cost(float* cost_, std::string value_);
-    void                set_bypass(bool* bypass, std::string value_);
+    void                set_bypass(temporal_component_t* comp_, std::string value_);
+    void                set_constraint(temporal_component_t* comp_, std::string value_);
     void init_temporal_component(temporal_component_t* component_,
                                  section_config_t section_config_); 
     void init_spatial_component(spatial_component_t* component_,

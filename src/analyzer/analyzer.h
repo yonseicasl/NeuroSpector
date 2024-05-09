@@ -8,6 +8,7 @@
 #include "accelerator.h"
 #include "network.h"
 #include "scheduling_table.h"
+#include "version.h"
 
 class analyzer_t{
 public:
@@ -19,12 +20,15 @@ public:
     analyzer_t(accelerator_t *accelerator_,
                network_t    *network_);
     ~analyzer_t();
+
     // Run analyzer
     void run();
     // Init analyzer
     void init(scheduling_table_t scheduling_table_);
     // Check scheduling table's validity
     bool check_validity() ;
+    bool check_spatial_validity() ;
+    bool check_temporal_validity() ;
     // Estimate accelerator's cost for a given scheduling table
     void estimate_cost();
     // Estimate the amount of data reuse between adjacent layers
@@ -72,6 +76,11 @@ public:
         unsigned dim_x = 1;
         unsigned dim_y = 1;
     };
+    struct arr_cnst_t {
+        std::vector<std::string> dim_x;
+        std::vector<std::string> dim_y;
+        bool empty = true;
+    };
     struct bypass_t {
         bool input  = false;
         bool weight = false;
@@ -88,6 +97,8 @@ private:
     bool check_hardware_constraints() ;
     // Check parameter constraints
     bool check_network_constraints() ;
+    bool check_user_constraint(component_t comp_, arr_cnst_t cnst_);
+    bool check_user_constraint(component_t comp_, std::vector<unsigned> cnst_);
     // Update tile size
     void update_tile_size();
     // Update tile-granular access count
@@ -188,6 +199,10 @@ private:
     arr_size_t chips_capacity;
     buffer_size_t lb_capacity;
     buffer_size_t gb_capacity;
+    // User constraints
+    arr_cnst_t  macs_constraint;
+    arr_cnst_t   pes_constraint;
+    arr_cnst_t chips_constraint;
     // is buffer type is shared or sepearted
     bool is_lb_shared;
     bool is_gb_shared;
@@ -216,6 +231,10 @@ private:
     unit_cost_t       lb_unit_static;
     unit_cost_t       gb_unit_static;
     unit_cost_t     dram_unit_static;
+    // Memory mapping constraint
+    std::vector<unsigned> lb_constraint;
+    std::vector<unsigned> gb_constraint;
+    std::vector<unsigned> dram_constraint;
 
     unsigned dram_idx; 
     unsigned   gb_idx; 

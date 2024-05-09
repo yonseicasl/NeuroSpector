@@ -33,3 +33,12 @@ std::vector<unsigned> comma_to_vector(std::string value_) {
     splited_value.clear();
     return rtn;
 }
+
+bool is_number(std::string& str_) {
+    for(unsigned i = 0; i < str_.size(); i++) {
+        if(!std::isdigit(str_[i])) {
+            return false;
+        }
+    }
+    return true;
+}

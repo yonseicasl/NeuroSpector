@@ -99,3 +99,13 @@ void network_t::print_stats() {
     }
     return;
 }
+void network_t::print_stats(unsigned layer_idx_) {
+    layer_t layer = layers.at(layer_idx_);
+    layer.print_stats();
+    return;
+}
+void network_t::print_stats(unsigned layer_idx_, std::ofstream &output_file_) {
+    layer_t layer = layers.at(layer_idx_);
+    layer.print_stats(output_file_);
+    return;
+}

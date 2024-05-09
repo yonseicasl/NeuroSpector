@@ -112,10 +112,11 @@ void bottom_up_t::print_results() {
 }
 // Print out results as an output file
 void bottom_up_t::print_results(unsigned idx_) {
+    std::string  metric_str[2] = {"energy", "cycle"};
     // Set output file name
     std::string output_file_name = accelerator->get_acc_name() + "-" 
                                  + network->get_network_name() + "_" + std::to_string(idx_+1) + "-"
-                                 + "bottom_up" + ".txt";
+                                 + "bottom_up-" + metric_str[(unsigned)metric] + ".txt";
     std::clog << "[message] optimization result is written in '" << output_file_name << "'"<< std::endl;
     // Open file stream
     std::ofstream output_file;
@@ -123,7 +124,6 @@ void bottom_up_t::print_results(unsigned idx_) {
     std::string strategy[2] = {"PM", "SP"};
     output_file.open(output_file_name, std::ios::out);
 
-    accelerator->print_spec(output_file);
     // Write optimization results
     output_file << "Strategies : "; 
     for(auto it = global_best_scheduling_option.strategy.begin();
@@ -292,6 +292,7 @@ void bottom_up_t::search(unsigned tid_,
     while(!mapping_space.is_last()) {
         // Get new mapping values
         mapping_values_set = mapping_space.get_mapping_set();
+
         // Update mapping values of scheduling table
         scheduling_table_curr.update_set_of_rows(spatial_pos, end_pos_,
                                                  mapping_values_set);

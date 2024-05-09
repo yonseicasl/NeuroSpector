@@ -281,45 +281,41 @@ unsigned accelerator_t::get_total_num_chips() {
     }
     return rtn;
 }
-// Get MAC array width (or height)
-unsigned accelerator_t::get_mac_array_size(dimension_t dim_) {
+// Get spatially arranged component size
+unsigned accelerator_t::get_array_size(component_t comp_, dimension_t dim_) {
     unsigned rtn = 1;
-    if(component_list[(unsigned)component_t::MAC_X] == nullptr) {
+    if(component_list[(unsigned)comp_] == nullptr) {
         return 1;
     }
     if(dim_ == dimension_t::DIM_X) {
-        rtn = ((spatial_component_t*)component_list[(unsigned)component_t::MAC_X])->dim_x;
+        rtn = ((spatial_component_t*)component_list[(unsigned)comp_])->dim_x;
     }
     else {
-        rtn = ((spatial_component_t*)component_list[(unsigned)component_t::MAC_Y])->dim_y;
+        rtn = ((spatial_component_t*)component_list[(unsigned)comp_])->dim_y;
     }
     return rtn;
 }
-// Get PE array width (or height)
-unsigned accelerator_t::get_pe_array_size(dimension_t dim_) {
-    unsigned rtn = 1;
-    if(component_list[(unsigned)component_t::PE_X] == nullptr) {
-        return 1;
+// Get spatially arranged component constraints
+std::string accelerator_t::get_array_constraint(component_t comp_, dimension_t dim_) {
+    std::string rtn = "";
+    if(component_list[(unsigned)comp_] == nullptr) {
+        return "";
     }
     if(dim_ == dimension_t::DIM_X) {
-        rtn = ((spatial_component_t*)component_list[(unsigned)component_t::PE_X])->dim_x;
+        rtn = ((spatial_component_t*)component_list[(unsigned)comp_])->constraint_x;
     }
     else {
-        rtn = ((spatial_component_t*)component_list[(unsigned)component_t::PE_Y])->dim_y;
+        rtn = ((spatial_component_t*)component_list[(unsigned)comp_])->constraint_y;
     }
     return rtn;
 }
-// Get Multi chips width (or height)
-unsigned accelerator_t::get_multi_chips_size(dimension_t dim_) {
-    unsigned rtn = 1;
-    if(component_list[(unsigned)component_t::CHIP_X] == nullptr) {
-        return 1;
-    }
-    if(dim_ == dimension_t::DIM_X) {
-        rtn = ((spatial_component_t*)component_list[(unsigned)component_t::CHIP_X])->dim_x;
-    }
-    else {
-        rtn = ((spatial_component_t*)component_list[(unsigned)component_t::CHIP_Y])->dim_y;
+std::vector<unsigned> accelerator_t::get_memory_constraint(component_t comp_) {
+    std::vector<unsigned> rtn;
+    std::vector<std::string> rtn_str;
+    rtn_str = split(((temporal_component_t*)component_list[(unsigned)comp_])->constraint, ',');
+    // Convert all mapping values to unsigned data
+    for(unsigned i = 0; i < rtn_str.size(); i++) {
+        rtn.push_back((unsigned)std::stoi(rtn_str.at(i)));
     }
     return rtn;
 }
@@ -341,22 +337,22 @@ bool accelerator_t::is_unit_component(component_t comp_) {
             }
             break;
         case component_t::MAC_X:
-            rtn = (get_mac_array_size(dimension_t::DIM_X) == 1); 
+            rtn = (get_array_size(component_t::MAC_X, dimension_t::DIM_X) == 1); 
             break;
         case component_t::MAC_Y:
-            rtn = (get_mac_array_size(dimension_t::DIM_Y) == 1); 
+            rtn = (get_array_size(component_t::MAC_X, dimension_t::DIM_Y) == 1); 
             break;
         case component_t::PE_X:
-            rtn = (get_pe_array_size(dimension_t::DIM_X) == 1); 
+            rtn = (get_array_size(component_t::PE_X, dimension_t::DIM_X) == 1); 
             break;
         case component_t::PE_Y:
-            rtn = (get_pe_array_size(dimension_t::DIM_Y) == 1);
+            rtn = (get_array_size(component_t::PE_X, dimension_t::DIM_Y) == 1);
             break;
         case component_t::CHIP_X:
-            rtn = (get_multi_chips_size(dimension_t::DIM_X)== 1);
+            rtn = (get_array_size(component_t::CHIP_X, dimension_t::DIM_X)== 1);
             break;
         case component_t::CHIP_Y:
-            rtn = (get_multi_chips_size(dimension_t::DIM_Y) == 1);
+            rtn = (get_array_size(component_t::CHIP_X, dimension_t::DIM_Y) == 1);
             break;
         default:
             break;
@@ -471,6 +467,9 @@ void accelerator_t::print_temporal_component(temporal_component_t* component_) {
         std::cout << component_->unit_cycle[i] << "  ";
     }
     std::cout << std::endl;
+    if(component_->constraint.size() != 0) {
+        std::cout << "[  unit cnst] " << component_->constraint << std::endl;
+    }
     return;
 }
 void accelerator_t::print_temporal_component(std::ofstream &output_file_, 
@@ -510,24 +509,39 @@ void accelerator_t::print_temporal_component(std::ofstream &output_file_,
         output_file_ << component_->unit_cycle[i] << "  ";
     }
     output_file_ << std::endl;
+    if(component_->constraint.size() != 0) {
+        output_file_ << "[  unit cnst] " << component_->constraint << std::endl;
+    }
     return;
 }
 // Print out spatial component
-void accelerator_t::print_spatial_component(std::ofstream &output_file_, 
-                                            spatial_component_t* component_) {
-    std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
-
-    output_file_ << "[ comp. type] " << type_str[(unsigned)component_->type] << "\n"
-              << "[ comp. dimX] " << component_->dim_x << "\n"
-              << "[ comp. dimY] " << component_->dim_y << std::endl; 
-    return;
-}
 void accelerator_t::print_spatial_component(spatial_component_t* component_) {
     std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
 
     std::cout << "[ comp. type] " << type_str[(unsigned)component_->type] << "\n"
               << "[ comp. dimX] " << component_->dim_x << "\n"
               << "[ comp. dimY] " << component_->dim_y << std::endl; 
+    if(!component_->constraint_x.empty()) {
+        std::cout << "[comp. cnstX] " << uppercase(component_->constraint_x) << std::endl;
+    }
+    if(!component_->constraint_y.empty()) {
+        std::cout << "[comp. cnstY] " << uppercase(component_->constraint_y) << std::endl;
+    }
+    return;
+}
+void accelerator_t::print_spatial_component(std::ofstream &output_file_, 
+                                            spatial_component_t* component_) {
+    std::string type_str[2]  = {"TEMPORAL", "SPATIAL"};
+
+    output_file_ << "[ comp. type] " << type_str[(unsigned)component_->type] << "\n"
+                 << "[ comp. dimX] " << component_->dim_x << "\n"
+                 << "[ comp. dimY] " << component_->dim_y << std::endl; 
+    if(!component_->constraint_x.empty()) {
+        output_file_ << "[comp. cnstX] " << uppercase(component_->constraint_x) << std::endl;
+    }
+    if(!component_->constraint_y.empty()) {
+        output_file_ << "[comp. cnstY] " << uppercase(component_->constraint_y) << std::endl;
+    }
     return;
 }
 
@@ -552,19 +566,6 @@ void accelerator_t::init_temporal_component(temporal_component_t* component_,
     if(!unrefined_value.empty()) {
         component_->dataflow = (dataflow_t)get_enum_type(dataflow_str, unrefined_value);
     }
-    // Set component bypass
-    unrefined_value = "";
-    section_config_.get_setting("bypass", &unrefined_value);
-    if(!unrefined_value.empty()) { set_bypass(component_->bypass, unrefined_value); }
-    // Check bypass validity
-    if((component_->dataflow == dataflow_t::IS && component_->bypass[unsigned(data_t::INPUT)])
-    || (component_->dataflow == dataflow_t::WS && component_->bypass[unsigned(data_t::WEIGHT)])
-    || (component_->dataflow == dataflow_t::OS && component_->bypass[unsigned(data_t::OUTPUT)])) {
-        std::cerr << "[Error] Invalid bypass setting in `" << component_->name 
-                  << "`. Data type, affected by dataflow, should be stored in the buffer level."
-                  << std::endl;
-        exit(0);
-    }
     // Set bitwidth
     unrefined_value = "";
     section_config_.get_setting("bandwidth", &unrefined_value);
@@ -581,6 +582,13 @@ void accelerator_t::init_temporal_component(temporal_component_t* component_,
     unrefined_value = "";
     section_config_.get_setting("unit_cycle", &unrefined_value);
     if(!unrefined_value.empty()) { set_cost(component_->unit_cycle, unrefined_value); }
+    // Set component bypass
+    unrefined_value = "";
+    section_config_.get_setting("bypass", &unrefined_value);
+    if(!unrefined_value.empty()) { set_bypass(component_, unrefined_value); }
+    unrefined_value = "";
+    section_config_.get_setting("constraint", &unrefined_value);
+    if(!unrefined_value.empty()) { set_constraint(component_, unrefined_value); }
 
     return;
 }
@@ -594,6 +602,8 @@ void accelerator_t::init_spatial_component(spatial_component_t* component_,
     // Get component size
     section_config_.get_setting("size_x", &component_->dim_x);
     section_config_.get_setting("size_y", &component_->dim_y);
+    section_config_.get_setting("constraint_x", &component_->constraint_x);
+    section_config_.get_setting("constraint_y", &component_->constraint_y);
     return;
 
 }
@@ -621,20 +631,20 @@ void accelerator_t::set_cost(float* cost_, std::string value_) {
     return;
 }
 // Set component bypass
-void accelerator_t::set_bypass(bool* bypass_, std::string value_) {
+void accelerator_t::set_bypass(temporal_component_t* comp_, std::string value_) {
     std::vector<std::string> splited_value;
     
     // Get bypass configuration
     splited_value = split(value_, ',');
     for(unsigned i = 0; i < splited_value.size(); i++) {
         if(splited_value.at(i) == "input") { 
-            bypass_[(unsigned)data_t::INPUT] = true;
+            comp_->bypass[(unsigned)data_t::INPUT] = true;
         }
         else if(splited_value.at(i) == "weight") { 
-            bypass_[(unsigned)data_t::WEIGHT] = true;
+            comp_->bypass[(unsigned)data_t::WEIGHT] = true;
         }
         else if(splited_value.at(i) == "output") { 
-            bypass_[(unsigned)data_t::OUTPUT] = true;
+            comp_->bypass[(unsigned)data_t::OUTPUT] = true;
         }
         else {
             std::cerr << "Error: invalid bypass configuration " 
@@ -642,5 +652,36 @@ void accelerator_t::set_bypass(bool* bypass_, std::string value_) {
             exit(0);
         }
     }
+    // Check bypass validity
+    if((comp_->dataflow == dataflow_t::IS && comp_->bypass[unsigned(data_t::INPUT)])
+    || (comp_->dataflow == dataflow_t::WS && comp_->bypass[unsigned(data_t::WEIGHT)])
+    || (comp_->dataflow == dataflow_t::OS && comp_->bypass[unsigned(data_t::OUTPUT)])) {
+        std::cerr << "[Error] Invalid bypass setting in `" << comp_->name 
+                  << "`. Data type, affected by dataflow, should be stored in the buffer level."
+                  << std::endl;
+        exit(0);
+    }
+    return;
+}
+// Set temporal components constraint
+void accelerator_t::set_constraint(temporal_component_t* comp_, std::string cnst_) {
+    std::vector<std::string> splited_cnst;
+    // Check the validty of input constraints
+    splited_cnst = split(cnst_, ',');
+    if(splited_cnst.size() != (unsigned) parameter_t::SIZE) {
+        std::cerr << "[Error] Invalid memory mapping constraint; Specify mapping values for all eight parameters. ("
+                  << splited_cnst.size() << " / " << "8)" << std::endl;
+        exit(0);
+    }
+    for(unsigned i = 0; i < splited_cnst.size(); i++) {
+        // Check whether value i is number
+        if(!is_number(splited_cnst.at(i))) {
+            std::cerr << "[Error] Invalid constraint value; all memory constraint values is number. "
+                      << splited_cnst.at(i) << std::endl;
+            exit(0);
+        }
+    }
+    // Update component's constraint
+    comp_->constraint = cnst_;
     return;
 }
