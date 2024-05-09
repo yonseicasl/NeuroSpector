@@ -57,11 +57,11 @@ The `analyzer` mode of NeuroSpector simply evaluates the energy and cycle costs 
 ## Download
 The latest release of the NeuroSpector framework is v1.5 The NeuroSpector framework will continually be updated for better code structuring, readability, usability, and bug fixes. To obtain the latest version of NeuroSpector, use the following git command in a terminal. 
 
-	$ git clone --branch v1.5 https://github.com/yonsei-icsl/NeuroSpector
+	$ git clone --branch v1.5 https://github.com/yonseicasl/NeuroSpector
 
 Or, if you wish to use the latest development version, simply clone the git repository as is.
 
-	$ git clone https://github.com/yonsei-icsl/NeuroSpector
+	$ git clone https://github.com/yonseicasl/NeuroSpector
 
 ## Reference
 To reference NeuroSpector, please use our TPDS paper.
@@ -77,4 +77,4 @@ To reference NeuroSpector, please use our TPDS paper.
 	    pages   = {2279-2294},
 	}
 
-For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr, or visit our lab webpage: https://icsl.yonsei.ac.kr.
+For troubleshooting, bug reports, or any questions regarding the use of NeuroSpector, please contact Chanho Park via email: ch.park {\at} yonsei {\dot} ac {\dot} kr, or visit our lab webpage: https://casl.yonsei.ac.kr.
