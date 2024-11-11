@@ -29,6 +29,10 @@ layer_t::~layer_t() {}
 std::string layer_t::get_name() { return name; }
 // Get layer parameters
 std::vector<unsigned> layer_t::get_parameters () { return parameters; }
+// Update specific layer parameter
+void layer_t::update_parameter(parameter_t param_, unsigned num) {
+    parameters.at((unsigned)param_) = num;
+}
 // Print stats
 void layer_t::print_stats() {
      std::cout << "|";

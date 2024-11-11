@@ -65,6 +65,7 @@ public:
     void argparse(int argc_, char** argv_,
                    std::map<std::string, std::string>& str_argv_);  // Parse input command 
     void cfgparse(const std::string cfg_path_);                     // Parse configuration file
+    void txtparse(const std::string cfg_path_);                     // Parse configuration file
     void print_help_argparser(char** argv_);                        // Print command options 
     
     std::vector<section_config_t> sections;

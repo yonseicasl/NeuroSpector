@@ -51,6 +51,16 @@ void network_t::get_layers(section_config_t section_config_) {
     }
     return;
 }
+void network_t::update_batch_size(const std::string &batch_size_) {
+    unsigned batch_size = stoi(batch_size_);
+    // Traverse all layer configurations
+    for(unsigned i = 0;  i < layers.size(); i++) {
+        // Update B parameter to the batch_size_
+        layer_t& layer = layers.at(i);
+        layer.update_parameter(parameter_t::B, batch_size);
+    }
+    return;
+}
 std::string network_t::get_network_name() {
     return name;
 }

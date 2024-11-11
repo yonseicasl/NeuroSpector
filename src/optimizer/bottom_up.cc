@@ -9,14 +9,17 @@ bottom_up_t::bottom_up_t(const std::string& accelerator_pth_,
                          const std::string& dataflow_,
                          const std::string& network_pth_,
                          const std::string& layer_,
+                         const std::string& batch_size_,
                          const std::string& metric_,
                          const std::string& cl_optimization_)
-    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
+    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_, batch_size_),
       best_cost_of_multiple_layers(FLT_MAX),
       metric(metric_t::ENERGY) {
           std::cerr << "[message] construct bottom_up class" << std::endl;
           // Init metric
           metric = (metric_t)get_enum_type(metric_str, metric_);
+          // Init batch_size
+          batch_size = batch_size_;
           // Init cross_layer_optimziation
           is_cross_layer_opt = cl_optimization_ == "true" ? true : false;
 }
@@ -115,7 +118,10 @@ void bottom_up_t::print_results(unsigned idx_) {
     std::string  metric_str[2] = {"energy", "cycle"};
     // Set output file name
     std::string output_file_name = accelerator->get_acc_name() + "-" 
-                                 + network->get_network_name() + "_" + std::to_string(idx_+1) + "-"
+                                 + global_best_scheduling_option.scheduling_table.get_dataflow() + "-"
+                                 + network->get_network_name() + "_" 
+                                 + "b" + batch_size + "_" 
+                                 + std::to_string(idx_+1) + "-"
                                  + "bottom_up-" + metric_str[(unsigned)metric] + ".txt";
     std::clog << "[message] optimization result is written in '" << output_file_name << "'"<< std::endl;
     // Open file stream
@@ -292,14 +298,13 @@ void bottom_up_t::search(unsigned tid_,
     while(!mapping_space.is_last()) {
         // Get new mapping values
         mapping_values_set = mapping_space.get_mapping_set();
-
         // Update mapping values of scheduling table
         scheduling_table_curr.update_set_of_rows(spatial_pos, end_pos_,
                                                  mapping_values_set);
         // Load scheduling table to analyzer
         analyzer.init(scheduling_table_curr);
         // Check_Validity
-        if(!analyzer.check_validity()) continue;
+        if(!analyzer.verify_constraints()) continue;
         //	Re-generate mapping space for the remain levels of target set 
         num_targeted_levels = 2;
         undetermined_values = scheduling_table_curr.get_row_values(end_pos_);
@@ -309,7 +314,7 @@ void bottom_up_t::search(unsigned tid_,
             scheduling_table_curr.update_row(begin_pos_, mapping_values_set.at(0));
             scheduling_table_curr.update_row(end_pos_, mapping_values_set.at(1));
             analyzer.init(scheduling_table_curr);
-            if(!analyzer.check_validity()) continue;
+            if(!analyzer.verify_constraints()) continue;
             analyzer.estimate_cost();
             // Consider scheduling option based on primary strategy
             cost_curr = analyzer.get_target_level_cost(end_pos_, metric);
@@ -559,7 +564,7 @@ std::vector<PartitioningInfo> bottom_up_t::collect_partition_comb(scheduling_tab
         // Load scheduling table to analyzer
         analyzer.init(table_);
         // Check_validity
-        if(!analyzer.check_validity()) continue;
+        if(!analyzer.verify_constraints()) continue;
         analyzer.estimate_cost();
         // Get num_activated_chips 
         num_activated_chips = analyzer.get_num_active_chips();

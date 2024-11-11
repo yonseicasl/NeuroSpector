@@ -42,3 +42,11 @@ bool is_number(std::string& str_) {
     }
     return true;
 }
+
+bool has_txt_extension(const std::string& path_) {
+    size_t last_dot = path_.find_last_of('.');
+    if(last_dot == std::string::npos) {
+        return false;
+    }
+    return path_.substr(last_dot + 1) == "txt";
+}

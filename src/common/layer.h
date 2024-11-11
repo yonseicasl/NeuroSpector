@@ -17,6 +17,7 @@ public:
     std::string           get_name();             // Get layer name
     std::vector<unsigned> get_parameters();       // Get layer parameters
     unsigned              get_stride();           // Get stride
+    void update_parameter(parameter_t param_, unsigned num);
     void print_stats();
     void print_stats(std::ofstream &output_file_);
 private:

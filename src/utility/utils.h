@@ -16,6 +16,8 @@ std::vector<std::string> split(std::string str_, char divisor_);
 std::vector<unsigned> comma_to_vector(std::string value_); 
 // Check whether String is Number
 bool is_number(std::string& str_);
+// Check whether the file extension is .txt
+bool has_txt_extension(const std::string& path_);
 
 
 #endif

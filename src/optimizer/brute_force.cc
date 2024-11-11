@@ -9,14 +9,17 @@ brute_force_t::brute_force_t(const std::string& accelerator_pth_,
                              const std::string& dataflow_,
                              const std::string& network_pth_,
                              const std::string& layer_,
+                             const std::string& batch_size_,
                              const std::string& metric_,
                              const std::string& thread_)
-    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_),
+    : optimizer_t(accelerator_pth_, dataflow_, network_pth_, layer_, batch_size_),
       metric(metric_t::ENERGY),
       num_threads(1) {
           std::cerr << "[message] construct brute_force class" << std::endl;
           // Init metric
           metric = (metric_t)get_enum_type(metric_str, metric_);
+          // Init batch_size
+          batch_size = batch_size_;
           // Init num threads
           if(!thread_.empty()) { num_threads = stoi(thread_); }       
 }
@@ -62,9 +65,12 @@ void brute_force_t::print_results() {
 // Print out results as an output file
 void brute_force_t::print_results(unsigned idx_) {
     // Set output file name
-    std::string output_file_name = accelerator->get_acc_name() + "-" 
-                                 + network->get_network_name() + "_" + std::to_string(idx_+1) + "-"
-                                 + "brute-force" + ".txt";
+    std::string output_file_name = accelerator->get_acc_name() + "-"
+                                 + global_best_scheduling_option.get_dataflow() + "-"
+                                 + network->get_network_name() + "_" 
+                                 + "b" + batch_size + "_" 
+                                 + std::to_string(idx_+1) + "-"
+                                 + "brute_force-" + metric_str[(unsigned)metric] + ".txt";
     std::clog << "[message] optimization result is written in '" << output_file_name << "'"<< std::endl;
     // Open file stream
     std::ofstream output_file;
@@ -159,7 +165,7 @@ void brute_force_t::search(unsigned tid_,
         // Load scheduling table to analyzer
         analyzer.init(local_scheduling_option);
         // Check_Validity
-        if(!analyzer.check_validity()) continue;
+        if(!analyzer.verify_constraints()) continue;
         // Evaluate scheduling tables cost
         analyzer.estimate_cost();
         // Get analyzer's cost

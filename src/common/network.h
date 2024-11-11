@@ -12,6 +12,7 @@ public:
     network_t(const std::string &cfg_path_);
     ~network_t();
     void init_network();
+    void update_batch_size(const std::string &batch_size_);
     void get_layers(section_config_t section_config_);
     std::string           get_network_name();                   // Get network name
     std::string           get_layer_name(unsigned idx_);        // Get target layer's name

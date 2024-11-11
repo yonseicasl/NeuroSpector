@@ -36,6 +36,8 @@ int main(int argc, char **argv) {
                                  ? str_argv.find("mc_partitioning")->second : "";
     std::string cl_optimization  = str_argv.find("cl_optimization")!=str_argv.end()
                                  ? str_argv.find("cl_optimization")->second : "";
+    std::string batch_size       = str_argv.find("batch_size")!=str_argv.end()
+                                 ? str_argv.find("batch_size")->second : "1";
 
     run_t run_type_enum = (run_t)get_enum_type(run_str, run_type);
     if(run_type_enum > run_t::SIZE) {
@@ -45,14 +47,16 @@ int main(int argc, char **argv) {
         exit(0);
     }
     print_banner();
-    std::clog << "Run_type         = " << run_type
-              << "\nAccelerator      = " << accelerator
-              << "\nDataflow         = " << dataflow
-              << "\nNetwork          = " << network
-              << "\nOptimizer        = " << optimizer_type
-              << "\nTarget Metric    = " << metric
-              << "\nTarget Layer     = " << layer
-              << "\nNum. threads     = " << thread;
+    if(run_type         != "") { std::clog << "Run_type         = " << run_type       << std::endl; }
+    if(accelerator      != "") { std::clog << "Accelerator      = " << accelerator    << std::endl; }
+    if(dataflow         != "") { std::clog << "Dataflow         = " << dataflow       << std::endl; }
+    if(network          != "") { std::clog << "Network          = " << network        << std::endl; }
+    if(batch_size       != "") { std::clog << "Batch size       = " << batch_size     << std::endl; }
+    if(optimizer_type   != "") { std::clog << "Optimizer        = " << optimizer_type << std::endl; }
+    if(metric           != "") { std::clog << "Target Metric    = " << metric         << std::endl; }
+    if(layer            != "") { std::clog << "Target Layer     = " << layer          << std::endl; }
+    if(scheduling_table != "") { std::clog << "Scheduling table = " << scheduling_table << std::endl; }
+    std::clog << "Num. threads     = " << thread;
     std::clog << "\n=======================================================";
     
     clock_t start, finish;
@@ -70,35 +74,36 @@ int main(int argc, char **argv) {
     switch(run_type_enum) {
         case run_t::OPTIMIZER:
             if(dataflow.empty()) {
-                std::cerr << "[Error] Specify dataflow (fixed or flexible)"
-                        << std::endl;
+                std::cerr << "[Error] Specify dataflow (fixed, flexible, or"
+                          << " specific dataflow (ws-os, ws-is, or etc))"
+                          << std::endl;
                 exit(0);
             }
             if(metric.empty()) {
-                std::cerr << "[Error] Specify optimization objectives (energy or cycle)"
-                        << std::endl;
+                std::cerr << "[Error] Specify optimization objectives "
+                          << "(energy or cycle)"
+                          << std::endl;
                 exit(0);
             }
             if(optimizer_type.compare("bottom-up") == 0) {
                 bottom_up_t *optimizer = new bottom_up_t(accelerator, dataflow, 
-                                                        network, layer, metric,
-                                                        cl_optimization);
-            
-                // Run optimizer
+                                                    network, layer, batch_size, 
+                                                    metric,
+                                                    cl_optimization);
                 std::cerr << "[message] Run optimizer" << std::endl;
                 // If multi-chip partitioning
                 if(!list_layer.empty()) {
-                    std::cerr << "[message] Run Multichip partitioning" << std::endl;
+                    std::cerr << "[message] Run Multichip partitioning"
+                              << std::endl;
                     optimizer->run(list_layer);
                 }
                 else { optimizer->run(); }
                 delete optimizer;
             }
             else if(optimizer_type.compare("brute-force") == 0) {
-                brute_force_t *optimizer = new brute_force_t(accelerator, dataflow, 
-                                                            network, layer, metric, 
-                                                            thread);
-                // Run optimizer
+                brute_force_t *optimizer = new brute_force_t(accelerator, 
+                                                    dataflow, network, layer, 
+                                                    batch_size, metric, thread);
                 std::cerr << "[message] Run optimizer" << std::endl;
                 optimizer->run();
                 delete optimizer;
@@ -111,8 +116,8 @@ int main(int argc, char **argv) {
             break;
         case run_t::ANALYZER:
             if(!scheduling_table.empty()) {
-                std::clog << "Scheduling table = " << scheduling_table << std::endl;
-                analyzer_t *analyzer = new analyzer_t(accelerator, network,
+                analyzer_t *analyzer = new analyzer_t(accelerator, dataflow, 
+                                                      network, batch_size,
                                                       scheduling_table);
                 std::cerr << "[message] Run Analyzer" << std::endl;
                 analyzer->run();
@@ -120,16 +125,13 @@ int main(int argc, char **argv) {
             }
             else {
                 std::cerr << "Invalid Analzyer."
-                            << "Type scheduling_table path"
-                            << std::endl;
+                          << "Type scheduling_table path"
+                          << std::endl;
             }
             break;
-
         default:
             break;
     }
-
-
     // Search complete
     finish = time(nullptr);
     std::cout << "[message] Runtime: "

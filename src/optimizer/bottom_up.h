@@ -16,6 +16,7 @@ public:
                 const std::string& dataflow_,
                 const std::string& network_pth_,
                 const std::string& layer_,
+                const std::string& batch_size_,
                 const std::string& metric_,
                 const std::string& cl_optimization_);
     ~bottom_up_t();
