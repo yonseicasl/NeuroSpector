@@ -1,7 +1,7 @@
 # NeuroSpector: Dataflow and Mapping Optimizer for Deep Neural Network Accelerators
 Developed by Chanho Park, Bogil Kim, Sungmin Ryu, and William J. Song\
 Computer Architecture and Systems Lab, Yonsei University\
-Current release: v1.5 (May. 2024)
+Current release: v1.5 (May 2024)
 
 ## Table of Contents
 1. [Intoduction](#introduction)
